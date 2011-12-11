@@ -1,10 +1,9 @@
 Format: http://dep.debian.net/deps/dep5
 Upstream-Name: qt-webkit-kiosk
-Source: <url://example.com>
+Source: https://code.google.com/p/qt-webkit-kiosk/
 
 Files: *
-Copyright: <years> <put author's name and email here>
-           <years> <likewise for another author>
+Copyright: 2011 Дрябжинский Сергей <sergey.dryabzhinsky@gmail.com>
 License: GPL-3.0+
 
 Files: debian/*
