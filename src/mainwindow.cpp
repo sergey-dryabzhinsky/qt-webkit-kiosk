@@ -39,6 +39,8 @@
 **
 ****************************************************************************/
 
+#include "config.h"
+
 #include <QtGui>
 #include <QtNetwork>
 #include <QtWebKit>
@@ -251,7 +253,9 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 void MainWindow::loadSettings(QString ini_file)
 {
     if (!ini_file.length()) {
-        ini_file = "qt-webkit-kiosk.ini";
+        ini_file = SHARE_DIR;
+        ini_file += "/";
+        ini_file += "qt-webkit-kiosk.ini";
     }
     mainSettings = new QSettings(ini_file, QSettings::IniFormat, this);
 

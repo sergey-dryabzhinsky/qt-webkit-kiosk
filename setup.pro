@@ -11,18 +11,21 @@ SUBDIRS += src/qt-webkit-kiosk.pro
 
 # INSTALL
 
-target.path = $$[install_prefix]/bin
+target.path = $${PREFIX}/bin
 
 icon.files = qt-webkit-kiosk.png
-icon.path = $$[install_prefix]/share/icons
+icon.path = $${PREFIX}/share/icons
 
 desktop.files = resources/qt-webkit-kiosk.desktop
-desktop.path = $$[install_prefix]/share/applications
+desktop.path = $${PREFIX}/share/applications
 
 config.files = resources/qt-webkit-kiosk.ini
-config.path = $$[install_prefix]/share/qt-webkit-kiosk
+config.path = $${PREFIX}/share/qt-webkit-kiosk
 
 sound.files = resources/window-clicked.wav
-sound.path = $$[install_prefix]/share/qt-webkit-kiosk
+sound.path = $${PREFIX}/share/qt-webkit-kiosk
 
-INSTALLS += target icon desktop config sound
+doc.files = doc/lgpl.html
+doc.path = $${PREFIX}/share/doc/qt-webkit-kiosk
+
+INSTALLS += target icon desktop config sound doc

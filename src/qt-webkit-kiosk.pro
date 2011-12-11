@@ -4,11 +4,18 @@
 #
 #-------------------------------------------------
 
+
+message(Qt version: $$[QT_VERSION])
+message(Qt is installed in $$[QT_INSTALL_PREFIX])
+message(Settings:)
+message( PREFIX: $${PREFIX})
+
 QT       += core gui network webkit
 
 TARGET = qt-webkit-kiosk
 TEMPLATE = app
 
+DEFINES += SHARE_DIR=\\\"$${PREFIX}/share\\\"
 
 SOURCES += main.cpp\
         mainwindow.cpp \
@@ -23,5 +30,8 @@ OTHER_FILES += \
     qt-webkit-kiosk.ini
 
 
-target.path = $$[install_prefix]/bin
+# INSTALL
 
+target.path = $${PREFIX}/bin
+
+INSTALLS += target
