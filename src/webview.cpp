@@ -20,9 +20,7 @@ void WebView::mousePressEvent(QMouseEvent *event)
     if (event->button() == Qt::LeftButton) {
         this->setFocus();
         if (mainSettings->value("event-sounds/enable").toBool()) {
-            QString sound = SHARE_DIR;
-                sound += "/";
-                sound += mainSettings->value("event-sounds/window-clicked").toString();
+            QString sound = mainSettings->value("event-sounds/window-clicked").toString();
             if (sound.length()) {
                 QSound::play(sound);
             }

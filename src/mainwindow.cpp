@@ -321,7 +321,7 @@ void MainWindow::loadSettings(QString ini_file)
 
 
     if (!mainSettings->contains("browser/homepage")) {
-        mainSettings->setValue("browser/homepage", "default.html");
+        mainSettings->setValue("browser/homepage", SHARE_DIR"/default.html");
     }
     if (!mainSettings->contains("browser/javascript")) {
         mainSettings->setValue("browser/javascript", true);
@@ -338,7 +338,7 @@ void MainWindow::loadSettings(QString ini_file)
         mainSettings->setValue("event-sounds/enable", false);
     }
     if (!mainSettings->contains("event-sounds/window-clicked")) {
-        mainSettings->setValue("event-sounds/window-clicked", "window-clicked.wav");
+        mainSettings->setValue("event-sounds/window-clicked", SHARE_DIR"/window-clicked.wav");
     }
 
     if (!mainSettings->contains("cache/enable")) {
