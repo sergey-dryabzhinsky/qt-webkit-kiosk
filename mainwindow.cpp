@@ -251,7 +251,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 void MainWindow::loadSettings(QString ini_file)
 {
     if (!ini_file.length()) {
-        ini_file = "kioskbrowser.ini";
+        ini_file = "qt-webkit-kiosk.ini";
     }
     mainSettings = new QSettings(ini_file, QSettings::IniFormat, this);
 
@@ -262,10 +262,10 @@ void MainWindow::loadSettings(QString ini_file)
         mainSettings->setValue("application/organization-domain", "www.example.com" );
     }
     if (!mainSettings->contains("application/name")) {
-        mainSettings->setValue("application/name", "QtWebKiosk" );
+        mainSettings->setValue("application/name", "QtWebkitKiosk" );
     }
     if (!mainSettings->contains("application/version")) {
-        mainSettings->setValue("application/version", "1.00.06" );
+        mainSettings->setValue("application/version", "1.01.00" );
     }
 
     if (!mainSettings->contains("proxy/enable")) {
