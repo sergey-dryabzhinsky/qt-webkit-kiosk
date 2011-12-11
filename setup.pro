@@ -4,20 +4,25 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network webkit
+TEMPLATE = subdirs
+CONFIG += ordered
 
-TARGET = qt-webkit-kiosk
-TEMPLATE = app
+SUBDIRS += src/qt-webkit-kiosk.pro
 
+# INSTALL
 
-SOURCES += main.cpp\
-        mainwindow.cpp \
-    webview.cpp \
-    anyoption.cpp
+target.path = $$[install_prefix]/bin
 
-HEADERS  += mainwindow.h \
-    webview.h \
-    anyoption.h
+icon.files = qt-webkit-kiosk.png
+icon.path = $$[install_prefix]/share/icons
 
-OTHER_FILES += \
-    qt-webkit-kiosk.ini
+desktop.files = resources/qt-webkit-kiosk.desktop
+desktop.path = $$[install_prefix]/share/applications
+
+config.files = resources/qt-webkit-kiosk.ini
+config.path = $$[install_prefix]/share/qt-webkit-kiosk
+
+sound.files = resources/window-clicked.wav
+sound.path = $$[install_prefix]/share/qt-webkit-kiosk
+
+INSTALLS += target icon desktop config sound

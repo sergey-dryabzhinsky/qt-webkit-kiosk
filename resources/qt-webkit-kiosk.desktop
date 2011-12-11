@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=QtWebkitKiosk
+Comment=Simple browser with kiosk mode
+Exec=qt-webkit-kiosk
+Categories=Internet;
+Icon=qt-webkit-kiosk
+Type=Application
+Terminal=false
+StartupNotify=true

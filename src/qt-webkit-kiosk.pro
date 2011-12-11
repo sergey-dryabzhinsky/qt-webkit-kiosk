@@ -21,3 +21,7 @@ HEADERS  += mainwindow.h \
 
 OTHER_FILES += \
     qt-webkit-kiosk.ini
+
+
+target.path = $$[install_prefix]/bin
+
