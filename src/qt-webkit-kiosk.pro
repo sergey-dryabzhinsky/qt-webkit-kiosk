@@ -7,7 +7,7 @@
 
 QT       += core gui network webkit phonon
 
-CONFIG += debug
+# CONFIG += debug
 TARGET = qt-webkit-kiosk
 TEMPLATE = app
 
