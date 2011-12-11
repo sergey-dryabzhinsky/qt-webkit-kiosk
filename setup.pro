@@ -25,6 +25,9 @@ config.path = $${PREFIX}/share/qt-webkit-kiosk
 sound.files = resources/window-clicked.wav
 sound.path = $${PREFIX}/share/qt-webkit-kiosk
 
+html.files = resources/default.html
+html.path = $${PREFIX}/share/qt-webkit-kiosk
+
 doc.files = doc/lgpl.html
 doc.path = $${PREFIX}/share/doc/qt-webkit-kiosk
 
