@@ -6,6 +6,13 @@
 
 WebView::WebView(QWidget* parent)
 {
+    audioOutput = new Phonon::AudioOutput(Phonon::MusicCategory, this);
+    mediaObject = new Phonon::MediaObject(this);
+
+    mediaObject->setTickInterval(1000);
+
+    Phonon::createPath(mediaObject, audioOutput);
+
     this->setParent(parent);
 }
 
@@ -23,8 +30,15 @@ void WebView::mousePressEvent(QMouseEvent *event)
             QString sound = mainSettings->value("event-sounds/window-clicked").toString();
             qDebug() << "Clicked! Play sound: " << sound;
             if (sound.length()) {
-                qDebug() << "Sound available? " << QSound::isAvailable();
-                QSound::play(sound);
+
+                mediaObject->stop();
+                mediaObject->clearQueue();
+
+                Phonon::MediaSource source(sound);
+
+                mediaObject->setCurrentSource(source);
+                mediaObject->play();
+
             }
         }
     }

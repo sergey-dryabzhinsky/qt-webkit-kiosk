@@ -3,6 +3,9 @@
 
 #include <QtGui>
 #include <QtWebKit>
+#include <phonon/audiooutput.h>
+#include <phonon/mediaobject.h>
+#include <phonon/backendcapabilities.h>
 
 class WebView : public QWebView
 {
@@ -11,7 +14,6 @@ class WebView : public QWebView
 public:
     WebView(QWidget* parent = 0);
 
-    void setSound(QSound *player);
     void setSettings(QSettings *settings);
 
 protected:
@@ -19,7 +21,8 @@ protected:
     void mousePressEvent(QMouseEvent *event);
 
 private:
-    QSound *player;
+    Phonon::MediaObject *mediaObject;
+    Phonon::AudioOutput *audioOutput;
     QSettings *mainSettings;
 };
 

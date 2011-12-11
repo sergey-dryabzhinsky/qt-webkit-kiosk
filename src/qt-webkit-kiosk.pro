@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 
-QT       += core gui network webkit
+QT       += core gui network webkit phonon
 
 CONFIG += debug
 TARGET = qt-webkit-kiosk
@@ -29,7 +29,8 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     webview.h \
-    anyoption.h
+    anyoption.h \
+    config.h
 
 OTHER_FILES += \
     qt-webkit-kiosk.ini

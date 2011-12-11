@@ -3,6 +3,7 @@
  */
 
 #ifndef __CONFIG_H
+#define __CONFIG_H
 
 #ifndef RESOURCES
     define RESOURCES "."

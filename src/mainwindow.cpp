@@ -346,7 +346,15 @@ void MainWindow::loadSettings(QString ini_file)
         mainSettings->setValue("event-sounds/enable", false);
     }
     if (!mainSettings->contains("event-sounds/window-clicked")) {
-        mainSettings->setValue("event-sounds/window-clicked", RESOURCES"/window-clicked.wav");
+        QFileInfo finfo = QFileInfo();
+        finfo.setFile(RESOURCES"/window-clicked.ogg");
+        if ( finfo.isFile() ) {
+            mainSettings->setValue("event-sounds/window-clicked", finfo.absoluteFilePath());
+        } else
+            finfo.setFile(RESOURCES"/window-clicked.wav");
+            if ( finfo.isFile() ) {
+                mainSettings->setValue("event-sounds/window-clicked", finfo.absoluteFilePath());
+            }
     }
 
     if (!mainSettings->contains("cache/enable")) {
