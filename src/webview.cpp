@@ -21,7 +21,9 @@ void WebView::mousePressEvent(QMouseEvent *event)
         this->setFocus();
         if (mainSettings->value("event-sounds/enable").toBool()) {
             QString sound = mainSettings->value("event-sounds/window-clicked").toString();
+            qDebug() << "Clicked! Play sound: " << sound;
             if (sound.length()) {
+                qDebug() << "Sound available? " << QSound::isAvailable();
                 QSound::play(sound);
             }
         }

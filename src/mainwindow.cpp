@@ -95,6 +95,12 @@ MainWindow::MainWindow()
 
     loadSettings(QString(cmdopts->getValue("config")));
 
+    qDebug() << "Application icon: " << mainSettings->value("application/icon").toString();
+
+    setWindowIcon(QIcon(
+       mainSettings->value("application/icon").toString()
+    ));
+
     if (cmdopts->getValue("uri")) {
         mainSettings->setValue("browser/homepage", cmdopts->getValue("uri"));
     }
@@ -253,7 +259,8 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 void MainWindow::loadSettings(QString ini_file)
 {
     if (!ini_file.length()) {
-        ini_file = SHARE_DIR"/qt-webkit-kiosk.ini";
+        ini_file = RESOURCES"/qt-webkit-kiosk.ini";
+        qDebug() << "Ini file: " << ini_file;
     }
     mainSettings = new QSettings(ini_file, QSettings::IniFormat, this);
 
@@ -268,6 +275,9 @@ void MainWindow::loadSettings(QString ini_file)
     }
     if (!mainSettings->contains("application/version")) {
         mainSettings->setValue("application/version", "1.01.00" );
+    }
+    if (!mainSettings->contains("application/icon")) {
+        mainSettings->setValue("application/icon", ICON );
     }
 
     if (!mainSettings->contains("proxy/enable")) {
@@ -319,7 +329,7 @@ void MainWindow::loadSettings(QString ini_file)
 
 
     if (!mainSettings->contains("browser/homepage")) {
-        mainSettings->setValue("browser/homepage", SHARE_DIR"/default.html");
+        mainSettings->setValue("browser/homepage", RESOURCES"/default.html");
     }
     if (!mainSettings->contains("browser/javascript")) {
         mainSettings->setValue("browser/javascript", true);
@@ -336,7 +346,7 @@ void MainWindow::loadSettings(QString ini_file)
         mainSettings->setValue("event-sounds/enable", false);
     }
     if (!mainSettings->contains("event-sounds/window-clicked")) {
-        mainSettings->setValue("event-sounds/window-clicked", SHARE_DIR"/window-clicked.wav");
+        mainSettings->setValue("event-sounds/window-clicked", RESOURCES"/window-clicked.wav");
     }
 
     if (!mainSettings->contains("cache/enable")) {

@@ -5,17 +5,22 @@
 #-------------------------------------------------
 
 
+QT       += core gui network webkit
+
+CONFIG += debug
+TARGET = qt-webkit-kiosk
+TEMPLATE = app
+
 message(Qt version: $$[QT_VERSION])
 message(Qt is installed in $$[QT_INSTALL_PREFIX])
 message(Settings:)
 message( PREFIX: $${PREFIX})
+message( TARGET: $${TARGET})
 
-QT       += core gui network webkit
+ICON = $${PREFIX}/share/icons/$${TARGET}.png
 
-TARGET = qt-webkit-kiosk
-TEMPLATE = app
-
-DEFINES += SHARE_DIR=\\\"$${PREFIX}/share\\\"
+DEFINES += RESOURCES=\\\"$${PREFIX}/share/$${TARGET}\\\"
+DEFINES += ICON=\\\"$${ICON}\\\"
 
 SOURCES += main.cpp\
         mainwindow.cpp \
@@ -34,4 +39,7 @@ OTHER_FILES += \
 
 target.path = $${PREFIX}/bin
 
-INSTALLS += target
+icon.files = ../resources/$${TARGET}.png
+icon.path = $${PREFIX}/share/icons
+
+INSTALLS += target icon

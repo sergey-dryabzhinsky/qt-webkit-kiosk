@@ -13,9 +13,6 @@ SUBDIRS += src/qt-webkit-kiosk.pro
 
 target.path = $${PREFIX}/bin
 
-icon.files = qt-webkit-kiosk.png
-icon.path = $${PREFIX}/share/icons
-
 desktop.files = resources/qt-webkit-kiosk.desktop
 desktop.path = $${PREFIX}/share/applications
 
@@ -31,4 +28,4 @@ html.path = $${PREFIX}/share/qt-webkit-kiosk
 doc.files = doc/lgpl.html
 doc.path = $${PREFIX}/share/doc/qt-webkit-kiosk
 
-INSTALLS += target icon desktop config sound doc
+INSTALLS += target desktop config sound html doc
