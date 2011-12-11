@@ -6,7 +6,7 @@
 
 QT       += core gui network webkit
 
-TARGET = kioskbrowser
+TARGET = qt-webkit-kiosk
 TEMPLATE = app
 
 
@@ -20,4 +20,4 @@ HEADERS  += mainwindow.h \
     anyoption.h
 
 OTHER_FILES += \
-    kioskbrowser.ini
+    qt-webkit-kiosk.ini
