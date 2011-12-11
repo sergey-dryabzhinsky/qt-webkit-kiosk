@@ -1,0 +1,17 @@
+Source: qt-webkit-kiosk
+Section: web
+Priority: extra
+Maintainer: Дрябжинский Сергей <sergey.dryabzhinsky@gmail.com>
+Build-Depends: debhelper (>= 8.0.0), libqt4-dev (>=4.7.0), libqtwebkit-dev, libphonon-dev
+Standards-Version: 3.9.2
+Homepage: https://code.google.com/p/qt-webkit-kiosk/
+
+Package: qt-webkit-kiosk
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, phonon-backend-gstreamer
+Description: It's one-window browser writen on Qt4 & QtWebkit
+ This is simple browser written on Qt4 & QtWebkit.
+ Usualy runing in fullscreen mode, but supports maximized and fixed size window mode.
+ This browser uses only one, "main" window. So, no popups, no plugins in separate processes, like Chrome do.
+ Supports several parameters via configuration file: proxy, user-agent, click sound.
+ Also supports hiding printer dialog and uses default or defined printer.
