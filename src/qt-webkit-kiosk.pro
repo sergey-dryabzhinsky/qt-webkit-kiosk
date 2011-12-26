@@ -17,10 +17,16 @@ message(Settings:)
 message( PREFIX: $${PREFIX})
 message( TARGET: $${TARGET})
 
-ICON = $${PREFIX}/share/icons/$${TARGET}.png
-
-DEFINES += RESOURCES=\\\"$${PREFIX}/share/$${TARGET}\\\"
-DEFINES += ICON=\\\"$${ICON}\\\"
+!win32 {
+    ICON = $${PREFIX}/share/icons/$${TARGET}.png
+    DEFINES += RESOURCES=\\\"$${PREFIX}/share/$${TARGET}/\\\"
+    DEFINES += ICON=\\\"$${ICON}\\\"
+}
+win32 {
+    ICON = ./$${TARGET}.png
+    DEFINES += RESOURCES=\\\"./\\\"
+    DEFINES += ICON=\\\"$${ICON}\\\"
+}
 
 SOURCES += main.cpp\
         mainwindow.cpp \

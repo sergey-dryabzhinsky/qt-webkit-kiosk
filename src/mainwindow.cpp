@@ -259,7 +259,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 void MainWindow::loadSettings(QString ini_file)
 {
     if (!ini_file.length()) {
-        ini_file = RESOURCES"/qt-webkit-kiosk.ini";
+        ini_file = RESOURCES"qt-webkit-kiosk.ini";
         qDebug() << "Ini file: " << ini_file;
     }
     mainSettings = new QSettings(ini_file, QSettings::IniFormat, this);
@@ -329,7 +329,7 @@ void MainWindow::loadSettings(QString ini_file)
 
 
     if (!mainSettings->contains("browser/homepage")) {
-        mainSettings->setValue("browser/homepage", RESOURCES"/default.html");
+        mainSettings->setValue("browser/homepage", RESOURCES"default.html");
     }
     if (!mainSettings->contains("browser/javascript")) {
         mainSettings->setValue("browser/javascript", true);
@@ -347,11 +347,11 @@ void MainWindow::loadSettings(QString ini_file)
     }
     if (!mainSettings->contains("event-sounds/window-clicked")) {
         QFileInfo finfo = QFileInfo();
-        finfo.setFile(RESOURCES"/window-clicked.ogg");
+        finfo.setFile(RESOURCES"window-clicked.ogg");
         if ( finfo.isFile() ) {
             mainSettings->setValue("event-sounds/window-clicked", finfo.absoluteFilePath());
         } else
-            finfo.setFile(RESOURCES"/window-clicked.wav");
+            finfo.setFile(RESOURCES"window-clicked.wav");
             if ( finfo.isFile() ) {
                 mainSettings->setValue("event-sounds/window-clicked", finfo.absoluteFilePath());
             }
