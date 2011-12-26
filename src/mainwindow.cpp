@@ -203,10 +203,27 @@ MainWindow::MainWindow()
         centerFixedSizeWindow();
     }
 
-    view->load(QUrl(
-        mainSettings->value("browser/homepage").toString()
-    ));
+    QFileInfo finfo = QFileInfo();
+    finfo.setFile(mainSettings->value("browser/homepage").toString());
 
+    qDebug() << "Load: file = " <<
+                mainSettings->value("browser/homepage").toString() <<
+                ", path = " <<
+                finfo.absoluteFilePath() <<
+                ", uri = " <<
+                QUrl::fromLocalFile(
+                    mainSettings->value("browser/homepage").toString()
+                ).toString();
+
+    if (finfo.isFile()) {
+        view->load(QUrl::fromLocalFile(
+            finfo.absoluteFilePath()
+        ));
+    } else {
+        view->load(QUrl(
+            mainSettings->value("browser/homepage").toString()
+        ));
+    }
 }
 
 
