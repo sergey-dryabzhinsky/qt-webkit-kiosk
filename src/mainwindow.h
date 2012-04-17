@@ -61,6 +61,8 @@ protected slots:
 
     void printRequested(QWebFrame *wf);
 
+    void desktopResized(int p);
+
 protected:
 
     void centerFixedSizeWindow();

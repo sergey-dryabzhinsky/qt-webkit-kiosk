@@ -78,21 +78,6 @@ MainWindow::MainWindow()
         return;
     }
 
-    if (cmdopts->hasOptions() && !QString(cmdopts->getValue("config")).length()) {
-        cmdopts->printUsage();
-        eventExit = new QKeyEvent( QEvent::KeyPress, Qt::Key_Q, Qt::ControlModifier, "Exit", 0 );
-        QCoreApplication::postEvent( this, eventExit );
-        return;
-    }
-
-    if (cmdopts->hasOptions() && !QString(cmdopts->getValue("uri")).length()) {
-        cmdopts->printUsage();
-        eventExit = new QKeyEvent( QEvent::KeyPress, Qt::Key_Q, Qt::ControlModifier, "Exit", 0 );
-        QCoreApplication::postEvent( this, eventExit );
-        return;
-    }
-
-
     if (cmdopts->getValue("config")) {
         loadSettings(QString(cmdopts->getValue("config")));
     } else {
@@ -190,6 +175,8 @@ MainWindow::MainWindow()
     connect(view, SIGNAL(iconChanged()), SLOT(pageIconLoaded()));
 
     connect(view->page(), SIGNAL(printRequested(QWebFrame*)), SLOT(printRequested(QWebFrame*)));
+
+    connect(QApplication::desktop(), SIGNAL(resized(int)), SLOT(desktopResized(int)));
 
     show();
 
@@ -295,7 +282,7 @@ void MainWindow::loadSettings(QString ini_file)
         mainSettings->setValue("application/name", "QtWebkitKiosk" );
     }
     if (!mainSettings->contains("application/version")) {
-        mainSettings->setValue("application/version", "1.01.00" );
+        mainSettings->setValue("application/version", VERSION );
     }
     if (!mainSettings->contains("application/icon")) {
         mainSettings->setValue("application/icon", ICON );
@@ -367,22 +354,19 @@ void MainWindow::loadSettings(QString ini_file)
         mainSettings->setValue("event-sounds/enable", false);
     }
     if (!mainSettings->contains("event-sounds/window-clicked")) {
-        QFileInfo finfo = QFileInfo();
-        finfo.setFile(RESOURCES"window-clicked.ogg");
-        if ( finfo.isFile() ) {
-            mainSettings->setValue("event-sounds/window-clicked", finfo.absoluteFilePath());
-        } else
-            finfo.setFile(RESOURCES"window-clicked.wav");
-            if ( finfo.isFile() ) {
-                mainSettings->setValue("event-sounds/window-clicked", finfo.absoluteFilePath());
-            }
+        mainSettings->setValue("event-sounds/window-clicked", RESOURCES"window-clicked.ogg");
     }
 
     if (!mainSettings->contains("cache/enable")) {
         mainSettings->setValue("cache/enable", true);
     }
     if (!mainSettings->contains("cache/location")) {
-        mainSettings->setValue("cache/location", QDesktopServices::storageLocation(QDesktopServices::CacheLocation));
+        QString location = QDesktopServices::storageLocation(QDesktopServices::CacheLocation);
+        QDir d = QDir(location);
+        location += d.separator();
+        location += mainSettings->value("application/name").toString();
+        d.setPath(location);
+        mainSettings->setValue("cache/location", d.absolutePath());
     }
     if (!mainSettings->contains("cache/size")) {
         mainSettings->setValue("cache/size", 50*1024*1024);
@@ -412,16 +396,29 @@ void MainWindow::loadSettings(QString ini_file)
 
 void MainWindow::adjustTitle()
 {
-    if (progress <= 0 || progress >= 100)
+    if (progress <= 0 || progress >= 100) {
         setWindowTitle(view->title());
-    else
+    } else {
         setWindowTitle(QString("%1 (%2%)").arg(view->title()).arg(progress));
+    }
 }
 
 void MainWindow::setProgress(int p)
 {
     progress = p;
     adjustTitle();
+}
+
+void MainWindow::desktopResized(int p)
+{
+    qDebug() << "Desktop resized event: p=" << p;
+    if (mainSettings->value("view/fullscreen").toBool()) {
+        showFullScreen();
+    } else if (mainSettings->value("view/maximized").toBool()) {
+        showMaximized();
+    } else if (mainSettings->value("view/fixed-size").toBool()) {
+        centerFixedSizeWindow();
+    }
 }
 
 void MainWindow::finishLoading(bool)

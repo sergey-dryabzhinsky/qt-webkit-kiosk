@@ -6,11 +6,15 @@
 #define __CONFIG_H
 
 #ifndef RESOURCES
-    define RESOURCES "./"
+    #define RESOURCES "./resources"
 #endif
 
 #ifndef ICON
-    define ICON "./qt-webkit-kiosk.png"
+    #define ICON "./qt-webkit-kiosk.png"
+#endif
+
+#ifndef VERSION
+    #define VERSION "1.02.00"
 #endif
 
 #endif

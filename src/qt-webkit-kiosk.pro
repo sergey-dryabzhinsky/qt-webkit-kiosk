@@ -10,12 +10,14 @@ QT       += core gui network webkit phonon
 # CONFIG += debug
 TARGET = qt-webkit-kiosk
 TEMPLATE = app
+VERSION = 1.02.00
 
 message(Qt version: $$[QT_VERSION])
 message(Qt is installed in $$[QT_INSTALL_PREFIX])
 message(Settings:)
 message( PREFIX: $${PREFIX})
 message( TARGET: $${TARGET})
+message( VERSION: $${VERSION})
 
 !win32 {
     ICON = $${PREFIX}/share/icons/$${TARGET}.png
@@ -26,10 +28,11 @@ win32 {
     ICON = ./$${TARGET}.png
     DEFINES += RESOURCES=\\\"./\\\"
     DEFINES += ICON=\\\"$${ICON}\\\"
+    DEFINES += VERSION=\\\"$${VERSION}\\\"
 }
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
+    mainwindow.cpp \
     webview.cpp \
     anyoption.cpp
 
