@@ -1,5 +1,13 @@
+qt-webkit-kiosk (1.02.00) unstable; urgency=low
+
+  * Fixed startup issue with only one command prompt parameter defined.
+  * Fixed issue with window size and position when screen resolution changed.
+  * Fixed build issues on older than Ununtu 11.10 systems.
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Thu, 17 Apr 2012 23:28:00 +0400
+
 qt-webkit-kiosk (1.01.00) unstable; urgency=low
 
   * Initial Release.
 
- -- Дрябжинский Сергей <sergey.dryabzhinsky@gmail.com>  Mon, 12 Dec 2011 02:36:28 +0400
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Mon, 12 Dec 2011 02:36:28 +0400
