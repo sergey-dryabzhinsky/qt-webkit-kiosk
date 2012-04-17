@@ -223,20 +223,23 @@ void MainWindow::centerFixedSizeWindow()
     quint16 widowWidth = mainSettings->value("view/fixed-width").toUInt();
     quint16 widowHeight = mainSettings->value("view/fixed-height").toUInt();
 
-    quint16 screenWidth = QApplication::desktop()->width();
-    quint16 screenHeight = QApplication::desktop()->height();
+    quint16 screenWidth = QApplication::desktop()->screenGeometry().width();
+    quint16 screenHeight = QApplication::desktop()->screenGeometry().height();
 
+    qDebug() << "Screen size: " << screenWidth << "x" << screenHeight;
 
-    quint16 x;
-    quint16 y;
+    quint16 x = 0;
+    quint16 y = 0;
 
     if (mainSettings->value("view/fixed-centered").toBool()) {
         x = (screenWidth - widowWidth) / 2;
-        y = (screenHeight - widowHeight) / 2 - 50;
+        y = (screenHeight - widowHeight) / 2;
     } else {
         x = mainSettings->value("view/fixed-x").toUInt();
         y = mainSettings->value("view/fixed-y").toUInt();
     }
+
+    qDebug() << "Move window to: (" << x << ";" << y << ")";
 
     move ( x, y );
     setFixedSize( widowWidth, widowHeight );
@@ -411,7 +414,6 @@ void MainWindow::setProgress(int p)
 
 void MainWindow::desktopResized(int p)
 {
-    qDebug() << "Desktop resized event: p=" << p;
     if (mainSettings->value("view/fullscreen").toBool()) {
         showFullScreen();
     } else if (mainSettings->value("view/maximized").toBool()) {
