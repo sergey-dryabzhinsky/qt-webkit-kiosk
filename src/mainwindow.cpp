@@ -93,7 +93,11 @@ MainWindow::MainWindow()
     }
 
 
-    loadSettings(QString(cmdopts->getValue("config")));
+    if (cmdopts->getValue("config")) {
+        loadSettings(QString(cmdopts->getValue("config")));
+    } else {
+        loadSettings(QString(""));
+    }
 
     qDebug() << "Application icon: " << mainSettings->value("application/icon").toString();
 
