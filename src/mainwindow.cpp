@@ -467,12 +467,25 @@ void MainWindow::attachJavascripts()
     }
     qDebug() << "Page loaded, attach" << scripts.length() << " user javascript files...";
     QStringListIterator scriptsIterator(scripts);
+    QFileInfo finfo = QFileInfo();
+    QString file_name;
     while (scriptsIterator.hasNext()) {
-        QString file_name = scriptsIterator.next();
+        file_name = scriptsIterator.next();
         qDebug() << "-- attach " << file_name;
-        QFile f(file_name);
-        QString content = QString(f.readAll()) + " null";
-        view->page()->mainFrame()->evaluateJavaScript(content);
+
+        finfo.setFile(file_name);
+        if (finfo.isFile()) {
+            qDebug() << "-- it's local file";
+            QFile f(file_name);
+            QString content = QString(f.readAll()) + " null";
+            view->page()->mainFrame()->evaluateJavaScript(content);
+        } else {
+            qDebug() << "-- it's remote file";
+            QString content = "<script type=\"text/javascript\" src=\"";
+            content += file_name;
+            content += "\"></script>\n";
+            view->page()->mainFrame()->findFirstElement("head").appendInside(content);
+        }
     }
 }
 
@@ -488,12 +501,25 @@ void MainWindow::attachStyles()
     qDebug() << "Page loaded, attach" << styles.length() << " user style files...";
     QStringListIterator stylesIterator(styles);
     QString file_name;
+    QFileInfo finfo = QFileInfo();
     while (stylesIterator.hasNext()) {
         file_name = stylesIterator.next();
-        QFile f(file_name);
-        QString content = "<style type=\"text/css\">\n";
-        content += QString(f.readAll());
-        content += "</style>\n";
+        qDebug() << "-- attach " << file_name;
+
+        finfo.setFile(file_name);
+
+        if (finfo.isFile()) {
+            qDebug() << "-- it's local file";
+            QFile f(file_name);
+            QString content = "<style type=\"text/css\">\n";
+            content += QString(f.readAll());
+            content += "</style>\n";
+        } else {
+            qDebug() << "-- it's remote file";
+            QString content = "<link type=\"text/css\" rel=\"stylesheet\" href=\"";
+            content += file_name;
+            content += "\"/>\n";
+        }
         view->page()->mainFrame()->findFirstElement("head").appendInside(content);
     }
 }
