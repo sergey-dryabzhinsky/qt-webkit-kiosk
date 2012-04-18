@@ -54,24 +54,28 @@ MainWindow::MainWindow()
     cmdopts = new AnyOption();
     //cmdopts->setVerbose();
 
-    cmdopts->addUsage("");
-    cmdopts->addUsage("This is simple web-browser working in fullscreen kiosk-mode.");
+    cmdopts->addUsage("This is a simple web-browser working in fullscreen kiosk-mode.");
     cmdopts->addUsage("");
     cmdopts->addUsage("Usage: ");
     cmdopts->addUsage("");
-    cmdopts->addUsage(" --help -h                 Print usage anf exit");
+    cmdopts->addUsage(" --help -h                 Print usage and exit");
+    cmdopts->addUsage(" --version -V              Print version and exit");
     cmdopts->addUsage(" --config options.ini      Configuration INI-file");
     cmdopts->addUsage(" --uri http.example.com/   Open this URI");
     cmdopts->addUsage("");
 
     cmdopts->setFlag("help", 'h');
+    cmdopts->setFlag("version", 'V');
 
     cmdopts->setOption("config");
     cmdopts->setOption("uri");
 
+    cmdopts->setVersion(VERSION);
+
     cmdopts->processCommandArgs( QCoreApplication::argc(), QCoreApplication::argv() );
 
     if (cmdopts->getFlag('h') || cmdopts->getFlag("help")) {
+        qDebug() << ">> Help option in command prompt...";
         cmdopts->printUsage();
         eventExit = new QKeyEvent( QEvent::KeyPress, Qt::Key_Q, Qt::ControlModifier, "Exit", 0 );
         QCoreApplication::postEvent( this, eventExit );
@@ -79,6 +83,7 @@ MainWindow::MainWindow()
     }
 
     if (cmdopts->getValue("config")) {
+        qDebug() << ">> Config option in command prompt...";
         loadSettings(QString(cmdopts->getValue("config")));
     } else {
         loadSettings(QString(""));
@@ -91,6 +96,7 @@ MainWindow::MainWindow()
     ));
 
     if (cmdopts->getValue("uri")) {
+        qDebug() << ">> Uri option in command prompt...";
         mainSettings->setValue("browser/homepage", cmdopts->getValue("uri"));
     }
 
@@ -197,20 +203,22 @@ MainWindow::MainWindow()
     QFileInfo finfo = QFileInfo();
     finfo.setFile(mainSettings->value("browser/homepage").toString());
 
-    qDebug() << "Load: file = " <<
+    qDebug() << "Homepage: like file = " <<
                 mainSettings->value("browser/homepage").toString() <<
-                ", path = " <<
+                ", absolute path = " <<
                 finfo.absoluteFilePath() <<
-                ", uri = " <<
+                ", local uri = " <<
                 QUrl::fromLocalFile(
                     mainSettings->value("browser/homepage").toString()
                 ).toString();
 
     if (finfo.isFile()) {
+        qDebug() << "Homepage: Local FILE!";
         view->load(QUrl::fromLocalFile(
             finfo.absoluteFilePath()
         ));
     } else {
+        qDebug() << "Homepage: Remote URI!";
         view->load(QUrl(
             mainSettings->value("browser/homepage").toString()
         ));
@@ -414,6 +422,7 @@ void MainWindow::setProgress(int p)
 
 void MainWindow::desktopResized(int p)
 {
+    qDebug() << "Desktop resized event: p=" << p;
     if (mainSettings->value("view/fullscreen").toBool()) {
         showFullScreen();
     } else if (mainSettings->value("view/maximized").toBool()) {

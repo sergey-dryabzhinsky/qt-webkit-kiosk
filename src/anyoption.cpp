@@ -1172,3 +1172,22 @@ AnyOption::addUsageError( const char *line )
 	exit(0);
 
 }
+
+void
+AnyOption::setVersion( const char *ver )
+{
+    version = ver;
+}
+
+void
+AnyOption::printVersion()
+{
+
+    if( once ) {
+        once = false ;
+        cout << endl ;
+        cout << version << endl;
+        cout << endl ;
+    }
+}
+

@@ -10,7 +10,7 @@ QT       += core gui network webkit phonon
 # CONFIG += debug
 TARGET = qt-webkit-kiosk
 TEMPLATE = app
-VERSION = 1.02.00
+VERSION = 1.02.01
 
 message(Qt version: $$[QT_VERSION])
 message(Qt is installed in $$[QT_INSTALL_PREFIX])
@@ -42,7 +42,15 @@ HEADERS  += mainwindow.h \
     config.h
 
 OTHER_FILES += \
-    qt-webkit-kiosk.ini
+    qt-webkit-kiosk.ini \
+    ../debian/rules \
+    ../debian/README \
+    ../debian/docs \
+    ../debian/copyright \
+    ../debian/control \
+    ../debian/compat \
+    ../debian/changelog \
+    ../debian/source/format
 
 
 # INSTALL

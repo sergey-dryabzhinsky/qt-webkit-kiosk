@@ -146,7 +146,9 @@ public: /* the public interface */
 	 * Print Usage
 	 */
 	void printUsage();
-	void printAutoUsage();
+    void printVersion();
+    void setVersion( const char *ver );
+    void printAutoUsage();
 	void addUsage( const char *line );
 	void printHelp();
         /* print auto usage printing for unknown options or flag */
@@ -190,7 +192,8 @@ private: /* the hidden data structure */
 
 	/* help and usage */
 	const char **usage; 	/* usage */
-	int max_usage_lines;	/* max usage lines reseverd */
+    const char *version;    /*  version string */
+    int max_usage_lines;	/* max usage lines reseverd */
 	int usage_lines;	/* number of usage lines */
 
 	bool command_set;	/* if argc/argv were provided */
