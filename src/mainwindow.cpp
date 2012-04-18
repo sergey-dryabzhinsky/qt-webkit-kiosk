@@ -58,10 +58,10 @@ MainWindow::MainWindow()
     cmdopts->addUsage("");
     cmdopts->addUsage("Usage: ");
     cmdopts->addUsage("");
-    cmdopts->addUsage(" --help -h                 Print usage and exit");
-    cmdopts->addUsage(" --version -V              Print version and exit");
-    cmdopts->addUsage(" --config options.ini      Configuration INI-file");
-    cmdopts->addUsage(" --uri http.example.com/   Open this URI");
+    cmdopts->addUsage(" --help -h                       Print usage and exit");
+    cmdopts->addUsage(" --version -V                    Print version and exit");
+    cmdopts->addUsage(" --config options.ini            Configuration INI-file");
+    cmdopts->addUsage(" --uri http://www.example.com/   Open this URI");
     cmdopts->addUsage("");
 
     cmdopts->setFlag("help", 'h');
@@ -77,6 +77,14 @@ MainWindow::MainWindow()
     if (cmdopts->getFlag('h') || cmdopts->getFlag("help")) {
         qDebug() << ">> Help option in command prompt...";
         cmdopts->printUsage();
+        eventExit = new QKeyEvent( QEvent::KeyPress, Qt::Key_Q, Qt::ControlModifier, "Exit", 0 );
+        QCoreApplication::postEvent( this, eventExit );
+        return;
+    }
+
+    if (cmdopts->getFlag('V') || cmdopts->getFlag("version")) {
+        qDebug() << ">> Version option in command prompt...";
+        cmdopts->printVersion();
         eventExit = new QKeyEvent( QEvent::KeyPress, Qt::Key_Q, Qt::ControlModifier, "Exit", 0 );
         QCoreApplication::postEvent( this, eventExit );
         return;
