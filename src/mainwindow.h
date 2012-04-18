@@ -66,6 +66,8 @@ protected slots:
 protected:
 
     void centerFixedSizeWindow();
+    void attachJavascripts();
+    void attachStyles();
     void keyPressEvent(QKeyEvent *event);
 
 private:

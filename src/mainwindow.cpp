@@ -410,6 +410,13 @@ void MainWindow::loadSettings(QString ini_file)
         mainSettings->setValue("printing/page_margin_bottom", 5);
     }
 
+    if (!mainSettings->contains("attach/javascripts")) {
+        mainSettings->setValue("attach/javascripts", "");
+    }
+    if (!mainSettings->contains("attach/styles")) {
+        mainSettings->setValue("attach/styles", "");
+    }
+
     mainSettings->sync();
 }
 
@@ -444,7 +451,53 @@ void MainWindow::finishLoading(bool)
 {
     progress = 100;
     adjustTitle();
+
+    attachStyles();
+    attachJavascripts();
 }
+
+void MainWindow::attachJavascripts()
+{
+    if (!mainSettings->contains("attach/javascripts")) {
+        return;
+    }
+    QStringList scripts = mainSettings->value("attach/javascripts").toStringList();
+    if (!scripts.length()) {
+        return;
+    }
+    qDebug() << "Page loaded, attach" << scripts.length() << " user javascript files...";
+    QStringListIterator scriptsIterator(scripts);
+    while (scriptsIterator.hasNext()) {
+        QString file_name = scriptsIterator.next();
+        qDebug() << "-- attach " << file_name;
+        QFile f(file_name);
+        QString content = QString(f.readAll()) + " null";
+        view->page()->mainFrame()->evaluateJavaScript(content);
+    }
+}
+
+void MainWindow::attachStyles()
+{
+    if (!mainSettings->contains("attach/styles")) {
+        return;
+    }
+    QStringList styles = mainSettings->value("attach/styles").toStringList();
+    if (!styles.length()) {
+        return;
+    }
+    qDebug() << "Page loaded, attach" << styles.length() << " user style files...";
+    QStringListIterator stylesIterator(styles);
+    QString file_name;
+    while (stylesIterator.hasNext()) {
+        file_name = stylesIterator.next();
+        QFile f(file_name);
+        QString content = "<style type=\"text/css\">\n";
+        content += QString(f.readAll());
+        content += "</style>\n";
+        view->page()->mainFrame()->findFirstElement("head").appendInside(content);
+    }
+}
+
 
 void MainWindow::pageIconLoaded()
 {
