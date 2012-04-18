@@ -508,15 +508,16 @@ void MainWindow::attachStyles()
 
         finfo.setFile(file_name);
 
+        QString content;
         if (finfo.isFile()) {
             qDebug() << "-- it's local file";
             QFile f(file_name);
-            QString content = "<style type=\"text/css\">\n";
+            content = "<style type=\"text/css\">\n";
             content += QString(f.readAll());
             content += "</style>\n";
         } else {
             qDebug() << "-- it's remote file";
-            QString content = "<link type=\"text/css\" rel=\"stylesheet\" href=\"";
+            content = "<link type=\"text/css\" rel=\"stylesheet\" href=\"";
             content += file_name;
             content += "\"/>\n";
         }
