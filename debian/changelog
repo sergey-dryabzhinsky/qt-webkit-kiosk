@@ -1,3 +1,10 @@
+qt-webkit-kiosk (1.03.00) unstable; urgency=low
+
+  * Remove debug output in release build
+  * Attach user scripts and styles when page loaded
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Thu, 19 Apr 2012 00:36:00 +0400
+
 qt-webkit-kiosk (1.02.01) unstable; urgency=low
 
   * Fixed startup issue with only one command prompt parameter defined.
