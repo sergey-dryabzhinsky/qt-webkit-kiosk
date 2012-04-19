@@ -1,8 +1,10 @@
 qt-webkit-kiosk (1.03.01) unstable; urgency=low
 
   * Fixed build version number
+  * Skip empty scripts and styles attach lists
+  * User config stored in user home directory: ~/.config/QtWebkitKiosk/config.ini
 
- -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Thu, 19 Apr 2012 22:36:00 +0400
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Thu, 19 Apr 2012 23:03:00 +0400
 
 qt-webkit-kiosk (1.03.00) unstable; urgency=low
 

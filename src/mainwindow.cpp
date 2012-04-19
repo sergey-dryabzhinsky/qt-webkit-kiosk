@@ -286,10 +286,11 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 void MainWindow::loadSettings(QString ini_file)
 {
     if (!ini_file.length()) {
-        ini_file = RESOURCES"qt-webkit-kiosk.ini";
-        qDebug() << "Ini file: " << ini_file;
+        mainSettings = new QSettings(QSettings::IniFormat, QSettings::UserScope, "QtWebkitKiosk", "config", this);
+    } else {
+        mainSettings = new QSettings(ini_file, QSettings::IniFormat, this);
     }
-    mainSettings = new QSettings(ini_file, QSettings::IniFormat, this);
+    qDebug() << "Ini file: " << mainSettings->fileName();
 
     if (!mainSettings->contains("application/organization")) {
         mainSettings->setValue("application/organization", "Organization" );
@@ -471,6 +472,9 @@ void MainWindow::attachJavascripts()
     QString file_name;
     while (scriptsIterator.hasNext()) {
         file_name = scriptsIterator.next();
+
+        if (!file_name.length()) continue;
+
         qDebug() << "-- attach " << file_name;
 
         finfo.setFile(file_name);
@@ -504,6 +508,9 @@ void MainWindow::attachStyles()
     QFileInfo finfo = QFileInfo();
     while (stylesIterator.hasNext()) {
         file_name = stylesIterator.next();
+
+        if (!file_name.length()) continue;
+
         qDebug() << "-- attach " << file_name;
 
         finfo.setFile(file_name);

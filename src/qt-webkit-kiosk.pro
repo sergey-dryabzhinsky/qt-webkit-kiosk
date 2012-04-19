@@ -19,6 +19,8 @@ message( PREFIX: $${PREFIX})
 message( TARGET: $${TARGET})
 message( VERSION: $${VERSION})
 
+DEFINES += VERSION=\\\"$${VERSION}\\\"
+
 !win32 {
     ICON = $${PREFIX}/share/icons/$${TARGET}.png
     DEFINES += RESOURCES=\\\"$${PREFIX}/share/$${TARGET}/\\\"
@@ -28,7 +30,6 @@ win32 {
     ICON = ./$${TARGET}.png
     DEFINES += RESOURCES=\\\"./\\\"
     DEFINES += ICON=\\\"$${ICON}\\\"
-    DEFINES += VERSION=\\\"$${VERSION}\\\"
 }
 
 SOURCES += main.cpp\
