@@ -76,6 +76,7 @@ private:
     QSound *player;
     QSettings *mainSettings;
     QNetworkDiskCache *diskCache;
+    QWebInspector *inspector;
 
     QKeyEvent * eventExit;
 

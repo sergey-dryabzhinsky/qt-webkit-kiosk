@@ -169,6 +169,16 @@ MainWindow::MainWindow()
         mainSettings->value("browser/plugins").toBool()
     );
 
+    if (mainSettings->value("inspector/enable").toBool()) {
+        view->page()->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
+
+        inspector = new QWebInspector();
+        inspector->setVisible(mainSettings->value("inspector/visible").toBool());
+        inspector->setMinimumSize(800, 600);
+        inspector->setWindowTitle(mainSettings->value("application/name").toString() + " - WebInspector");
+        inspector->setWindowIcon(this->windowIcon());
+        inspector->setPage(view->page());
+    }
 
     // --- Disk cache --- //
     if (mainSettings->value("cache/enable").toBool()) {
@@ -271,6 +281,15 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             QApplication::exit(0);
         }
         break;
+    case Qt::Key_F12:
+        if (mainSettings->value("inspector/enable").toBool()) {
+            if (!inspector->isVisible()) {
+                inspector->setVisible(true);
+            } else {
+                inspector->setVisible(false);
+            }
+        }
+        break;
     case Qt::Key_F11:
         if (isFullScreen()) {
             showNormal();
@@ -370,6 +389,14 @@ void MainWindow::loadSettings(QString ini_file)
     }
 
 
+    if (!mainSettings->contains("inspector/enable")) {
+        mainSettings->setValue("inspector/enable", false);
+    }
+    if (!mainSettings->contains("inspector/visible")) {
+        mainSettings->setValue("inspector/visible", false);
+    }
+
+
     if (!mainSettings->contains("event-sounds/enable")) {
         mainSettings->setValue("event-sounds/enable", false);
     }
@@ -466,7 +493,7 @@ void MainWindow::attachJavascripts()
     if (!scripts.length()) {
         return;
     }
-    qDebug() << "Page loaded, attach" << scripts.length() << " user javascript files...";
+    qDebug() << "Page loaded, found" << scripts.length() << " user javascript files...";
     QStringListIterator scriptsIterator(scripts);
     QFileInfo finfo = QFileInfo();
     QString file_name;
@@ -502,7 +529,7 @@ void MainWindow::attachStyles()
     if (!styles.length()) {
         return;
     }
-    qDebug() << "Page loaded, attach" << styles.length() << " user style files...";
+    qDebug() << "Page loaded, found" << styles.length() << " user style files...";
     QStringListIterator stylesIterator(styles);
     QString file_name;
     QFileInfo finfo = QFileInfo();
