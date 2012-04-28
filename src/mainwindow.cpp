@@ -281,6 +281,15 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             QApplication::exit(0);
         }
         break;
+    case Qt::Key_R:
+        if (int(event->modifiers()) == Qt::CTRL) {
+            diskCache->clear();
+            view->reload();
+        }
+        break;
+    case Qt::Key_F5:
+        view->reload();
+        break;
     case Qt::Key_F12:
         if (mainSettings->value("inspector/enable").toBool()) {
             if (!inspector->isVisible()) {
