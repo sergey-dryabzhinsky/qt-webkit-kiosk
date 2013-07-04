@@ -374,6 +374,23 @@ AnyOption::useCommandArgs( int _argc, char **_argv )
 }
 
 void
+AnyOption::useCommandArgs( int _argc, QStringList _argv)
+{
+    // Copy input to output
+    argv = new char*[_argv.size() + 1];
+    for (int i = 0; i < _argv.size(); i++) {
+        argv[i] = new char[strlen(_argv.at(i).toStdString().c_str())+1];
+        memcpy(argv[i], _argv.at(i).toStdString().c_str(), strlen(_argv.at(i).toStdString().c_str())+1);
+    }
+    argv[_argv.size()] = ((char)NULL);
+
+    argc = _argc;
+    command_set = true;
+    appname = argv[0];
+    if(argc > 1) hasoptions = true;
+}
+
+void
 AnyOption::useFiileName( const char *_filename )
 {
 	filename = _filename;
@@ -592,6 +609,13 @@ AnyOption::processCommandArgs(int max_args)
 }
  
 void
+AnyOption::processCommandArgs(int _argc, char **_argv)
+{
+    useCommandArgs( _argc, _argv );
+    processCommandArgs();
+}
+
+void
 AnyOption::processCommandArgs( int _argc, char **_argv, int max_args )
 {
 	max_legal_args = max_args;
@@ -599,7 +623,7 @@ AnyOption::processCommandArgs( int _argc, char **_argv, int max_args )
 }
 
 void
-AnyOption::processCommandArgs( int _argc, char **_argv )
+AnyOption::processCommandArgs(int _argc, QStringList _argv)
 {
 	useCommandArgs( _argc, _argv );
 	processCommandArgs();

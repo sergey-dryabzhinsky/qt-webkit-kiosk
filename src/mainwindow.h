@@ -40,8 +40,11 @@
 ****************************************************************************/
 
 #include <QtGui>
+#include <QMainWindow>
 #include <QtNetwork>
 #include <QtWebKit>
+#include <QtPrintSupport/QPrinter>
+#include <QtWebKitWidgets/QWebInspector>
 #include "webview.h"
 #include "anyoption.h"
 
@@ -73,7 +76,6 @@ protected:
 private:
     WebView *view;
     QPrinter *printer;
-    QSound *player;
     QSettings *mainSettings;
     QNetworkDiskCache *diskCache;
     QWebInspector *inspector;

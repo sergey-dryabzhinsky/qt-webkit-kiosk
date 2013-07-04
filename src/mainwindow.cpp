@@ -46,6 +46,10 @@
 #include <QtWebKit>
 #include <QDebug>
 #include "mainwindow.h"
+#include <QStandardPaths>
+#include <QApplication>
+#include <QDesktopWidget>
+#include <QtWebKitWidgets/QWebFrame>
 
 MainWindow::MainWindow()
 {
@@ -72,7 +76,7 @@ MainWindow::MainWindow()
 
     cmdopts->setVersion(VERSION);
 
-    cmdopts->processCommandArgs( QCoreApplication::argc(), QCoreApplication::argv() );
+    cmdopts->processCommandArgs( QCoreApplication::arguments().length(), QCoreApplication::arguments() );
 
     if (cmdopts->getFlag('h') || cmdopts->getFlag("help")) {
         qDebug() << ">> Help option in command prompt...";
@@ -143,7 +147,7 @@ MainWindow::MainWindow()
     }
 
     if (!mainSettings->value("printing/show-printer-dialog").toBool()) {
-        printer = new QPrinter(QPrinter::ScreenResolution);
+        printer = new QPrinter();
         printer->setPrinterName(mainSettings->value("printing/printer").toString());
         printer->setPageMargins(
             mainSettings->value("printing/page_margin_left").toReal(),
@@ -185,7 +189,7 @@ MainWindow::MainWindow()
         diskCache = new QNetworkDiskCache(this);
         QString location = mainSettings->value("cache/location").toString();
         if (!location.length()) {
-            location = QDesktopServices::storageLocation(QDesktopServices::CacheLocation);
+            location = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
         }
         diskCache->setCacheDirectory(location);
         diskCache->setMaximumCacheSize(mainSettings->value("cache/size").toUInt());
@@ -200,7 +204,8 @@ MainWindow::MainWindow()
 
     connect(view->page(), SIGNAL(printRequested(QWebFrame*)), SLOT(printRequested(QWebFrame*)));
 
-    connect(QApplication::desktop(), SIGNAL(resized(int)), SLOT(desktopResized(int)));
+    QDesktopWidget *desktop = QApplication::desktop();
+    connect(desktop, SIGNAL(resized(int)), SLOT(desktopResized(int)));
 
     show();
 
@@ -420,7 +425,7 @@ void MainWindow::loadSettings(QString ini_file)
         mainSettings->setValue("cache/enable", false);
     }
     if (!mainSettings->contains("cache/location")) {
-        QString location = QDesktopServices::storageLocation(QDesktopServices::CacheLocation);
+        QString location = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
         QDir d = QDir(location);
         location += d.separator();
         location += mainSettings->value("application/name").toString();

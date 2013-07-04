@@ -3,9 +3,8 @@
 
 #include <QtGui>
 #include <QtWebKit>
-#include <phonon/audiooutput.h>
-#include <phonon/mediaobject.h>
-#include <phonon/backendcapabilities.h>
+#include <QtWebKitWidgets/QWebView>
+#include <qplayer.h>
 
 class WebView : public QWebView
 {
@@ -22,8 +21,7 @@ protected:
     void linkClicked(const QUrl &);
 
 private:
-    Phonon::MediaObject *mediaObject;
-    Phonon::AudioOutput *audioOutput;
+    QPlayer *player;
     QSettings *mainSettings;
 };
 

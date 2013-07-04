@@ -5,6 +5,7 @@
 #include <fstream>
 #include <stdlib.h>
 #include <string.h>
+#include <QStringList>
 
 #define COMMON_OPT 	1
 #define COMMAND_OPT 	2
@@ -56,7 +57,8 @@ public: /* the public interface */
 	 */
 
 	void useCommandArgs( int _argc, char **_argv );
-	void useFiileName( const char *_filename );
+    void useCommandArgs(int _argc, QStringList _argv );
+    void useFiileName( const char *_filename );
 
 	/* 
          * turn off the POSIX style options 
@@ -131,7 +133,8 @@ public: /* the public interface */
          */
 	void processCommandArgs( int _argc, char **_argv );
 	void processCommandArgs( int _argc, char **_argv, int max_args );
-	bool processFile( const char *_filename );
+    void processCommandArgs(int _argc, QStringList _argv );
+    bool processFile( const char *_filename );
 	
 	/*
          * get the value of the options 

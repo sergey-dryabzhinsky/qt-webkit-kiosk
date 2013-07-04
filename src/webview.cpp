@@ -6,12 +6,7 @@
 
 WebView::WebView(QWidget* parent)
 {
-    audioOutput = new Phonon::AudioOutput(Phonon::MusicCategory, this);
-    mediaObject = new Phonon::MediaObject(this);
-
-    mediaObject->setTickInterval(1000);
-
-    Phonon::createPath(mediaObject, audioOutput);
+    player = new QPlayer();
 
     this->setParent(parent);
 }
@@ -29,16 +24,7 @@ void WebView::mousePressEvent(QMouseEvent *event)
         if (mainSettings->value("event-sounds/enable").toBool()) {
             QString sound = mainSettings->value("event-sounds/window-clicked").toString();
             qDebug() << "Window Clicked! Play sound: " << sound;
-            if (sound.length()) {
-
-                mediaObject->stop();
-                mediaObject->clearQueue();
-
-                Phonon::MediaSource source(sound);
-
-                mediaObject->setCurrentSource(source);
-                mediaObject->play();
-            }
+            player->play(sound);
         }
     }
 }
@@ -49,15 +35,6 @@ void WebView::linkClicked(const QUrl &url)
     if (mainSettings->value("event-sounds/enable").toBool()) {
         QString sound = mainSettings->value("event-sounds/link-clicked").toString();
         qDebug() << "Link Clicked! Play sound: " << sound;
-        if (sound.length()) {
-
-            mediaObject->stop();
-            mediaObject->clearQueue();
-
-            Phonon::MediaSource source(sound);
-
-            mediaObject->setCurrentSource(source);
-            mediaObject->play();
-        }
+        player->play(sound);
     }
 }

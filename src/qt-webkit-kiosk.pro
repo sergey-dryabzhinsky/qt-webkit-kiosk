@@ -5,12 +5,17 @@
 #-------------------------------------------------
 
 
-QT       += core gui network webkit phonon
+QT       += core gui network webkit multimedia widgets webkitwidgets printsupport
+
+contains(QT_VERSION, ^4\\.[0-9]\\..*) {
+    message("Cannot build Qt Creator with Qt version $${QT_VERSION}.")
+    error("Use at least Qt 5.0.")
+}
 
 CONFIG += console
 TARGET = qt-webkit-kiosk
 TEMPLATE = app
-VERSION = 1.04.01
+VERSION = 1.05.01
 
 message(Qt version: $$[QT_VERSION])
 message(Qt is installed in $$[QT_INSTALL_PREFIX])
@@ -35,12 +40,14 @@ win32 {
 SOURCES += main.cpp\
     mainwindow.cpp \
     webview.cpp \
-    anyoption.cpp
+    anyoption.cpp \
+    qplayer.cpp
 
 HEADERS  += mainwindow.h \
     webview.h \
     anyoption.h \
-    config.h
+    config.h \
+    qplayer.h
 
 OTHER_FILES += \
     qt-webkit-kiosk.ini \
