@@ -412,9 +412,12 @@ void MainWindow::loadSettings(QString ini_file)
     if (!mainSettings->contains("event-sounds/window-clicked")) {
         mainSettings->setValue("event-sounds/window-clicked", RESOURCES"window-clicked.ogg");
     }
+    if (!mainSettings->contains("event-sounds/link-clicked")) {
+        mainSettings->setValue("event-sounds/link-clicked", RESOURCES"window-clicked.ogg");
+    }
 
     if (!mainSettings->contains("cache/enable")) {
-        mainSettings->setValue("cache/enable", true);
+        mainSettings->setValue("cache/enable", false);
     }
     if (!mainSettings->contains("cache/location")) {
         QString location = QDesktopServices::storageLocation(QDesktopServices::CacheLocation);
@@ -502,10 +505,10 @@ void MainWindow::attachJavascripts()
     if (!scripts.length()) {
         return;
     }
-    qDebug() << "Page loaded, found" << scripts.length() << " user javascript files...";
     QStringListIterator scriptsIterator(scripts);
     QFileInfo finfo = QFileInfo();
     QString file_name;
+    quint32 countScripts = 0;
     while (scriptsIterator.hasNext()) {
         file_name = scriptsIterator.next();
 
@@ -513,20 +516,26 @@ void MainWindow::attachJavascripts()
 
         qDebug() << "-- attach " << file_name;
 
+        countScripts++;
+
         finfo.setFile(file_name);
         if (finfo.isFile()) {
             qDebug() << "-- it's local file";
             QFile f(file_name);
-            QString content = QString(f.readAll()) + " null";
-            view->page()->mainFrame()->evaluateJavaScript(content);
+            QString content = "<script type=\"text/javascript\">";
+            content += QString(f.readAll());
+            content += "</script>\n";
+            view->page()->mainFrame()->findFirstElement("body").appendInside(content);
+            f.close();
         } else {
             qDebug() << "-- it's remote file";
             QString content = "<script type=\"text/javascript\" src=\"";
             content += file_name;
             content += "\"></script>\n";
-            view->page()->mainFrame()->findFirstElement("head").appendInside(content);
+            view->page()->mainFrame()->findFirstElement("body").appendInside(content);
         }
     }
+    qDebug() << "Page loaded, found " << countScripts << " user javascript files...";
 }
 
 void MainWindow::attachStyles()
@@ -538,16 +547,17 @@ void MainWindow::attachStyles()
     if (!styles.length()) {
         return;
     }
-    qDebug() << "Page loaded, found" << styles.length() << " user style files...";
     QStringListIterator stylesIterator(styles);
     QString file_name;
     QFileInfo finfo = QFileInfo();
+    quint32 countStyles = 0;
     while (stylesIterator.hasNext()) {
         file_name = stylesIterator.next();
 
         if (!file_name.length()) continue;
 
         qDebug() << "-- attach " << file_name;
+        countStyles++;
 
         finfo.setFile(file_name);
 
@@ -558,6 +568,7 @@ void MainWindow::attachStyles()
             content = "<style type=\"text/css\">\n";
             content += QString(f.readAll());
             content += "</style>\n";
+            f.close();
         } else {
             qDebug() << "-- it's remote file";
             content = "<link type=\"text/css\" rel=\"stylesheet\" href=\"";
@@ -566,6 +577,7 @@ void MainWindow::attachStyles()
         }
         view->page()->mainFrame()->findFirstElement("head").appendInside(content);
     }
+    qDebug() << "Page loaded, found " << countStyles << " user style files...";
 }
 
 

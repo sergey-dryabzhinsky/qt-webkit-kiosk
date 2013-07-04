@@ -28,7 +28,7 @@ void WebView::mousePressEvent(QMouseEvent *event)
         this->setFocus();
         if (mainSettings->value("event-sounds/enable").toBool()) {
             QString sound = mainSettings->value("event-sounds/window-clicked").toString();
-            qDebug() << "Clicked! Play sound: " << sound;
+            qDebug() << "Window Clicked! Play sound: " << sound;
             if (sound.length()) {
 
                 mediaObject->stop();
@@ -38,8 +38,26 @@ void WebView::mousePressEvent(QMouseEvent *event)
 
                 mediaObject->setCurrentSource(source);
                 mediaObject->play();
-
             }
+        }
+    }
+}
+
+void WebView::linkClicked(const QUrl &url)
+{
+    QWebView::linkClicked(url);
+    if (mainSettings->value("event-sounds/enable").toBool()) {
+        QString sound = mainSettings->value("event-sounds/link-clicked").toString();
+        qDebug() << "Link Clicked! Play sound: " << sound;
+        if (sound.length()) {
+
+            mediaObject->stop();
+            mediaObject->clearQueue();
+
+            Phonon::MediaSource source(sound);
+
+            mediaObject->setCurrentSource(source);
+            mediaObject->play();
         }
     }
 }

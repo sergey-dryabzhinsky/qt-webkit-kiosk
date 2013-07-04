@@ -19,6 +19,7 @@ public:
 protected:
 
     void mousePressEvent(QMouseEvent *event);
+    void linkClicked(const QUrl &);
 
 private:
     Phonon::MediaObject *mediaObject;
