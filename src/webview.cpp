@@ -92,17 +92,13 @@ QWebView *WebView::createWindow(QWebPage::WebWindowType type)
     Q_UNUSED(type);
 
     if (loader == NULL) {
-        loader = new QWebView(this);
+        loader = new FakeWebView(this);
         QWebPage *newWeb = new QWebPage(loader);
         loader->setAttribute(Qt::WA_DeleteOnClose, true);
         loader->setPage(newWeb);
 
         connect(loader, SIGNAL(urlChanged(QUrl)), SLOT(urlChanged(QUrl)));
     }
-
-    //webView->show();
-
-//    (MainWindow *)(this->parentWidget())->setCentralWidget(webview);
 
     return loader;
 }

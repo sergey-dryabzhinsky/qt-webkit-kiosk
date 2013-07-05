@@ -12,7 +12,7 @@ contains(QT_VERSION, ^4\\.[0-9]\\..*) {
     error("Use at least Qt 5.0.")
 }
 
-CONFIG += console
+# CONFIG += console
 TARGET = qt-webkit-kiosk
 TEMPLATE = app
 VERSION = 1.05.02
@@ -41,13 +41,15 @@ SOURCES += main.cpp\
     mainwindow.cpp \
     webview.cpp \
     anyoption.cpp \
-    qplayer.cpp
+    qplayer.cpp \
+    fakewebview.cpp
 
 HEADERS  += mainwindow.h \
     webview.h \
     anyoption.h \
     config.h \
-    qplayer.h
+    qplayer.h \
+    fakewebview.h
 
 OTHER_FILES += \
     qt-webkit-kiosk.ini \

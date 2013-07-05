@@ -5,6 +5,7 @@
 #include <QtWebKit>
 #include <QtWebKitWidgets/QWebView>
 #include <qplayer.h>
+#include <fakewebview.h>
 
 class WebView : public QWebView
 {
@@ -32,7 +33,7 @@ private slots:
 private:
     QPlayer *player;
     QSettings *mainSettings;
-    QWebView *loader;
+    FakeWebView *loader;
 };
 
 #endif // WEBVIEW_H
