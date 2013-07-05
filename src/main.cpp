@@ -39,19 +39,37 @@
 **
 ****************************************************************************/
 
+#include <signal.h>
 #include "mainwindow.h"
 #include <QApplication>
 #include <QWebSettings>
 
+static void unixSignalHandler(int signum) {
+    qDebug("DBG: main.cpp::unixSignalHandler(). signal = %d\n", signum);
+
+    /*
+     * Make sure your Qt application gracefully quits.
+     * NOTE - purpose for calling qApp->exit(0):
+     *      1. Forces the Qt framework's "main event loop `qApp->exec()`" to quit looping.
+     *      2. Also emits the QCoreApplication::aboutToQuit() signal. This signal is used for cleanup code.
+     */
+    qApp->exit(0);
+}
+
 int main(int argc, char * argv[])
 {
     QApplication app(argc, argv);
-    MainWindow browser;
-    browser.show();
+    MainWindow *browser = new MainWindow();
 
-    int retVal = app.exec();
+    if (signal(SIGINT, unixSignalHandler) == SIG_ERR) {
+        qFatal("ERR - %s(%d): An error occurred while setting a signal handler.\n", __FILE__,__LINE__);
+    }
+    if (signal(SIGTERM, unixSignalHandler) == SIG_ERR) {
+        qFatal("ERR - %s(%d): An error occurred while setting a signal handler.\n", __FILE__,__LINE__);
+    }
+    // executes browser.cleanupSlot() when the Qt framework emits aboutToQuit() signal.
+    QObject::connect(qApp,          SIGNAL(aboutToQuit()),
+                     browser,   SLOT(cleanupSlot()));
 
-    QWebSettings::clearMemoryCaches();
-
-    return retVal;
+    return app.exec();
 }

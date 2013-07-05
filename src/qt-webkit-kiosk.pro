@@ -15,7 +15,7 @@ contains(QT_VERSION, ^4\\.[0-9]\\..*) {
 # CONFIG += console
 TARGET = qt-webkit-kiosk
 TEMPLATE = app
-VERSION = 1.05.03
+VERSION = 1.05.04
 
 message(Qt version: $$[QT_VERSION])
 message(Qt is installed in $$[QT_INSTALL_PREFIX])
@@ -42,14 +42,16 @@ SOURCES += main.cpp\
     webview.cpp \
     anyoption.cpp \
     qplayer.cpp \
-    fakewebview.cpp
+    fakewebview.cpp \
+    cachingnm.cpp
 
 HEADERS  += mainwindow.h \
     webview.h \
     anyoption.h \
     config.h \
     qplayer.h \
-    fakewebview.h
+    fakewebview.h \
+    cachingnm.h
 
 OTHER_FILES += \
     qt-webkit-kiosk.ini \

@@ -58,7 +58,12 @@ public:
     WebView *getWebView();
     void setWebView(WebView *wv);
 
+    void clearCache();
+    void clearCacheOnExit();
+
 protected slots:
+
+    void cleanupSlot();
 
     void adjustTitle();
     void setProgress(int p);

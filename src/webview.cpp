@@ -64,8 +64,8 @@ void WebView::urlChanged(const QUrl &url)
     qDebug() << "-- load url";
 
     loader->close();
-    loader = NULL;
     qDebug() << "-- close";
+    loader = NULL;
 }
 
 QPlayer *WebView::getPlayer()
@@ -92,6 +92,7 @@ QWebView *WebView::createWindow(QWebPage::WebWindowType type)
     Q_UNUSED(type);
 
     if (loader == NULL) {
+        qDebug() << "New fake webview loader";
         loader = new FakeWebView(this);
         QWebPage *newWeb = new QWebPage(loader);
         loader->setAttribute(Qt::WA_DeleteOnClose, true);
