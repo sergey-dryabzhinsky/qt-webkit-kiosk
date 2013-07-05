@@ -55,9 +55,6 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow();
 
-    WebView *getWebView();
-    void setWebView(WebView *wv);
-
     void clearCache();
     void clearCacheOnExit();
 

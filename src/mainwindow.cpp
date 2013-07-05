@@ -72,6 +72,7 @@ MainWindow::MainWindow() : QMainWindow()
 
     cmdopts->setFlag("help", 'h');
     cmdopts->setFlag("version", 'V');
+    cmdopts->setFlag("clear-cache", 'C');
 
     cmdopts->setOption("config");
     cmdopts->setOption("uri");
@@ -273,16 +274,6 @@ MainWindow::MainWindow() : QMainWindow()
             mainSettings->value("browser/homepage").toString()
         ));
     }
-}
-
-WebView *MainWindow::getWebView()
-{
-    return view;
-}
-
-void MainWindow::setWebView(WebView *wv)
-{
-    view = wv;
 }
 
 void MainWindow::clearCache()
