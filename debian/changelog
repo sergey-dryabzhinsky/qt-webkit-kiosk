@@ -1,3 +1,13 @@
+qt-webkit-kiosk (1.05.04ubuntu1) unstable; urgency=low
+
+  * Version 1.05.04:
+  * Handle SIGTERM signals
+  * Cache cleanup on start or exit
+  * New commandline option -C
+  * Fix cache use - tune request objects
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sat, 06 Jul 2013 00:09:43 +0400
+
 qt-webkit-kiosk (1.05.03ubuntu1) unstable; urgency=low
 
   * Version 1.05.03
