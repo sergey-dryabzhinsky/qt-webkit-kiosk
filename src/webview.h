@@ -11,18 +11,28 @@ class WebView : public QWebView
     Q_OBJECT
 
 public:
-    WebView(QWidget* parent = 0);
+    explicit WebView(QWidget* parent = 0);
 
     void setSettings(QSettings *settings);
+
+    QWebView *createWindow(QWebPage::WebWindowType type);
+protected slots:
+    void linkClicked(const QUrl &);
+    void urlChanged(const QUrl &);
 
 protected:
 
     void mousePressEvent(QMouseEvent *event);
-    void linkClicked(const QUrl &);
+    QPlayer *getPlayer();
+    void playSound(QString soundSetting);
+
+private slots:
+    void handleSslErrors(QNetworkReply* reply, const QList<QSslError> &errors);
 
 private:
     QPlayer *player;
     QSettings *mainSettings;
+    QWebView *loader;
 };
 
 #endif // WEBVIEW_H

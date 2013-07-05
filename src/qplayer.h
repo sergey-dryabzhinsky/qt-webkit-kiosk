@@ -2,7 +2,6 @@
 #define QPLAYER_H
 
 #include <QtCore>
-
 #include <QtMultimedia/QMediaPlayer>
 
 class QPlayer : public QObject
@@ -10,7 +9,7 @@ class QPlayer : public QObject
     Q_OBJECT
 
 public:
-    QPlayer();
+    explicit QPlayer();
 
     void play(QString soundFile);
 

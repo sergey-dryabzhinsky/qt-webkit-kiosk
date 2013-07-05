@@ -53,12 +53,17 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow();
+    explicit MainWindow();
+
+    WebView *getWebView();
+    void setWebView(WebView *wv);
 
 protected slots:
 
     void adjustTitle();
     void setProgress(int p);
+    void startLoading();
+    void urlChanged(const QUrl &);
     void finishLoading(bool);
     void pageIconLoaded();
 

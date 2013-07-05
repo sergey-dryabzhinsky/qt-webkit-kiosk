@@ -3,11 +3,15 @@
 
 QPlayer::QPlayer()
 {
-    player = new QMediaPlayer();
+    player = NULL;
 }
 
 void QPlayer::play(QString soundFile)
 {
+    if (player == NULL) {
+        player = new QMediaPlayer();
+    }
+
     if (soundFile.length()) {
         player->stop();
         player->setMedia(QUrl::fromLocalFile(soundFile));

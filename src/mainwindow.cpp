@@ -51,7 +51,7 @@
 #include <QDesktopWidget>
 #include <QtWebKitWidgets/QWebFrame>
 
-MainWindow::MainWindow()
+MainWindow::MainWindow() : QMainWindow()
 {
     progress = 0;
 
@@ -161,20 +161,36 @@ MainWindow::MainWindow()
     // --- Web View --- //
 
     view = new WebView(this);
-    view->setSettings(mainSettings);
+    view->setAttribute(Qt::WA_DeleteOnClose, true);
 
-    view->page()->settings()->setAttribute(QWebSettings::JavascriptEnabled,
+    view->setSettings(mainSettings);
+    view->setPage(new QWebPage(view));
+
+    view->settings()->setAttribute(QWebSettings::JavascriptEnabled,
         mainSettings->value("browser/javascript").toBool()
     );
-    view->page()->settings()->setAttribute(QWebSettings::JavaEnabled,
+
+    view->settings()->setAttribute(QWebSettings::JavascriptCanOpenWindows,
+        mainSettings->value("browser/javascript_can_open_windows").toBool()
+    );
+
+    view->settings()->setAttribute(QWebSettings::JavascriptCanCloseWindows,
+        mainSettings->value("browser/javascript_can_close_windows").toBool()
+    );
+
+    view->settings()->setAttribute(QWebSettings::WebGLEnabled,
+        mainSettings->value("browser/webgl").toBool()
+    );
+
+    view->settings()->setAttribute(QWebSettings::JavaEnabled,
         mainSettings->value("browser/java").toBool()
     );
-    view->page()->settings()->setAttribute(QWebSettings::PluginsEnabled,
+    view->settings()->setAttribute(QWebSettings::PluginsEnabled,
         mainSettings->value("browser/plugins").toBool()
     );
 
     if (mainSettings->value("inspector/enable").toBool()) {
-        view->page()->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
+        view->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
 
         inspector = new QWebInspector();
         inspector->setVisible(mainSettings->value("inspector/visible").toBool());
@@ -198,6 +214,8 @@ MainWindow::MainWindow()
     }
 
     connect(view, SIGNAL(titleChanged(QString)), SLOT(adjustTitle()));
+    connect(view, SIGNAL(loadStarted()), SLOT(startLoading()));
+    connect(view, SIGNAL(urlChanged(QUrl)), SLOT(urlChanged(QUrl)));
     connect(view, SIGNAL(loadProgress(int)), SLOT(setProgress(int)));
     connect(view, SIGNAL(loadFinished(bool)), SLOT(finishLoading(bool)));
     connect(view, SIGNAL(iconChanged()), SLOT(pageIconLoaded()));
@@ -246,6 +264,16 @@ MainWindow::MainWindow()
             mainSettings->value("browser/homepage").toString()
         ));
     }
+}
+
+WebView *MainWindow::getWebView()
+{
+    return view;
+}
+
+void MainWindow::setWebView(WebView *wv)
+{
+    view = wv;
 }
 
 
@@ -395,11 +423,24 @@ void MainWindow::loadSettings(QString ini_file)
     if (!mainSettings->contains("browser/javascript")) {
         mainSettings->setValue("browser/javascript", true);
     }
+    if (!mainSettings->contains("browser/javascript_can_open_windows")) {
+        mainSettings->setValue("browser/javascript_can_open_windows", false);
+    }
+    if (!mainSettings->contains("browser/javascript_can_close_windows")) {
+        mainSettings->setValue("browser/javascript_can_close_windows", false);
+    }
+    if (!mainSettings->contains("browser/webgl")) {
+        mainSettings->setValue("browser/webgl", false);
+    }
     if (!mainSettings->contains("browser/java")) {
         mainSettings->setValue("browser/java", false);
     }
     if (!mainSettings->contains("browser/plugins")) {
         mainSettings->setValue("browser/plugins", true);
+    }
+    // Don't break on SSL errors
+    if (!mainSettings->contains("browser/ignore_ssl_errors")) {
+        mainSettings->setValue("browser/ignore_ssl_errors", true);
     }
 
 
@@ -490,6 +531,21 @@ void MainWindow::desktopResized(int p)
     } else if (mainSettings->value("view/fixed-size").toBool()) {
         centerFixedSizeWindow();
     }
+}
+
+void MainWindow::startLoading()
+{
+    progress = 0;
+    adjustTitle();
+
+    QWebSettings::clearMemoryCaches();
+
+    qDebug() << "Start loading page: " << view->url().toString();
+}
+
+void MainWindow::urlChanged(const QUrl &url)
+{
+    qDebug() << "URL changes: " << url.toString();
 }
 
 void MainWindow::finishLoading(bool)
