@@ -1,3 +1,12 @@
+qt-webkit-kiosk (1.05.05ubuntu1) unstable; urgency=low
+
+  * Version 1.05.05:
+  * Merged changes from 1.04.04
+  * + Fix segfault on exit
+  * + Disable printing by default
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sat, 06 Jul 2013 03:31:42 +0400
+
 qt-webkit-kiosk (1.05.04ubuntu1) unstable; urgency=low
 
   * Version 1.05.04:
