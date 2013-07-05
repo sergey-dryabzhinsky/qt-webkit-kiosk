@@ -12,10 +12,10 @@ contains(QT_VERSION, ^4\\.[0-9]\\..*) {
     error("Use at least Qt 5.0.")
 }
 
-# CONFIG += console
+CONFIG += console
 TARGET = qt-webkit-kiosk
 TEMPLATE = app
-VERSION = 1.05.04
+VERSION = 1.05.05
 
 message(Qt version: $$[QT_VERSION])
 message(Qt is installed in $$[QT_INSTALL_PREFIX])
