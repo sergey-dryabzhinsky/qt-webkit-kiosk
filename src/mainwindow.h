@@ -69,8 +69,6 @@ protected slots:
     void finishLoading(bool);
     void pageIconLoaded();
 
-    void printRequested(QWebFrame *wf);
-
     void desktopResized(int p);
 
 protected:
@@ -82,7 +80,6 @@ protected:
 
 private:
     WebView *view;
-    QPrinter *printer;
     QSettings *mainSettings;
     QNetworkDiskCache *diskCache;
     QWebInspector *inspector;

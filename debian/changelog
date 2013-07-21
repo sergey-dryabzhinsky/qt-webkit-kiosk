@@ -1,3 +1,11 @@
+qt-webkit-kiosk (1.05.06ubuntu1) unstable; urgency=low
+
+  * Version 1.05.06:
+  * + Fix handle link click and sound play
+  * + Fix handle window.close()
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sat, 06 Jul 2013 03:31:42 +0400
+
 qt-webkit-kiosk (1.05.05ubuntu1) unstable; urgency=low
 
   * Version 1.05.05:

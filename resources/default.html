@@ -22,8 +22,9 @@ vertical-align:middle;
 <p>This is your kiosk browser, written in Qt/C++ & WebKit!</p>
 <hr/>
 <p>Check <a href="#">link click</a> sound.</p>
-<p>Check <a href="#" onclick="window.print();">print</a> via Javascript</p>
-<p>Try <a href="#" onclick="window.close();">Close window</a> with Javascript.</p>
+<p>Check <a href="#" onclick="window.print(); return false;">print</a> via Javascript</p>
+<p>Try <a href="#" onclick="window.close(); return false;">Close window</a> via Javascript (tag a).</p>
+<p>Try <button onclick="window.close();">Close window</button> via Javascript (tag button).</p>
 <p>Fullscreen mode switched by &lt;F11&gt;</p>
 <p>Toggle Developer Tools by &lt;F12&gt; if enabled</p>
 <p>To reload page press &lt;F5&gt;</p>

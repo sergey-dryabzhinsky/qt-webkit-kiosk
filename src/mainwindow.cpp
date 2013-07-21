@@ -150,20 +150,6 @@ MainWindow::MainWindow() : QMainWindow()
         }
     }
 
-    if (mainSettings->value("printing/enable").toBool()) {
-        if (!mainSettings->value("printing/show-printer-dialog").toBool()) {
-            printer = new QPrinter();
-            printer->setPrinterName(mainSettings->value("printing/printer").toString());
-            printer->setPageMargins(
-                mainSettings->value("printing/page_margin_left").toReal(),
-                mainSettings->value("printing/page_margin_top").toReal(),
-                mainSettings->value("printing/page_margin_right").toReal(),
-                mainSettings->value("printing/page_margin_bottom").toReal(),
-                QPrinter::Millimeter
-            );
-        }
-    }
-
     // --- Web View --- //
 
     view = new WebView(this);
@@ -228,12 +214,10 @@ MainWindow::MainWindow() : QMainWindow()
 
     connect(view, SIGNAL(titleChanged(QString)), SLOT(adjustTitle()));
     connect(view, SIGNAL(loadStarted()), SLOT(startLoading()));
-    connect(view, SIGNAL(urlChanged(QUrl)), SLOT(urlChanged(QUrl)));
+    connect(view, SIGNAL(urlChanged(const QUrl &)), SLOT(urlChanged(const QUrl &)));
     connect(view, SIGNAL(loadProgress(int)), SLOT(setProgress(int)));
     connect(view, SIGNAL(loadFinished(bool)), SLOT(finishLoading(bool)));
     connect(view, SIGNAL(iconChanged()), SLOT(pageIconLoaded()));
-
-    connect(view->page(), SIGNAL(printRequested(QWebFrame*)), SLOT(printRequested(QWebFrame*)));
 
     QDesktopWidget *desktop = QApplication::desktop();
     connect(desktop, SIGNAL(resized(int)), SLOT(desktopResized(int)));
@@ -254,29 +238,7 @@ MainWindow::MainWindow() : QMainWindow()
         centerFixedSizeWindow();
     }
 
-    QFileInfo finfo = QFileInfo();
-    finfo.setFile(mainSettings->value("browser/homepage").toString());
-
-    qDebug() << "Homepage: like file = " <<
-                mainSettings->value("browser/homepage").toString() <<
-                ", absolute path = " <<
-                finfo.absoluteFilePath() <<
-                ", local uri = " <<
-                QUrl::fromLocalFile(
-                    mainSettings->value("browser/homepage").toString()
-                ).toString();
-
-    if (finfo.isFile()) {
-        qDebug() << "Homepage: Local FILE!";
-        view->load(QUrl::fromLocalFile(
-            finfo.absoluteFilePath()
-        ));
-    } else {
-        qDebug() << "Homepage: Remote URI!";
-        view->load(QUrl(
-            mainSettings->value("browser/homepage").toString()
-        ));
-    }
+    view->loadHomepage();
 }
 
 void MainWindow::clearCache()
@@ -472,6 +434,10 @@ void MainWindow::loadSettings(QString ini_file)
     // Don't break on SSL errors
     if (!mainSettings->contains("browser/ignore_ssl_errors")) {
         mainSettings->setValue("browser/ignore_ssl_errors", true);
+    }
+    // Show default homepage if window closed by javascript
+    if (!mainSettings->contains("browser/show_homepage_on_window_close")) {
+        mainSettings->setValue("browser/show_homepage_on_window_close", true);
     }
 
 
@@ -687,15 +653,4 @@ void MainWindow::attachStyles()
 void MainWindow::pageIconLoaded()
 {
     setWindowIcon(view->icon());
-}
-
-void MainWindow::printRequested(QWebFrame *wf)
-{
-    if (mainSettings->value("printing/enable").toBool()) {
-        if (!mainSettings->value("printing/show-printer-dialog").toBool()) {
-            if (printer->printerState() != QPrinter::Error) {
-                wf->print(printer);
-            }
-        }
-    }
 }
