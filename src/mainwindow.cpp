@@ -552,6 +552,9 @@ void MainWindow::startLoading()
 void MainWindow::urlChanged(const QUrl &url)
 {
     qDebug() << "URL changes: " << url.toString();
+
+    // This is real link clicked
+    view->playSound("event-sounds/link-clicked");
 }
 
 void MainWindow::finishLoading(bool)

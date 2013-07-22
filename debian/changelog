@@ -1,10 +1,18 @@
+qt-webkit-kiosk (1.05.07ubuntu1) unstable; urgency=low
+
+  * Version 1.05.07:
+  * + Fix handle link click and sound play
+  * + New sounds
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Mon, 22 Jul 2013 22:57:00 +0400
+
 qt-webkit-kiosk (1.05.06ubuntu1) unstable; urgency=low
 
   * Version 1.05.06:
   * + Fix handle link click and sound play
   * + Fix handle window.close()
 
- -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sat, 06 Jul 2013 03:31:42 +0400
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sun, 21 Jul 2013 23:05:00 +0400
 
 qt-webkit-kiosk (1.05.05ubuntu1) unstable; urgency=low
 

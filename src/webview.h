@@ -26,7 +26,6 @@ public:
     void playSound(QString soundSetting);
 
 public slots:
-    void handleLinkClicked(const QUrl &);
     void handlePrintRequested(QWebFrame *);
     void handleUrlChanged(const QUrl &);
 

@@ -31,12 +31,6 @@ void WebView::initSignals()
             this,
             SLOT(handleWindowCloseRequested()));
 
-    page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
-    connect(page(),
-            SIGNAL(linkClicked(const QUrl &)),
-            this,
-            SLOT(handleLinkClicked(const QUrl &)));
-
     connect(page(),
             SIGNAL(printRequested(QWebFrame*)),
             this,
@@ -161,8 +155,14 @@ void WebView::playSound(QString soundSetting)
 {
     if (getPlayer() != NULL) {
         QString sound = mainSettings->value(soundSetting).toString();
-        qDebug() << "Play sound: " << sound;
-        getPlayer()->play(sound);
+        QFileInfo finfo = QFileInfo();
+        finfo.setFile(sound);
+        if (finfo.exists()) {
+            qDebug() << "Play sound: " << sound;
+            getPlayer()->play(sound);
+        } else {
+            qDebug() << "Sound file" << sound << "not found!";
+        }
     }
 }
 
@@ -181,13 +181,6 @@ QWebView *WebView::createWindow(QWebPage::WebWindowType type)
     }
 
     return loader;
-}
-
-void WebView::handleLinkClicked(const QUrl &url)
-{
-    qDebug() << "Handle linkClicked: " << url.toString();
-    playSound("event-sounds/link-clicked");
-    load(url);
 }
 
 void WebView::handlePrintRequested(QWebFrame *wf)
