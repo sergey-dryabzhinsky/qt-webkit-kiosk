@@ -1,10 +1,10 @@
 #ifndef WEBVIEW_H
 #define WEBVIEW_H
 
-#include <QtGui>
 #include <QtWebKit>
 #include <QtWebKitWidgets/QWebView>
 #include <QtWebKitWidgets/QWebFrame>
+#include <QPrinter>
 #include <qplayer.h>
 #include <fakewebview.h>
 
