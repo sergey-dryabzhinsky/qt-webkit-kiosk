@@ -19,7 +19,9 @@ desktop.path = $${PREFIX}/share/applications
 config.files = resources/qt-webkit-kiosk.ini
 config.path = $${PREFIX}/share/qt-webkit-kiosk
 
-sound.files = resources/window-clicked.wav resources/window-clicked.ogg
+sound.files = \
+    resources/window-clicked.wav resources/window-clicked.ogg resources/window-clicked.mp3 \
+    resources/link-clicked.wav resources/link-clicked.ogg resources/link-clicked.mp3
 sound.path = $${PREFIX}/share/qt-webkit-kiosk
 
 html.files = resources/default.html

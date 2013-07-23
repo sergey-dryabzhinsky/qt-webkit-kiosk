@@ -1,3 +1,10 @@
+qt-webkit-kiosk (1.05.08ubuntu1) unstable; urgency=low
+
+  * Version 1.05.08:
+  * Qt project files clean up and fix
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Thu, 23 Jul 2013 10:46:00 +0400
+
 qt-webkit-kiosk (1.05.07ubuntu1) unstable; urgency=low
 
   * Version 1.05.07:
