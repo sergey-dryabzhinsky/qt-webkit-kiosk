@@ -2,7 +2,7 @@
 Name=QtWebkitKiosk
 Comment=Simple browser with kiosk mode
 Exec=qt-webkit-kiosk
-Categories=Internet;
+Categories=Network;WebBrowser;
 Icon=qt-webkit-kiosk
 Type=Application
 Terminal=false
