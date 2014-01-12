@@ -1,3 +1,11 @@
+qt-webkit-kiosk (1.05.09ubuntu1) unstable; urgency=low
+
+  * Version 1.05.09:
+    + Add startup delay for window resize and page load
+    + Add minimum window size options
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sun, 12 Jan 2014 21:16:00 +0400
+
 qt-webkit-kiosk (1.05.08ubuntu1) unstable; urgency=low
 
   * Version 1.05.08:

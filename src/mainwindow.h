@@ -70,6 +70,9 @@ protected slots:
 
     void desktopResized(int p);
 
+    void delayedWindowResize();
+    void delayedPageLoad();
+
 protected:
 
     void centerFixedSizeWindow();

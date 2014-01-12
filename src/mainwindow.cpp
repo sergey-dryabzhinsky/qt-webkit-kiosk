@@ -106,6 +106,18 @@ MainWindow::MainWindow() : QMainWindow()
         return;
     }
 
+    setMinimumWidth(320);
+    setMinimumHeight(200);
+
+    quint16 minimalWidth = mainSettings->value("view/minimal-width").toUInt();
+    quint16 minimalHeight = mainSettings->value("view/minimal-height").toUInt();
+    if (minimalWidth) {
+        setMinimumWidth(minimalWidth);
+    }
+    if (minimalHeight) {
+        setMinimumHeight(minimalHeight);
+    }
+
     qDebug() << "Application icon: " << mainSettings->value("application/icon").toString();
     setWindowIcon(QIcon(
        mainSettings->value("application/icon").toString()
@@ -228,7 +240,25 @@ MainWindow::MainWindow() : QMainWindow()
 
     view->page()->view()->setFocusPolicy(Qt::StrongFocus);
     view->setFocusPolicy(Qt::StrongFocus);
+
+    int delay_resize = 0;
+    if (mainSettings->value("view/startup_resize_delayed").toBool()) {
+        delay_resize = mainSettings->value("view/startup_resize_delay").toInt();
+    }
+    QTimer::singleShot(delay_resize, this, SLOT(delayedWindowResize()));
+
+    int delay_load = 0;
+    if (mainSettings->value("browser/startup_load_delayed").toBool()) {
+        delay_load = mainSettings->value("browser/startup_load_delay").toInt();
+    }
+    QTimer::singleShot(delay_load, this, SLOT(delayedPageLoad()));
+
+}
+
+void MainWindow::delayedWindowResize()
+{
     this->setFocusPolicy(Qt::StrongFocus);
+    this->focusWidget();
 
     if (mainSettings->value("view/fullscreen").toBool()) {
         showFullScreen();
@@ -237,7 +267,10 @@ MainWindow::MainWindow() : QMainWindow()
     } else if (mainSettings->value("view/fixed-size").toBool()) {
         centerFixedSizeWindow();
     }
+}
 
+void MainWindow::delayedPageLoad()
+{
     view->loadHomepage();
 }
 
@@ -399,6 +432,12 @@ void MainWindow::loadSettings(QString ini_file)
     if (!mainSettings->contains("view/fixed-height")) {
         mainSettings->setValue("view/fixed-height", 600);
     }
+    if (!mainSettings->contains("view/minimal-width")) {
+        mainSettings->setValue("view/minimal-width", 320);
+    }
+    if (!mainSettings->contains("view/minimal-height")) {
+        mainSettings->setValue("view/minimal-height", 200);
+    }
     if (!mainSettings->contains("view/fixed-centered")) {
         mainSettings->setValue("view/fixed-centered", true);
     }
@@ -407,6 +446,13 @@ void MainWindow::loadSettings(QString ini_file)
     }
     if (!mainSettings->contains("view/fixed-y")) {
         mainSettings->setValue("view/fixed-y", 0);
+    }
+
+    if (!mainSettings->contains("view/startup_resize_delayed")) {
+        mainSettings->setValue("view/startup_resize_delayed", false);
+    }
+    if (!mainSettings->contains("view/startup_resize_delay")) {
+        mainSettings->setValue("view/startup_resize_delay", 2000);
     }
 
 
@@ -438,6 +484,13 @@ void MainWindow::loadSettings(QString ini_file)
     // Show default homepage if window closed by javascript
     if (!mainSettings->contains("browser/show_homepage_on_window_close")) {
         mainSettings->setValue("browser/show_homepage_on_window_close", true);
+    }
+
+    if (!mainSettings->contains("browser/startup_load_delayed")) {
+        mainSettings->setValue("browser/startup_load_delayed", false);
+    }
+    if (!mainSettings->contains("browser/startup_load_delay")) {
+        mainSettings->setValue("browser/startup_load_delay", 100);
     }
 
 
