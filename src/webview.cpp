@@ -213,7 +213,7 @@ void WebView::scrollPageDown()
 void WebView::scrollEnd()
 {
     QWebFrame* frame = this->page()->mainFrame();
-    frame->setScrollPosition(QPoint(0, frame->scrollBarMaximum(Qt::Vertical)));
+    frame->setScrollPosition(QPoint(0, frame->contentsSize().height()));
 }
 
 void WebView::scrollUp()

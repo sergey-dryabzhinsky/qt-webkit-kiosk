@@ -1,3 +1,10 @@
+qt-webkit-kiosk (1.05.11ubuntu1) unstable; urgency=low
+
+  * Version 1.05.11:
+    + Fix scroll to the bottom of page
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sat, 18 Jan 2014 19:02:00 +0400
+
 qt-webkit-kiosk (1.05.10ubuntu1) unstable; urgency=low
 
   * Version 1.05.10:
