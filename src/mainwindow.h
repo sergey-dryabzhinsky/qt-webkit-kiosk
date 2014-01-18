@@ -78,10 +78,12 @@ protected:
     void centerFixedSizeWindow();
     void attachJavascripts();
     void attachStyles();
+    bool hideScrollbars();
     void keyPressEvent(QKeyEvent *event);
 
 private:
     WebView *view;
+
     QSettings *mainSettings;
     QNetworkDiskCache *diskCache;
     QWebInspector *inspector;
@@ -91,6 +93,7 @@ private:
     AnyOption *cmdopts;
 
     int progress;
+    bool isScrollBarsHidden;
 
     void loadSettings(QString ini_file);
 };

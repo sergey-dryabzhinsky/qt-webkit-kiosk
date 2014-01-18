@@ -27,7 +27,7 @@ sound.path = $${PREFIX}/share/qt-webkit-kiosk
 html.files = resources/default.html
 html.path = $${PREFIX}/share/qt-webkit-kiosk
 
-doc.files = doc/lgpl.html
+doc.files = doc/lgpl.html doc/README.md
 doc.path = $${PREFIX}/share/doc/qt-webkit-kiosk
 
 INSTALLS += target desktop config sound html doc

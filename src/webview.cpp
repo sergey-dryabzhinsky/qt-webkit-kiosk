@@ -195,3 +195,44 @@ void WebView::handlePrintRequested(QWebFrame *wf)
         }
     }
 }
+
+void WebView::scrollDown()
+{
+    QWebFrame* frame = this->page()->mainFrame();
+    QPoint point = frame->scrollPosition();
+    frame->setScrollPosition(point + QPoint(0, 100));
+}
+
+void WebView::scrollPageDown()
+{
+    QWebFrame* frame = this->page()->mainFrame();
+    QPoint point = frame->scrollPosition();
+    frame->setScrollPosition(point + QPoint(0, this->page()->mainFrame()->geometry().height()));
+}
+
+void WebView::scrollEnd()
+{
+    QWebFrame* frame = this->page()->mainFrame();
+    frame->setScrollPosition(QPoint(0, frame->scrollBarMaximum(Qt::Vertical)));
+}
+
+void WebView::scrollUp()
+{
+    QWebFrame* frame = this->page()->mainFrame();
+    QPoint point = frame->scrollPosition();
+    frame->setScrollPosition(point - QPoint(0, 100));
+}
+
+void WebView::scrollPageUp()
+{
+    QWebFrame* frame = this->page()->mainFrame();
+    QPoint point = frame->scrollPosition();
+    frame->setScrollPosition(point - QPoint(0, this->page()->mainFrame()->geometry().height()));
+}
+
+void WebView::scrollHome()
+{
+    QWebFrame* frame = this->page()->mainFrame();
+    frame->setScrollPosition(QPoint(0, 0));
+}
+

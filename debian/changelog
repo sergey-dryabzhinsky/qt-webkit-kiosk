@@ -1,3 +1,14 @@
+qt-webkit-kiosk (1.05.10ubuntu1) unstable; urgency=low
+
+  * Version 1.05.10:
+    + Add new hotkeys for page scrolling
+    + Add new options:
+      - hide scroll bars
+      - window on top
+      - disable hotkeys
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sat, 18 Jan 2014 17:45:00 +0400
+
 qt-webkit-kiosk (1.05.09ubuntu1) unstable; urgency=low
 
   * Version 1.05.09:

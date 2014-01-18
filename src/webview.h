@@ -29,6 +29,14 @@ public slots:
     void handlePrintRequested(QWebFrame *);
     void handleUrlChanged(const QUrl &);
 
+    // http://slow-tone.blogspot.com/2011/04/qt-hide-scrollbars-qwebview.html?showComment=1318404188431#c5258624438625837585
+    void scrollUp();
+    void scrollDown();
+    void scrollPageUp();
+    void scrollPageDown();
+    void scrollHome();
+    void scrollEnd();
+
 protected:
     void mousePressEvent(QMouseEvent *event);
     QPlayer *getPlayer();
