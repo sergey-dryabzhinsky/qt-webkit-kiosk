@@ -503,6 +503,10 @@ void MainWindow::loadSettings(QString ini_file)
         mainSettings->setValue("view/stay_on_top", false);
     }
 
+    if (!mainSettings->contains("view/disable_selection")) {
+        mainSettings->setValue("view/disable_selection", true);
+    }
+
 
     if (!mainSettings->contains("browser/homepage")) {
         mainSettings->setValue("browser/homepage", RESOURCES"default.html");
@@ -631,10 +635,15 @@ void MainWindow::setProgress(int p)
     progress = p;
     adjustTitle();
 
+    qDebug() << "Loading progress: " << p;
+
     // 1. Hide scrollbars (and add some styles)
     // If there complete head and body start loaded...
     if (!isScrollBarsHidden) {
         isScrollBarsHidden = hideScrollbars();
+    }
+    if (!isSelectionDisabled) {
+        isSelectionDisabled = disableSelection();
     }
 }
 
@@ -654,6 +663,8 @@ void MainWindow::startLoading()
 {
     progress = 0;
     isScrollBarsHidden = false;
+    isSelectionDisabled = false;
+
     adjustTitle();
 
     QWebSettings::clearMemoryCaches();
@@ -680,6 +691,9 @@ void MainWindow::finishLoading(bool)
     if (!isScrollBarsHidden) {
         isScrollBarsHidden = hideScrollbars();
     }
+    if (!isSelectionDisabled) {
+        isSelectionDisabled = disableSelection();
+    }
     // 2. Add more styles which can override previous styles...
     attachStyles();
     attachJavascripts();
@@ -691,11 +705,53 @@ void MainWindow::finishLoading(bool)
  */
 bool MainWindow::hideScrollbars()
 {
-    qDebug() << "Try to hide scrollbars if needed...";
-
     if (mainSettings->value("view/hide_scrollbars").toBool()) {
+        qDebug() << "Try to hide scrollbars...";
+
         view->page()->mainFrame()->setScrollBarPolicy( Qt::Vertical, Qt::ScrollBarAlwaysOff );
         view->page()->mainFrame()->setScrollBarPolicy( Qt::Horizontal, Qt::ScrollBarAlwaysOff );
+    }
+
+    return true;
+}
+
+bool MainWindow::disableSelection()
+{
+    if (mainSettings->value("view/disable_selection").toBool()) {
+        qDebug() << "Try to disable text selection...";
+
+        // Then webkit loads page and it's "empty" - empty html DOM loaded...
+        // So we wait before real page DOM loaded...
+        QWebElement bodyElem = view->page()->mainFrame()->findFirstElement("body");
+        if (!bodyElem.isNull() && !bodyElem.firstChild().isNull()) {
+            QWebElement headElem = view->page()->mainFrame()->findFirstElement("head");
+            if (headElem.isNull() || headElem.toPlainText() == "") {
+                return false;
+            }
+
+            qDebug() << "... head element content:\n" << headElem.toInnerXml();
+
+            // http://stackoverflow.com/a/5313735
+            QString content;
+            content = "<style type=\"text/css\">\n";
+            content += "body, div, p, span, h1, h2, h3, h4, h5, h6, caption, td {\n";
+            content += " -moz-user-select: none;\n";
+            content += " -khtml-user-select: none;\n";
+            content += " -webkit-user-select: none;\n";
+            content += " user-select: none;\n";
+            content += " }\n";
+            content += "</style>\n";
+
+            // Ugly hack, but it's works...
+            headElem.setInnerXml(headElem.toInnerXml() + content);
+
+            headElem = view->page()->mainFrame()->findFirstElement("head");
+            qDebug() << "... head element content after:\n" << headElem.toInnerXml() ;
+
+        } else {
+            qDebug() << "... html body not loaded ... wait...";
+            return false;
+        }
     }
 
     return true;
@@ -714,6 +770,10 @@ void MainWindow::attachJavascripts()
     QFileInfo finfo = QFileInfo();
     QString file_name;
     quint32 countScripts = 0;
+
+    QWebElement bodyElem = view->page()->mainFrame()->findFirstElement("body");
+    QString content = "";
+
     while (scriptsIterator.hasNext()) {
         file_name = scriptsIterator.next();
 
@@ -723,23 +783,26 @@ void MainWindow::attachJavascripts()
 
         countScripts++;
 
+
         finfo.setFile(file_name);
         if (finfo.isFile()) {
             qDebug() << "-- it's local file";
             QFile f(file_name);
-            QString content = "<script type=\"text/javascript\">";
+            content += "\n<script type=\"text/javascript\">";
             content += QString(f.readAll());
             content += "</script>\n";
-            view->page()->mainFrame()->findFirstElement("body").appendInside(content);
             f.close();
         } else {
             qDebug() << "-- it's remote file";
-            QString content = "<script type=\"text/javascript\" src=\"";
+            content += "\n<script type=\"text/javascript\" src=\"";
             content += file_name;
             content += "\"></script>\n";
-            view->page()->mainFrame()->findFirstElement("body").appendInside(content);
         }
     }
+    if (countScripts > 0 && content.length() > 0) {
+        bodyElem.setInnerXml(bodyElem.toInnerXml() + content);
+    }
+
     qDebug() << "Page loaded, found " << countScripts << " user javascript files...";
 }
 
@@ -756,6 +819,10 @@ void MainWindow::attachStyles()
     QString file_name;
     QFileInfo finfo = QFileInfo();
     quint32 countStyles = 0;
+
+    QWebElement headElem = view->page()->mainFrame()->findFirstElement("head");
+    QString content = "";
+
     while (stylesIterator.hasNext()) {
         file_name = stylesIterator.next();
 
@@ -766,22 +833,25 @@ void MainWindow::attachStyles()
 
         finfo.setFile(file_name);
 
-        QString content;
         if (finfo.isFile()) {
             qDebug() << "-- it's local file";
             QFile f(file_name);
-            content = "<style type=\"text/css\">\n";
+            content += "\n<style type=\"text/css\">\n";
             content += QString(f.readAll());
             content += "</style>\n";
             f.close();
         } else {
             qDebug() << "-- it's remote file";
-            content = "<link type=\"text/css\" rel=\"stylesheet\" href=\"";
+            content += "\n<link type=\"text/css\" rel=\"stylesheet\" href=\"";
             content += file_name;
             content += "\"/>\n";
         }
-        view->page()->mainFrame()->findFirstElement("head").appendInside(content);
     }
+
+    if (countStyles > 0 && content.length() > 0) {
+        headElem.setInnerXml(headElem.toInnerXml() + content);
+    }
+
     qDebug() << "Page loaded, found " << countStyles << " user style files...";
 }
 

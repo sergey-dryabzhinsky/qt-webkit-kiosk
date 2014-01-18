@@ -15,7 +15,7 @@ contains(QT_VERSION, ^4\\.[0-9]\\..*) {
 CONFIG += console
 TARGET = qt-webkit-kiosk
 TEMPLATE = app
-VERSION = 1.05.11
+VERSION = 1.05.12
 
 message(Qt version: $$[QT_VERSION])
 message(Qt is installed in $$[QT_INSTALL_PREFIX])

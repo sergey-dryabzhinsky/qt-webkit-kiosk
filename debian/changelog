@@ -1,3 +1,11 @@
+qt-webkit-kiosk (1.05.12sergey1) unstable; urgency=low
+
+  * Version 1.05.12:
+    + Fix styles and scripts inserting into page after it's loaded
+    + Add option to disable text selection
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sat, 18 Jan 2014 21:44:00 +0400
+
 qt-webkit-kiosk (1.05.11ubuntu1) unstable; urgency=low
 
   * Version 1.05.11:
