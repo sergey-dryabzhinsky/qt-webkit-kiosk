@@ -163,8 +163,27 @@ MainWindow::MainWindow() : QMainWindow()
     }
 
     // --- Web View --- //
-
     view = new WebView(this);
+
+    // --- Progress Bar --- //
+    loadProgress = new QProgressBar(view);
+    loadProgress->setContentsMargins(2, 2, 2, 2);
+    loadProgress->setMinimumWidth(100);
+    loadProgress->setMinimumHeight(16);
+    loadProgress->setFixedHeight(16);
+    loadProgress->setAutoFillBackground(true);
+    QPalette palette = this->palette();
+    palette.setColor(QPalette::Window, QColor(255,255,255,63));
+    loadProgress->setPalette(palette);
+
+    // Do not work... Need Layout...
+    loadProgress->setAlignment(Qt::AlignTop);
+    loadProgress->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+    loadProgress->hide();
+
+    setCentralWidget(view);
+
     view->setSettings(mainSettings);
     view->setPage(new QWebPage(view));
 
@@ -235,8 +254,6 @@ MainWindow::MainWindow() : QMainWindow()
     connect(desktop, SIGNAL(resized(int)), SLOT(desktopResized(int)));
 
     show();
-
-    setCentralWidget(view);
 
     view->page()->view()->setFocusPolicy(Qt::StrongFocus);
     view->setFocusPolicy(Qt::StrongFocus);
@@ -507,6 +524,14 @@ void MainWindow::loadSettings(QString ini_file)
         mainSettings->setValue("view/disable_selection", true);
     }
 
+    if (!mainSettings->contains("view/show_load_progress")) {
+        mainSettings->setValue("view/show_load_progress", true);
+    }
+
+    if (!mainSettings->contains("view/page_scale")) {
+        mainSettings->setValue("view/page_scale", 1.0);
+    }
+
 
     if (!mainSettings->contains("browser/homepage")) {
         mainSettings->setValue("browser/homepage", RESOURCES"default.html");
@@ -630,23 +655,6 @@ void MainWindow::adjustTitle()
     }
 }
 
-void MainWindow::setProgress(int p)
-{
-    progress = p;
-    adjustTitle();
-
-    qDebug() << "Loading progress: " << p;
-
-    // 1. Hide scrollbars (and add some styles)
-    // If there complete head and body start loaded...
-    if (!isScrollBarsHidden) {
-        isScrollBarsHidden = hideScrollbars();
-    }
-    if (!isSelectionDisabled) {
-        isSelectionDisabled = disableSelection();
-    }
-}
-
 void MainWindow::desktopResized(int p)
 {
     qDebug() << "Desktop resized event: " << p;
@@ -669,12 +677,45 @@ void MainWindow::startLoading()
 
     QWebSettings::clearMemoryCaches();
 
+    if (mainSettings->value("view/show_load_progress").toBool()) {
+        loadProgress->show();
+    }
+
+    if (mainSettings->contains("view/page_scale")) {
+        view->page()->mainFrame()->setZoomFactor(mainSettings->value("view/page_scale").toReal());
+    }
+
     qDebug() << "Start loading...";
+}
+
+void MainWindow::setProgress(int p)
+{
+    progress = p;
+    adjustTitle();
+
+    qDebug() << "Loading progress: " << p;
+
+    if (mainSettings->value("view/show_load_progress").toBool()) {
+        loadProgress->setValue(p);
+    }
+
+    // 1. Hide scrollbars (and add some styles)
+    // If there complete head and body start loaded...
+    if (!isScrollBarsHidden) {
+        isScrollBarsHidden = hideScrollbars();
+    }
+    if (!isSelectionDisabled) {
+        isSelectionDisabled = disableSelection();
+    }
 }
 
 void MainWindow::urlChanged(const QUrl &url)
 {
     qDebug() << "URL changes: " << url.toString();
+
+    // Where is a real change in webframe! Drop flags.
+    isScrollBarsHidden = false;
+    isSelectionDisabled = false;
 
     // This is real link clicked
     view->playSound("event-sounds/link-clicked");
@@ -686,6 +727,10 @@ void MainWindow::finishLoading(bool)
 
     progress = 100;
     adjustTitle();
+
+    if (mainSettings->value("view/show_load_progress").toBool()) {
+        loadProgress->hide();
+    }
 
     // 1. Hide scrollbars (and add some styles)
     if (!isScrollBarsHidden) {
@@ -723,13 +768,14 @@ bool MainWindow::disableSelection()
         // Then webkit loads page and it's "empty" - empty html DOM loaded...
         // So we wait before real page DOM loaded...
         QWebElement bodyElem = view->page()->mainFrame()->findFirstElement("body");
-        if (!bodyElem.isNull() && !bodyElem.firstChild().isNull()) {
+        if (!bodyElem.isNull() && !bodyElem.toInnerXml().trimmed().isEmpty()) {
             QWebElement headElem = view->page()->mainFrame()->findFirstElement("head");
-            if (headElem.isNull() || headElem.toPlainText() == "") {
+            if (headElem.isNull() || headElem.toInnerXml().trimmed().isEmpty()) {
+                qDebug() << "... html head not loaded ... wait...";
                 return false;
             }
 
-            qDebug() << "... head element content:\n" << headElem.toInnerXml();
+            //qDebug() << "... head element content:\n" << headElem.toInnerXml();
 
             // http://stackoverflow.com/a/5313735
             QString content;
@@ -743,10 +789,15 @@ bool MainWindow::disableSelection()
             content += "</style>\n";
 
             // Ugly hack, but it's works...
-            headElem.setInnerXml(headElem.toInnerXml() + content);
+            if (!headElem.toInnerXml().contains(content)) {
+                headElem.setInnerXml(headElem.toInnerXml() + content);
+                qDebug() << "... html head loaded ... hack inserted...";
+            } else {
+                qDebug() << "... html head loaded ... hack already inserted...";
+            }
 
-            headElem = view->page()->mainFrame()->findFirstElement("head");
-            qDebug() << "... head element content after:\n" << headElem.toInnerXml() ;
+            //headElem = view->page()->mainFrame()->findFirstElement("head");
+            //qDebug() << "... head element content after:\n" << headElem.toInnerXml() ;
 
         } else {
             qDebug() << "... html body not loaded ... wait...";
@@ -777,7 +828,7 @@ void MainWindow::attachJavascripts()
     while (scriptsIterator.hasNext()) {
         file_name = scriptsIterator.next();
 
-        if (!file_name.length()) continue;
+        if (!file_name.trimmed().length()) continue;
 
         qDebug() << "-- attach " << file_name;
 
@@ -799,11 +850,11 @@ void MainWindow::attachJavascripts()
             content += "\"></script>\n";
         }
     }
-    if (countScripts > 0 && content.length() > 0) {
+    if (countScripts > 0 && content.trimmed().length() > 0) {
         bodyElem.setInnerXml(bodyElem.toInnerXml() + content);
-    }
 
-    qDebug() << "Page loaded, found " << countScripts << " user javascript files...";
+        qDebug() << "Page loaded, found " << countScripts << " user javascript files...";
+    }
 }
 
 void MainWindow::attachStyles()
@@ -826,7 +877,7 @@ void MainWindow::attachStyles()
     while (stylesIterator.hasNext()) {
         file_name = stylesIterator.next();
 
-        if (!file_name.length()) continue;
+        if (!file_name.trimmed().length()) continue;
 
         qDebug() << "-- attach " << file_name;
         countStyles++;
@@ -848,11 +899,11 @@ void MainWindow::attachStyles()
         }
     }
 
-    if (countStyles > 0 && content.length() > 0) {
+    if (countStyles > 0 && content.trimmed().length() > 0) {
         headElem.setInnerXml(headElem.toInnerXml() + content);
-    }
 
-    qDebug() << "Page loaded, found " << countStyles << " user style files...";
+        qDebug() << "Page loaded, found " << countStyles << " user style files...";
+    }
 }
 
 

@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include <QtGui>
+#include <QProgressBar>
 #include <QMainWindow>
 #include <QtNetwork>
 #include <QtWebKit>
@@ -83,7 +84,8 @@ protected:
     void keyPressEvent(QKeyEvent *event);
 
 private:
-    WebView *view;
+    WebView *view;                      // Webkit Page View
+    QProgressBar *loadProgress;         // progress bar to display page loading
 
     QSettings *mainSettings;
     QNetworkDiskCache *diskCache;
