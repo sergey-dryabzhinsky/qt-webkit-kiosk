@@ -5,7 +5,7 @@ qt-webkit-kiosk (1.05.13sergey1) unstable; urgency=low
     + Add page load indication with progress bar
     + Add option to scale pages
 
- -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sat, 18 Jan 2014 21:44:00 +0400
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sun, 19 Jan 2014 19:15:00 +0400
 
 qt-webkit-kiosk (1.05.12sergey1) unstable; urgency=low
 
