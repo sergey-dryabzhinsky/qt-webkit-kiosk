@@ -7,15 +7,19 @@
 
 QT       += core gui network webkit multimedia widgets webkitwidgets printsupport
 
-contains(QT_VERSION, ^4\\.[0-9]\\..*) {
-    message("Cannot build Qt Creator with Qt version $${QT_VERSION}.")
-    error("Use at least Qt 5.0.")
-}
-
 CONFIG += console
 TARGET = qt-webkit-kiosk
 TEMPLATE = app
-VERSION = 1.05.13
+VERSION = 1.05.14
+
+CONFIG(debug, debug|release) {
+# here comes debug specific statements
+    message(Debug build)
+} else {
+# here comes release specific statements
+    CONFIG -= debug
+    DEFINES += QT_NO_DEBUG_OUTPUT
+}
 
 message(Qt version: $$[QT_VERSION])
 message(Qt is installed in $$[QT_INSTALL_PREFIX])
@@ -43,7 +47,9 @@ SOURCES += main.cpp\
     anyoption.cpp \
     qplayer.cpp \
     fakewebview.cpp \
-    cachingnm.cpp
+    cachingnm.cpp \
+    unixsignals.cpp \
+    socketpair.cpp
 
 HEADERS  += mainwindow.h \
     webview.h \
@@ -51,7 +57,9 @@ HEADERS  += mainwindow.h \
     config.h \
     qplayer.h \
     fakewebview.h \
-    cachingnm.h
+    cachingnm.h \
+    unixsignals.h \
+    socketpair.h
 
 # INSTALL
 

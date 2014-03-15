@@ -41,6 +41,7 @@
 
 #include "config.h"
 
+#include <signal.h>
 #include <QtGui>
 #include <QtNetwork>
 #include <QtWebKit>
@@ -50,7 +51,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QtWebKitWidgets/QWebFrame>
-#include <cachingnm.h>
+#include "cachingnm.h"
 
 MainWindow::MainWindow() : QMainWindow()
 {
@@ -58,53 +59,31 @@ MainWindow::MainWindow() : QMainWindow()
     diskCache = NULL;
     mainSettings = NULL;
 
-    cmdopts = new AnyOption();
-    //cmdopts->setVerbose();
+    handler = new UnixSignals(this);
+    connect(handler, SIGNAL(sigBREAK()), this, SLOT(unixSignalQuit()));
+    connect(handler, SIGNAL(sigTERM()), this, SLOT(unixSignalQuit()));
+    connect(handler, SIGNAL(sigINT()), this, SLOT(unixSignalQuit()));
 
-    cmdopts->addUsage("This is a simple web-browser working in fullscreen kiosk-mode.");
-    cmdopts->addUsage("");
-    cmdopts->addUsage("Usage: ");
-    cmdopts->addUsage("");
-    cmdopts->addUsage(" --help -h                       Print usage and exit");
-    cmdopts->addUsage(" --version -V                    Print version and exit");
-    cmdopts->addUsage(" --config options.ini            Configuration INI-file");
-    cmdopts->addUsage(" --uri http://www.example.com/   Open this URI");
-    cmdopts->addUsage(" --clear-cache -C                Clear cached request data");
-    cmdopts->addUsage("");
+    delayedResize = new QTimer();
+    delayedLoad = new QTimer();
+}
 
-    cmdopts->setFlag("help", 'h');
-    cmdopts->setFlag("version", 'V');
-    cmdopts->setFlag("clear-cache", 'C');
-
-    cmdopts->setOption("config");
-    cmdopts->setOption("uri");
-
-    cmdopts->setVersion(VERSION);
-
-    cmdopts->processCommandArgs( QCoreApplication::arguments().length(), QCoreApplication::arguments() );
+void MainWindow::init(AnyOption *opts)
+{
+    cmdopts = opts;
 
     if (cmdopts->getValue("config")) {
-        qDebug() << ">> Config option in command prompt...";
+        qDebug(">> Config option in command prompt...");
         loadSettings(QString(cmdopts->getValue("config")));
     } else {
         loadSettings(QString(""));
     }
 
-    if (cmdopts->getFlag('h') || cmdopts->getFlag("help")) {
-        qDebug() << ">> Help option in command prompt...";
-        cmdopts->printUsage();
-        eventExit = new QKeyEvent( QEvent::KeyPress, Qt::Key_Q, Qt::ControlModifier, "Exit", 0 );
-        QCoreApplication::postEvent( this, eventExit );
-        return;
+    if (mainSettings->value("signals/enable").toBool()) {
+        connect(handler, SIGNAL(sigUSR1()), this, SLOT(unixSignalUsr1()));
+        connect(handler, SIGNAL(sigUSR2()), this, SLOT(unixSignalUsr2()));
     }
-
-    if (cmdopts->getFlag('V') || cmdopts->getFlag("version")) {
-        qDebug() << ">> Version option in command prompt...";
-        cmdopts->printVersion();
-        eventExit = new QKeyEvent( QEvent::KeyPress, Qt::Key_Q, Qt::ControlModifier, "Exit", 0 );
-        QCoreApplication::postEvent( this, eventExit );
-        return;
-    }
+    handler->start();
 
     setMinimumWidth(320);
     setMinimumHeight(200);
@@ -124,7 +103,7 @@ MainWindow::MainWindow() : QMainWindow()
     ));
 
     if (cmdopts->getValue("uri")) {
-        qDebug() << ">> Uri option in command prompt...";
+        qDebug(">> Uri option in command prompt...");
         mainSettings->setValue("browser/homepage", cmdopts->getValue("uri"));
     }
 
@@ -200,7 +179,7 @@ MainWindow::MainWindow() : QMainWindow()
         if (mainSettings->value("cache/clear-on-start").toBool()) {
             diskCache->clear();
         }
-        if (cmdopts->getFlag('C') || cmdopts->getFlag("clear-cache")) {
+        else if (cmdopts->getFlag('C') || cmdopts->getFlag("clear-cache")) {
             diskCache->clear();
         }
 
@@ -262,13 +241,13 @@ MainWindow::MainWindow() : QMainWindow()
     if (mainSettings->value("view/startup_resize_delayed").toBool()) {
         delay_resize = mainSettings->value("view/startup_resize_delay").toInt();
     }
-    QTimer::singleShot(delay_resize, this, SLOT(delayedWindowResize()));
+    delayedResize->singleShot(delay_resize, this, SLOT(delayedWindowResize()));
 
     int delay_load = 0;
     if (mainSettings->value("browser/startup_load_delayed").toBool()) {
         delay_load = mainSettings->value("browser/startup_load_delay").toInt();
     }
-    QTimer::singleShot(delay_load, this, SLOT(delayedPageLoad()));
+    delayedLoad->singleShot(delay_load, this, SLOT(delayedPageLoad()));
 
 }
 
@@ -317,7 +296,7 @@ void MainWindow::clearCacheOnExit()
 
 void MainWindow::cleanupSlot()
 {
-    qDebug() << "Cleanup Slot (application exit)";
+    qDebug("Cleanup Slot (application exit)");
     clearCacheOnExit();
     QWebSettings::clearMemoryCaches();
 }
@@ -575,6 +554,17 @@ void MainWindow::loadSettings(QString ini_file)
     }
 
 
+    if (!mainSettings->contains("signals/enable")) {
+        mainSettings->setValue("signals/enable", true);
+    }
+    if (!mainSettings->contains("signals/SIGUSR1")) {
+        mainSettings->setValue("signals/SIGUSR1", "");
+    }
+    if (!mainSettings->contains("signals/SIGUSR2")) {
+        mainSettings->setValue("signals/SIGUSR2", "");
+    }
+
+
     if (!mainSettings->contains("inspector/enable")) {
         mainSettings->setValue("inspector/enable", false);
     }
@@ -685,7 +675,7 @@ void MainWindow::startLoading()
         view->page()->mainFrame()->setZoomFactor(mainSettings->value("view/page_scale").toReal());
     }
 
-    qDebug() << "Start loading...";
+    qDebug("Start loading...");
 }
 
 void MainWindow::setProgress(int p)
@@ -723,7 +713,7 @@ void MainWindow::urlChanged(const QUrl &url)
 
 void MainWindow::finishLoading(bool)
 {
-    qDebug() << "Finish loading...";
+    qDebug("Finish loading...");
 
     progress = 100;
     adjustTitle();
@@ -751,7 +741,7 @@ void MainWindow::finishLoading(bool)
 bool MainWindow::hideScrollbars()
 {
     if (mainSettings->value("view/hide_scrollbars").toBool()) {
-        qDebug() << "Try to hide scrollbars...";
+        qDebug("Try to hide scrollbars...");
 
         view->page()->mainFrame()->setScrollBarPolicy( Qt::Vertical, Qt::ScrollBarAlwaysOff );
         view->page()->mainFrame()->setScrollBarPolicy( Qt::Horizontal, Qt::ScrollBarAlwaysOff );
@@ -763,7 +753,7 @@ bool MainWindow::hideScrollbars()
 bool MainWindow::disableSelection()
 {
     if (mainSettings->value("view/disable_selection").toBool()) {
-        qDebug() << "Try to disable text selection...";
+        qDebug("Try to disable text selection...");
 
         // Then webkit loads page and it's "empty" - empty html DOM loaded...
         // So we wait before real page DOM loaded...
@@ -771,7 +761,7 @@ bool MainWindow::disableSelection()
         if (!bodyElem.isNull() && !bodyElem.toInnerXml().trimmed().isEmpty()) {
             QWebElement headElem = view->page()->mainFrame()->findFirstElement("head");
             if (headElem.isNull() || headElem.toInnerXml().trimmed().isEmpty()) {
-                qDebug() << "... html head not loaded ... wait...";
+                qDebug("... html head not loaded ... wait...");
                 return false;
             }
 
@@ -791,16 +781,16 @@ bool MainWindow::disableSelection()
             // Ugly hack, but it's works...
             if (!headElem.toInnerXml().contains(content)) {
                 headElem.setInnerXml(headElem.toInnerXml() + content);
-                qDebug() << "... html head loaded ... hack inserted...";
+                qDebug("... html head loaded ... hack inserted...");
             } else {
-                qDebug() << "... html head loaded ... hack already inserted...";
+                qDebug("... html head loaded ... hack already inserted...");
             }
 
             //headElem = view->page()->mainFrame()->findFirstElement("head");
             //qDebug() << "... head element content after:\n" << headElem.toInnerXml() ;
 
         } else {
-            qDebug() << "... html body not loaded ... wait...";
+            qDebug("... html body not loaded ... wait...");
             return false;
         }
     }
@@ -837,14 +827,14 @@ void MainWindow::attachJavascripts()
 
         finfo.setFile(file_name);
         if (finfo.isFile()) {
-            qDebug() << "-- it's local file";
+            qDebug("-- it's local file");
             QFile f(file_name);
             content += "\n<script type=\"text/javascript\">";
             content += QString(f.readAll());
             content += "</script>\n";
             f.close();
         } else {
-            qDebug() << "-- it's remote file";
+            qDebug("-- it's remote file");
             content += "\n<script type=\"text/javascript\" src=\"";
             content += file_name;
             content += "\"></script>\n";
@@ -885,14 +875,14 @@ void MainWindow::attachStyles()
         finfo.setFile(file_name);
 
         if (finfo.isFile()) {
-            qDebug() << "-- it's local file";
+            qDebug("-- it's local file");
             QFile f(file_name);
             content += "\n<style type=\"text/css\">\n";
             content += QString(f.readAll());
             content += "</style>\n";
             f.close();
         } else {
-            qDebug() << "-- it's remote file";
+            qDebug("-- it's remote file");
             content += "\n<link type=\"text/css\" rel=\"stylesheet\" href=\"";
             content += file_name;
             content += "\"/>\n";
@@ -910,4 +900,60 @@ void MainWindow::attachStyles()
 void MainWindow::pageIconLoaded()
 {
     setWindowIcon(view->icon());
+}
+
+// ----------------------- SIGNALS -----------------------------
+
+/**
+ * Force quit on Unix SIGTERM or SIGINT signals
+ * @brief MainWindow::unixSignalQuit
+ */
+void MainWindow::unixSignalQuit()
+{
+    // No cache clean - quick exit
+    qDebug(">> Quit Signal catched. Exiting...");
+    QApplication::exit(0);
+}
+
+/**
+ * Do something on Unix SIGUSR1 signal
+ * Usualy:
+ *  1. Reload config and load home page URI
+ *  2. If option 'signals/SIGUSR1' defined and not empty - try to load defined URI
+ *
+ * @brief MainWindow::unixSignalUsr1
+ */
+void MainWindow::unixSignalUsr1()
+{
+    if (mainSettings->contains("signals/SIGUSR1") && !mainSettings->value("signals/SIGUSR1").toString().isEmpty()) {
+        qDebug(">> SIGUSR1 >> Load URI from config file...");
+        view->loadCustomPage(mainSettings->value("signals/SIGUSR1").toString());
+    } else {
+        qDebug(">> SIGUSR1 >> Load config file...");
+        if (cmdopts->getValue("config")) {
+            loadSettings(QString(cmdopts->getValue("config")));
+        } else {
+            loadSettings(QString(""));
+        }
+        view->loadHomepage();
+    }
+}
+
+/**
+ * Do something on Unix SIGUSR2 signal
+ * Usualy:
+ *  1. Load home page URI
+ *  2. If option 'signals/SIGUSR2' defined and not empty - try to load defined URI
+ *
+ * @brief MainWindow::unixSignalUsr2
+ */
+void MainWindow::unixSignalUsr2()
+{
+    if (mainSettings->contains("signals/SIGUSR2") && !mainSettings->value("signals/SIGUSR2").toString().isEmpty()) {
+        qDebug(">> SIGUSR2 >> Load URI from config file...");
+        view->loadCustomPage(mainSettings->value("signals/SIGUSR2").toString());
+    } else {
+        qDebug(">> SIGUSR2 >> Load homepage URI...");
+        view->loadHomepage();
+    }
 }

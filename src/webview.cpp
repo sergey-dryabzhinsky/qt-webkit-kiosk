@@ -50,7 +50,9 @@ void WebView::setSettings(QSettings *settings)
 
     if (mainSettings->value("printing/enable").toBool()) {
         if (!mainSettings->value("printing/show-printer-dialog").toBool()) {
-            printer = new QPrinter();
+            if (!printer) {
+                printer = new QPrinter();
+            }
             printer->setPrinterName(mainSettings->value("printing/printer").toString());
             printer->setPageMargins(
                 mainSettings->value("printing/page_margin_left").toReal(),
@@ -66,28 +68,33 @@ void WebView::setSettings(QSettings *settings)
 
 void WebView::loadHomepage()
 {
-    QFileInfo finfo = QFileInfo();
-    finfo.setFile(mainSettings->value("browser/homepage").toString());
+    loadCustomPage(mainSettings->value("browser/homepage").toString());
+}
 
-    qDebug() << "Homepage: like file = " <<
-                mainSettings->value("browser/homepage").toString() <<
+void WebView::loadCustomPage(QString uri)
+{
+    QFileInfo finfo = QFileInfo();
+    finfo.setFile(uri);
+
+    qDebug() << "Page: check local file = " <<
+                uri <<
                 ", absolute path = " <<
                 finfo.absoluteFilePath() <<
                 ", local uri = " <<
                 QUrl::fromLocalFile(
-                    mainSettings->value("browser/homepage").toString()
+                    uri
                 ).toString();
 
     if (finfo.isFile()) {
-        qDebug() << "Homepage: Local FILE!";
+        qDebug() << "Page: Local FILE";
+        this->stop();
         this->load(QUrl::fromLocalFile(
             finfo.absoluteFilePath()
         ));
     } else {
-        qDebug() << "Homepage: Remote URI!";
-        this->load(QUrl(
-            mainSettings->value("browser/homepage").toString()
-        ));
+        qDebug() << "Page: Remote URI";
+        this->stop();
+        this->load(QUrl(uri));
     }
 }
 
@@ -134,13 +141,16 @@ void WebView::handleUrlChanged(const QUrl &url)
     if (this->url().toString() != url.toString()) {
         qDebug() << "url Changed!" << url.toString();
 
+        this->stop();
         this->load(url);
         qDebug() << "-- load url";
     }
 
-    loader->close();
-    qDebug() << "-- close loader";
-    loader = NULL;
+    if (loader) {
+        loader->close();
+        qDebug() << "-- close loader";
+        loader = NULL;
+    }
 }
 
 QPlayer *WebView::getPlayer()

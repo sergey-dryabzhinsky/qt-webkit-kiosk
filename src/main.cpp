@@ -1,17 +1,10 @@
 /****************************************************************************
 **
-** Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies).
+** Copyright (C) 2011 Sergey Dryabzhinsky
 ** All rights reserved.
-** Contact: Nokia Corporation (qt-info@nokia.com)
+** Contact: Sergey Dryabzhinsky (sergey.dryabzhinsky@gmail.com)
 **
 ** This file is part of the examples of the Qt Toolkit.
-**
-** $QT_BEGIN_LICENSE:LGPL$
-** Commercial Usage
-** Licensees holding valid Qt Commercial licenses may use this file in
-** accordance with the Qt Commercial License Agreement provided with the
-** Software or, alternatively, in accordance with the terms contained in
-** a written agreement between you and Nokia.
 **
 ** GNU Lesser General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU Lesser
@@ -39,33 +32,61 @@
 **
 ****************************************************************************/
 
-#include <signal.h>
 #include "mainwindow.h"
 #include <QApplication>
+#include "anyoption.h"
 
-static void unixSignalHandler(int signum) {
-    qDebug("DBG: main.cpp::unixSignalHandler(). signal = %d\n", signum);
+bool launch(AnyOption *cmdopts)
+{
+    cmdopts->addUsage("This is a simple web-browser working in fullscreen kiosk-mode.");
+    cmdopts->addUsage("");
+    cmdopts->addUsage("Usage: ");
+    cmdopts->addUsage("");
+    cmdopts->addUsage(" --help -h                       Print usage and exit");
+    cmdopts->addUsage(" --version -v                    Print version and exit");
+    cmdopts->addUsage(" --config options.ini            Configuration INI-file");
+    cmdopts->addUsage(" --uri http://www.example.com/   Open this URI, home page");
+    cmdopts->addUsage(" --clear-cache -C                Clear cached request data");
+    cmdopts->addUsage("");
 
-    /*
-     * Make sure your Qt application gracefully quits.
-     * NOTE - purpose for calling qApp->exit(0):
-     *      1. Forces the Qt framework's "main event loop `qApp->exec()`" to quit looping.
-     *      2. Also emits the QCoreApplication::aboutToQuit() signal. This signal is used for cleanup code.
-     */
-    qApp->exit(0);
+    cmdopts->setFlag("help", 'h');
+    cmdopts->setFlag("version", 'v');
+    cmdopts->setFlag("clear-cache", 'C');
+
+    cmdopts->setOption("config");
+    cmdopts->setOption("uri");
+
+    cmdopts->setVersion(VERSION);
+
+    cmdopts->processCommandArgs( QCoreApplication::arguments().length(), QCoreApplication::arguments() );
+
+    if (cmdopts->getFlag('h') || cmdopts->getFlag("help")) {
+        qDebug(">> Help option in command prompt...");
+        cmdopts->printUsage();
+        return false;
+    }
+
+    if (cmdopts->getFlag('v') || cmdopts->getFlag("version")) {
+        qDebug(">> Version option in command prompt...");
+        cmdopts->printVersion();
+        return false;
+    }
+
+    return true;
 }
 
 int main(int argc, char * argv[])
 {
     QApplication app(argc, argv);
-    MainWindow *browser = new MainWindow();
 
-    if (signal(SIGINT, unixSignalHandler) == SIG_ERR) {
-        qFatal("ERR - %s(%d): An error occurred while setting a signal handler.\n", __FILE__,__LINE__);
+    AnyOption *cmdopts = new AnyOption();
+    if (!launch(cmdopts)) {
+        return 0;
     }
-    if (signal(SIGTERM, unixSignalHandler) == SIG_ERR) {
-        qFatal("ERR - %s(%d): An error occurred while setting a signal handler.\n", __FILE__,__LINE__);
-    }
+
+    MainWindow *browser = new MainWindow();
+    browser->init(cmdopts);
+
     // executes browser.cleanupSlot() when the Qt framework emits aboutToQuit() signal.
     QObject::connect(qApp,          SIGNAL(aboutToQuit()),
                      browser,   SLOT(cleanupSlot()));
