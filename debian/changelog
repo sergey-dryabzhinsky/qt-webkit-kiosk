@@ -1,3 +1,12 @@
+qt-webkit-kiosk (1.05.14-1sergey1) unstable; urgency=low
+
+  * Version 1.05.14:
+    + Update project build files
+    + Rewrite unix signal handling
+    + Add confguration options for actions on USR1 and USR2 signals
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sun, 16 Mar 2014 01:34:00 +0400
+
 qt-webkit-kiosk (1.05.13sergey1) unstable; urgency=low
 
   * Version 1.05.13:
