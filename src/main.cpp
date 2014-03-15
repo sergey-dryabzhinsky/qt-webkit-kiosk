@@ -32,8 +32,8 @@
 **
 ****************************************************************************/
 
-#include "mainwindow.h"
 #include <QApplication>
+#include "mainwindow.h"
 #include "anyoption.h"
 
 bool launch(AnyOption *cmdopts)
