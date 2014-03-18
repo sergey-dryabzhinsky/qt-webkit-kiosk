@@ -1,3 +1,11 @@
+qt-webkit-kiosk (1.05.15-1sergey1) unstable; urgency=low
+
+  * Version 1.05.15:
+    + Merge changes from 1.4.11
+      - Fixed signal handling - use socketpair for every listening signal...
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Web, 19 Mar 2014 02:20:00 +0400
+
 qt-webkit-kiosk (1.05.14-1sergey1) unstable; urgency=low
 
   * Version 1.05.14:
