@@ -59,10 +59,11 @@ MainWindow::MainWindow() : QMainWindow()
     diskCache = NULL;
     mainSettings = NULL;
 
-    handler = new UnixSignals(this);
-    connect(handler, SIGNAL(sigBREAK()), this, SLOT(unixSignalQuit()));
-    connect(handler, SIGNAL(sigTERM()), this, SLOT(unixSignalQuit()));
-    connect(handler, SIGNAL(sigINT()), this, SLOT(unixSignalQuit()));
+    handler = new UnixSignals();
+    connect(handler, SIGNAL(sigBREAK()), SLOT(unixSignalQuit()));
+    connect(handler, SIGNAL(sigTERM()), SLOT(unixSignalQuit()));
+    connect(handler, SIGNAL(sigINT()), SLOT(unixSignalQuit()));
+    connect(handler, SIGNAL(sigHUP()), SLOT(unixSignalHup()));
 
     delayedResize = new QTimer();
     delayedLoad = new QTimer();
@@ -72,16 +73,20 @@ void MainWindow::init(AnyOption *opts)
 {
     cmdopts = opts;
 
-    if (cmdopts->getValue("config")) {
+    if (cmdopts->getValue("config") || cmdopts->getValue('c')) {
         qDebug(">> Config option in command prompt...");
-        loadSettings(QString(cmdopts->getValue("config")));
+        QString cfgPath = cmdopts->getValue('c');
+        if (cfgPath.isEmpty()) {
+            cfgPath = cmdopts->getValue("config");
+        }
+        loadSettings(cfgPath);
     } else {
         loadSettings(QString(""));
     }
 
     if (mainSettings->value("signals/enable").toBool()) {
-        connect(handler, SIGNAL(sigUSR1()), this, SLOT(unixSignalUsr1()));
-        connect(handler, SIGNAL(sigUSR2()), this, SLOT(unixSignalUsr2()));
+        connect(handler, SIGNAL(sigUSR1()), SLOT(unixSignalUsr1()));
+        connect(handler, SIGNAL(sigUSR2()), SLOT(unixSignalUsr2()));
     }
     handler->start();
 
@@ -102,9 +107,13 @@ void MainWindow::init(AnyOption *opts)
        mainSettings->value("application/icon").toString()
     ));
 
-    if (cmdopts->getValue("uri")) {
+    if (cmdopts->getValue("uri") || cmdopts->getValue('u')) {
         qDebug(">> Uri option in command prompt...");
-        mainSettings->setValue("browser/homepage", cmdopts->getValue("uri"));
+        QString uri = cmdopts->getValue('u');
+        if (uri.isEmpty()) {
+            uri = cmdopts->getValue("uri");
+        }
+        mainSettings->setValue("browser/homepage", uri);
     }
 
     QCoreApplication::setOrganizationName(
@@ -297,6 +306,7 @@ void MainWindow::clearCacheOnExit()
 void MainWindow::cleanupSlot()
 {
     qDebug("Cleanup Slot (application exit)");
+    handler->stop();
     clearCacheOnExit();
     QWebSettings::clearMemoryCaches();
 }
@@ -916,6 +926,27 @@ void MainWindow::unixSignalQuit()
 }
 
 /**
+ * Do something on Unix SIGHUP signal
+ * Usualy:
+ *  1. Reload config
+ *
+ * @brief MainWindow::unixSignalHup
+ */
+void MainWindow::unixSignalHup()
+{
+    if (cmdopts->getValue("config") || cmdopts->getValue('c')) {
+        qDebug(">> Config option in command prompt...");
+        QString cfgPath = cmdopts->getValue('c');
+        if (cfgPath.isEmpty()) {
+            cfgPath = cmdopts->getValue("config");
+        }
+        loadSettings(cfgPath);
+    } else {
+        loadSettings(QString(""));
+    }
+}
+
+/**
  * Do something on Unix SIGUSR1 signal
  * Usualy:
  *  1. Reload config and load home page URI
@@ -930,8 +961,13 @@ void MainWindow::unixSignalUsr1()
         view->loadCustomPage(mainSettings->value("signals/SIGUSR1").toString());
     } else {
         qDebug(">> SIGUSR1 >> Load config file...");
-        if (cmdopts->getValue("config")) {
-            loadSettings(QString(cmdopts->getValue("config")));
+        if (cmdopts->getValue("config") || cmdopts->getValue('c')) {
+            qDebug(">> Config option in command prompt...");
+            QString cfgPath = cmdopts->getValue('c');
+            if (cfgPath.isEmpty()) {
+                cfgPath = cmdopts->getValue("config");
+            }
+            loadSettings(cfgPath);
         } else {
             loadSettings(QString(""));
         }

@@ -1,6 +1,10 @@
 #ifndef SOCKETPAIR_H
 #define SOCKETPAIR_H
 
+/**
+ * Unix socketpair function emulation
+ */
+
 #include <QObject>
 #include <QTcpSocket>
 #include <QTcpServer>

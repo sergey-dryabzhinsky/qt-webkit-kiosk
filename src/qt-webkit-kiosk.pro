@@ -10,7 +10,7 @@ QT       += core gui network webkit multimedia widgets webkitwidgets printsuppor
 CONFIG += console
 TARGET = qt-webkit-kiosk
 TEMPLATE = app
-VERSION = 1.05.14
+VERSION = 1.05.15
 
 CONFIG(debug, debug|release) {
 # here comes debug specific statements

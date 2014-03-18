@@ -80,6 +80,8 @@ protected slots:
 
     // TERM or INT - Quit from App
     void unixSignalQuit();
+    // HUP - Reload config
+    void unixSignalHup();
     // USR1 - Reload config and back to homepage, or load page from config
     void unixSignalUsr1();
     // USR2 - Back to homepage, or load page from config
