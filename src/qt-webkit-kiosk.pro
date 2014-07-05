@@ -38,8 +38,13 @@ PLAYER = NONE
     DEFINES += RESOURCES=\\\"$${PREFIX}/share/$${TARGET}/\\\"
     DEFINES += ICON=\\\"$${ICON}\\\"
 
+    PKG_TEST=QtTest
+
 contains(QT_VERSION, ^5\\.[0-9]\\..*) {
-    packagesExist(QtMultimedia QtMultimedia4 Qt5Multimedia) {
+
+    PKG_TEST=Qt5Test
+
+    packagesExist(Qt5Multimedia) {
         message('Multimedia framework found. Using Multimedia-player.')
         DEFINES += PLAYER_MULTIMEDIA
         QT += multimedia
@@ -48,8 +53,9 @@ contains(QT_VERSION, ^5\\.[0-9]\\..*) {
         HEADERS += player/multimedia.h
     }
 }
+
     contains(PLAYER, NONE) {
-        packagesExist(phonon phonon4) {
+        packagesExist(phonon) {
             message('Phonon framework found. Using Phonon-player.')
             DEFINES += PLAYER_PHONON
             QT += phonon
@@ -58,7 +64,8 @@ contains(QT_VERSION, ^5\\.[0-9]\\..*) {
             HEADERS += player/phonon.h
         }
     }
-    packagesExist(QtTest QtTest4 Qt5Test) {
+
+    packagesExist($${PKG_TEST}) {
         message('Test framework found.')
         DEFINES += USE_TESTLIB
         QT += testlib
