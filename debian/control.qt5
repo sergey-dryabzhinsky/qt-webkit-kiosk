@@ -8,7 +8,7 @@ Homepage: https://code.google.com/p/qt-webkit-kiosk/
 
 Package: qt-webkit-kiosk
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, phonon-backend-gstreamer
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: It's one-window browser writen on Qt5 & QtWebkit
  This is simple browser written on Qt5 & QtWebkit.
  Usualy runing in fullscreen mode, but supports maximized and fixed size window mode.

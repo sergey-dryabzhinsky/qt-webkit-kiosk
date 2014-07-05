@@ -7,4 +7,5 @@ QPlayer::QPlayer()
 
 void QPlayer::play(QString soundFile)
 {
+    Q_UNUSED(soundFile);
 }

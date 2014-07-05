@@ -855,9 +855,6 @@ void MainWindow::attachJavascripts()
     QString file_name;
     quint32 countScripts = 0;
 
-    QWebElement bodyElem = view->page()->mainFrame()->findFirstElement("body");
-    QString content = "";
-
     while (scriptsIterator.hasNext()) {
         file_name = scriptsIterator.next();
 
@@ -910,9 +907,6 @@ void MainWindow::attachStyles()
     QString file_name;
     QFileInfo finfo = QFileInfo();
     quint32 countStyles = 0;
-
-    QWebElement headElem = view->page()->mainFrame()->findFirstElement("head");
-    QString content = "";
 
     while (stylesIterator.hasNext()) {
         file_name = stylesIterator.next();

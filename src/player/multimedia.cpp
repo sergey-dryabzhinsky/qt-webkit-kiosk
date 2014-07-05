@@ -1,5 +1,5 @@
 #include "config.h"
-#include "qplayer.h"
+#include "multimedia.h"
 
 QPlayer::QPlayer()
 {
