@@ -1,3 +1,9 @@
+qt-webkit-kiosk (1.99.2-1sergey1) unstable; urgency=medium
+
+  * Fixed dependencies checks for *nix
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sun, 06 Jul 2014 01:16:15 +0400
+
 qt-webkit-kiosk (1.99.1-1sergey1) unstable; urgency=medium
 
   * Version 1.99.1
