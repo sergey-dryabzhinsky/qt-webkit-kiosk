@@ -23,13 +23,7 @@ public:
 
     static void signalHandler(int number);
 
-    // QSocketNotifier suck...
-    static SocketPair spBREAK;
-    static SocketPair spTERM;
-    static SocketPair spHUP;
-    static SocketPair spINT;
-    static SocketPair spUSR1;
-    static SocketPair spUSR2;
+    static SocketPair sockPair;
 
 Q_SIGNALS:
     void sigBREAK();
@@ -40,21 +34,10 @@ Q_SIGNALS:
     void sigUSR2();
 
 private slots:
-    void handleSigBREAK();
-    void handleSigTERM();
-    void handleSigHUP();
-    void handleSigINT();
-    void handleSigUSR1();
-    void handleSigUSR2();
+    void handleSig(QByteArray);
 
 private:
-
-    QSocketNotifier *mNotifierBREAK;
-    QSocketNotifier *mNotifierTERM;
-    QSocketNotifier *mNotifierHUP;
-    QSocketNotifier *mNotifierINT;
-    QSocketNotifier *mNotifierUSR1;
-    QSocketNotifier *mNotifierUSR2;
+    void handleSignal(int);
 };
 
 #endif // UNIXSIGNALS_H

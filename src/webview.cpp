@@ -1,12 +1,16 @@
 #include "config.h"
 
+#include <QtDebug>
 #include <QtGui>
 #include <QtWebKit>
 #include "webview.h"
+#include <signal.h>
+#include "unixsignals.h"
+
+#ifdef QT5
 #include <QNetworkReply>
-#include <QtDebug>
 #include <QSslError>
-#include "mainwindow.h"
+#endif
 
 
 WebView::WebView(QWidget* parent): QWebView(parent)
@@ -122,8 +126,7 @@ void WebView::handleWindowCloseRequested()
         loadHomepage();
     } else {
         qDebug() << "-- exit application";
-        QKeyEvent * eventExit = new QKeyEvent( QEvent::KeyPress, Qt::Key_Q, Qt::ControlModifier, "Exit", 0 );
-        QCoreApplication::postEvent( this, eventExit );
+        UnixSignals::signalHandler(SIGINT);
     }
 }
 

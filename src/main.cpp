@@ -58,7 +58,11 @@ bool launch(AnyOption *cmdopts)
 
     cmdopts->setVersion(VERSION);
 
+#ifdef QT5
     cmdopts->processCommandArgs( QCoreApplication::arguments().length(), QCoreApplication::arguments() );
+#else
+    cmdopts->processCommandArgs( QCoreApplication::argc(), QCoreApplication::argv() );
+#endif
 
     if (cmdopts->getFlag('h') || cmdopts->getFlag("help")) {
         qDebug(">> Help option in command prompt...");
@@ -88,8 +92,8 @@ int main(int argc, char * argv[])
     browser->init(cmdopts);
 
     // executes browser.cleanupSlot() when the Qt framework emits aboutToQuit() signal.
-    QObject::connect(qApp,          SIGNAL(aboutToQuit()),
-                     browser,   SLOT(cleanupSlot()));
+    QObject::connect(qApp, SIGNAL(aboutToQuit()),
+                     browser, SLOT(cleanupSlot()));
 
     int ret = app.exec();
     qDebug() << "Application return:" << ret;

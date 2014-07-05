@@ -4,11 +4,6 @@
 #
 #-------------------------------------------------
 
-contains(QT_VERSION, ^4\\.[0-9]\\..*) {
-    message("Cannot build Qt Webkit Kiosk with Qt version $${QT_VERSION}.")
-    error("Use at least Qt 5.0.")
-}
-
 TEMPLATE = subdirs
 CONFIG += ordered warn_on
 

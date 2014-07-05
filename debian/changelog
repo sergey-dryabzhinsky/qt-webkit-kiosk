@@ -1,10 +1,17 @@
+qt-webkit-kiosk (1.99.0-1sergey1) unstable; urgency=medium
+
+  * Version 1.99.0
+  * Try to combine Qt4 and Qt5 code
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sat, 05 Jul 2014 18:59:18 +0400
+
 qt-webkit-kiosk (1.05.15-1sergey1) unstable; urgency=low
 
   * Version 1.05.15:
     + Merge changes from 1.4.11
       - Fixed signal handling - use socketpair for every listening signal...
 
- -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Web, 19 Mar 2014 02:20:00 +0400
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Wed, 19 Mar 2014 02:20:00 +0400
 
 qt-webkit-kiosk (1.05.14-1sergey1) unstable; urgency=low
 

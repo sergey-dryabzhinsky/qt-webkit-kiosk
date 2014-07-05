@@ -5,12 +5,18 @@
 #-------------------------------------------------
 
 
-QT       += core gui network webkit multimedia widgets webkitwidgets printsupport
+QT       += core gui network webkit
+
+contains(QT_VERSION, ^5\\.[0-9]\\..*) {
+QT       += multimedia widgets webkitwidgets printsupport
+DEFINES  += QT5
+}
+
 
 CONFIG += console
 TARGET = qt-webkit-kiosk
 TEMPLATE = app
-VERSION = 1.05.15
+VERSION = 1.99.0
 
 CONFIG(debug, debug|release) {
 # here comes debug specific statements
@@ -41,11 +47,32 @@ win32 {
     DEFINES += ICON=\\\"$${ICON}\\\"
 }
 
+packagesExist(phonon) {
+    message('Phonon framework found. Using Phonon-player.')
+    DEFINES += PLAYER_PHONON
+    QT += phonon
+    SOURCES += player/phonon.cpp
+    HEADERS += player/phonon.h
+} else {
+    warning('No phonon framework found! Using NULL-player.')
+    DEFINES += PLAYER_NULL
+    SOURCES += player/null.cpp
+    HEADERS += player/null.h
+}
+
+packagesExist(QtTest) {
+    message('Test framework found.')
+    DEFINES += USE_TESTLIB
+    QT += testlib
+} else {
+    warning('No QtTest framework found! Will not do hacks with window...')
+}
+
+
 SOURCES += main.cpp\
     mainwindow.cpp \
     webview.cpp \
     anyoption.cpp \
-    qplayer.cpp \
     fakewebview.cpp \
     cachingnm.cpp \
     unixsignals.cpp \

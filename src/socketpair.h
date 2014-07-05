@@ -8,6 +8,7 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QTcpServer>
+#include <QTimer>
 
 class SocketPair: public QObject
 {
@@ -20,9 +21,18 @@ public:
     QTcpSocket* input();
     QTcpSocket* output();
 
+Q_SIGNALS:
+    void sigData(QByteArray);
+
+private slots:
+    void newConnection();
+    void readServerData();
+
 private:
-    QTcpSocket *endPoints[2];
-    QTcpServer *server;
+    QTimer *dataCheck;
+    QTcpSocket *serverConnection;
+    QTcpSocket clientConnection;
+    QTcpServer server;
 };
 
 #endif // SOCKETPAIR_H

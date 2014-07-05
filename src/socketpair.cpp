@@ -1,54 +1,82 @@
 #include "socketpair.h"
-#include <QTcpSocket>
+#include <QIODevice>
+#include <QDebug>
 
 SocketPair::SocketPair(QObject *parent)
         : QObject(parent)
 {
-    endPoints[0] = endPoints[1] = 0;
-    server = new QTcpServer();
+    dataCheck = new QTimer();
+    dataCheck->setInterval(100);
+    connect(dataCheck, SIGNAL(timeout()), this, SLOT(readServerData()));
+
+    connect(&server, SIGNAL(newConnection()), this, SLOT(newConnection()));
 }
 
 bool SocketPair::create()
 {
-    server->listen();
-
-    QTcpSocket *active = new QTcpSocket(this);
-    active->connectToHost("127.0.0.1", server->serverPort());
-
-    // need more time as working with embedded
-    // device and testing from emualtor
-    // things tend to get slower
-    if (!active->waitForConnected(1000))
+    int tries = 5;
+    while (tries) {
+        if (!server.isListening()) {
+            if (server.listen(QHostAddress::LocalHost)) {
+                break;
+            }
+        } else {
+            break;
+        }
+        tries--;
+    }
+    if (!server.isListening()) {
+        qDebug() << "Can't start tcpServer:" << server.errorString();
         return false;
+    }
 
-    if (!server->waitForNewConnection(1000))
-        return false;
+	clientConnection.setSocketOption( QAbstractSocket::LowDelayOption, 1 );
+	clientConnection.setSocketOption( QAbstractSocket::KeepAliveOption, 1 );
 
-    QTcpSocket *passive = server->nextPendingConnection();
-    passive->setParent(this);
-
-    endPoints[0] = active;
-    endPoints[1] = passive;
+    clientConnection.connectToHost(QHostAddress::LocalHost, server.serverPort(), QIODevice::WriteOnly);
     return true;
+}
+
+void SocketPair::newConnection()
+{
+    serverConnection = server.nextPendingConnection();
+
+	serverConnection->setSocketOption( QAbstractSocket::LowDelayOption, 1 );
+	serverConnection->setSocketOption( QAbstractSocket::KeepAliveOption, 1 );
+	serverConnection->setReadBufferSize( 1 );
+
+    dataCheck->start();
+
+//    connect(serverConnection, SIGNAL(readyRead()), this, SLOT(readServerData()));
+    server.close();
+}
+
+void SocketPair::readServerData()
+{
+    QByteArray data = serverConnection->readAll();
+    if (data.length()) {
+        emit sigData(data);
+    }
 }
 
 void SocketPair::close()
 {
-    server->close();
-    if (endPoints[0]) {
-        endPoints[0]->close();
+    dataCheck->stop();
+    clientConnection.close();
+    if (serverConnection) {
+        serverConnection->close();
+        delete serverConnection;
+        serverConnection = 0;
     }
-    if (endPoints[1]) {
-        endPoints[1]->close();
-    }
+    server.close();
 }
 
 QTcpSocket* SocketPair::input()
 {
-    return endPoints[0];
+    return &clientConnection;
 }
 
 QTcpSocket* SocketPair::output()
 {
-    return endPoints[1];
+    return serverConnection;
 }

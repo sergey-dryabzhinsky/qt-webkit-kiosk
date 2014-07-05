@@ -41,16 +41,19 @@
 
 #include "config.h"
 
-#include <signal.h>
 #include <QtGui>
 #include <QtNetwork>
 #include <QtWebKit>
 #include <QDebug>
 #include "mainwindow.h"
+
+#ifdef QT5
 #include <QStandardPaths>
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QtWebKitWidgets/QWebFrame>
+#endif
+
 #include "cachingnm.h"
 
 MainWindow::MainWindow() : QMainWindow()
@@ -58,6 +61,8 @@ MainWindow::MainWindow() : QMainWindow()
     progress = 0;
     diskCache = NULL;
     mainSettings = NULL;
+
+    isUrlRealyChanged = false;
 
     handler = new UnixSignals();
     connect(handler, SIGNAL(sigBREAK()), SLOT(unixSignalQuit()));
@@ -67,6 +72,11 @@ MainWindow::MainWindow() : QMainWindow()
 
     delayedResize = new QTimer();
     delayedLoad = new QTimer();
+
+#ifdef USE_TESTLIB
+    simulateClick = new QTestEventList();
+#endif
+
 }
 
 void MainWindow::init(AnyOption *opts)
@@ -153,22 +163,24 @@ void MainWindow::init(AnyOption *opts)
     // --- Web View --- //
     view = new WebView(this);
 
-    // --- Progress Bar --- //
-    loadProgress = new QProgressBar(view);
-    loadProgress->setContentsMargins(2, 2, 2, 2);
-    loadProgress->setMinimumWidth(100);
-    loadProgress->setMinimumHeight(16);
-    loadProgress->setFixedHeight(16);
-    loadProgress->setAutoFillBackground(true);
-    QPalette palette = this->palette();
-    palette.setColor(QPalette::Window, QColor(255,255,255,63));
-    loadProgress->setPalette(palette);
+    if (mainSettings->value("view/show_load_progress").toBool()) {
+        // --- Progress Bar --- //
+        loadProgress = new QProgressBar(view);
+        loadProgress->setContentsMargins(2, 2, 2, 2);
+        loadProgress->setMinimumWidth(100);
+        loadProgress->setMinimumHeight(16);
+        loadProgress->setFixedHeight(16);
+        loadProgress->setAutoFillBackground(true);
+        QPalette palette = this->palette();
+        palette.setColor(QPalette::Window, QColor(255,255,255,63));
+        loadProgress->setPalette(palette);
 
-    // Do not work... Need Layout...
-    loadProgress->setAlignment(Qt::AlignTop);
-    loadProgress->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        // Do not work... Need Layout...
+        loadProgress->setAlignment(Qt::AlignTop);
+        loadProgress->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
-    loadProgress->hide();
+        loadProgress->hide();
+    }
 
     setCentralWidget(view);
 
@@ -180,7 +192,11 @@ void MainWindow::init(AnyOption *opts)
         diskCache = new QNetworkDiskCache(this);
         QString location = mainSettings->value("cache/location").toString();
         if (!location.length()) {
+#ifdef QT5
             location = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+#else
+            location = QDesktopServices::storageLocation(QDesktopServices::CacheLocation);
+#endif
         }
         diskCache->setCacheDirectory(location);
         diskCache->setMaximumCacheSize(mainSettings->value("cache/size").toUInt());
@@ -495,14 +511,14 @@ void MainWindow::loadSettings(QString ini_file)
     }
 
     if (!mainSettings->contains("view/startup_resize_delayed")) {
-        mainSettings->setValue("view/startup_resize_delayed", false);
+        mainSettings->setValue("view/startup_resize_delayed", true);
     }
     if (!mainSettings->contains("view/startup_resize_delay")) {
-        mainSettings->setValue("view/startup_resize_delay", 2000);
+        mainSettings->setValue("view/startup_resize_delay", 200);
     }
 
     if (!mainSettings->contains("view/hide_scrollbars")) {
-        mainSettings->setValue("view/hide_scrollbars", false);
+        mainSettings->setValue("view/hide_scrollbars", true);
     }
 
     if (!mainSettings->contains("view/stay_on_top")) {
@@ -553,7 +569,7 @@ void MainWindow::loadSettings(QString ini_file)
     }
 
     if (!mainSettings->contains("browser/startup_load_delayed")) {
-        mainSettings->setValue("browser/startup_load_delayed", false);
+        mainSettings->setValue("browser/startup_load_delayed", true);
     }
     if (!mainSettings->contains("browser/startup_load_delay")) {
         mainSettings->setValue("browser/startup_load_delay", 100);
@@ -597,7 +613,11 @@ void MainWindow::loadSettings(QString ini_file)
         mainSettings->setValue("cache/enable", false);
     }
     if (!mainSettings->contains("cache/location")) {
+#ifdef QT5
         QString location = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+#else
+        QString location = QDesktopServices::storageLocation(QDesktopServices::CacheLocation);
+#endif
         QDir d = QDir(location);
         location += d.separator();
         location += mainSettings->value("application/name").toString();
@@ -672,6 +692,7 @@ void MainWindow::startLoading()
     progress = 0;
     isScrollBarsHidden = false;
     isSelectionDisabled = false;
+    isUrlRealyChanged = false;
 
     adjustTitle();
 
@@ -679,10 +700,6 @@ void MainWindow::startLoading()
 
     if (mainSettings->value("view/show_load_progress").toBool()) {
         loadProgress->show();
-    }
-
-    if (mainSettings->contains("view/page_scale")) {
-        view->page()->mainFrame()->setZoomFactor(mainSettings->value("view/page_scale").toReal());
     }
 
     qDebug("Start loading...");
@@ -701,10 +718,10 @@ void MainWindow::setProgress(int p)
 
     // 1. Hide scrollbars (and add some styles)
     // If there complete head and body start loaded...
-    if (!isScrollBarsHidden) {
+    if (!isScrollBarsHidden && isUrlRealyChanged) {
         isScrollBarsHidden = hideScrollbars();
     }
-    if (!isSelectionDisabled) {
+    if (!isSelectionDisabled && isUrlRealyChanged) {
         isSelectionDisabled = disableSelection();
     }
 }
@@ -716,6 +733,11 @@ void MainWindow::urlChanged(const QUrl &url)
     // Where is a real change in webframe! Drop flags.
     isScrollBarsHidden = false;
     isSelectionDisabled = false;
+    isUrlRealyChanged = true;
+
+    if (mainSettings->contains("view/page_scale")) {
+        view->page()->mainFrame()->setZoomFactor(mainSettings->value("view/page_scale").toReal());
+    }
 
     // This is real link clicked
     view->playSound("event-sounds/link-clicked");
@@ -742,6 +764,9 @@ void MainWindow::finishLoading(bool)
     // 2. Add more styles which can override previous styles...
     attachStyles();
     attachJavascripts();
+
+    // 3. Focus window and click into it to stimulate event loop after signal handling
+    putWindowUp();
 }
 
 /**
@@ -780,7 +805,7 @@ bool MainWindow::disableSelection()
             // http://stackoverflow.com/a/5313735
             QString content;
             content = "<style type=\"text/css\">\n";
-            content += "body, div, p, span, h1, h2, h3, h4, h5, h6, caption, td {\n";
+            content += "body, div, p, span, h1, h2, h3, h4, h5, h6, caption, td, li, dt, dd {\n";
             content += " -moz-user-select: none;\n";
             content += " -khtml-user-select: none;\n";
             content += " -webkit-user-select: none;\n";
@@ -817,6 +842,14 @@ void MainWindow::attachJavascripts()
     if (!scripts.length()) {
         return;
     }
+
+    QWebElement bodyElem = view->page()->mainFrame()->findFirstElement("body");
+    QString content = "";
+    if (bodyElem.isNull() || bodyElem.toInnerXml().trimmed().isEmpty()) {
+        // No body here... We need something in <body> to interact with?
+        return;
+    }
+
     QStringListIterator scriptsIterator(scripts);
     QFileInfo finfo = QFileInfo();
     QString file_name;
@@ -833,7 +866,6 @@ void MainWindow::attachJavascripts()
         qDebug() << "-- attach " << file_name;
 
         countScripts++;
-
 
         finfo.setFile(file_name);
         if (finfo.isFile()) {
@@ -866,6 +898,14 @@ void MainWindow::attachStyles()
     if (!styles.length()) {
         return;
     }
+
+    QWebElement headElem = view->page()->mainFrame()->findFirstElement("head");
+    QString content = "";
+    if (headElem.isNull() || headElem.toInnerXml().trimmed().isEmpty()) {
+        // Page without head... We need something in <head> to interact with?
+        return;
+    }
+
     QStringListIterator stylesIterator(styles);
     QString file_name;
     QFileInfo finfo = QFileInfo();
@@ -923,6 +963,25 @@ void MainWindow::unixSignalQuit()
     // No cache clean - quick exit
     qDebug(">> Quit Signal catched. Exiting...");
     QApplication::exit(0);
+}
+
+/**
+ * Activate window after signal
+ */
+void MainWindow::putWindowUp()
+{
+    qDebug("Try to activate window...");
+
+    QApplication::setActiveWindow(this);
+    this->focusWidget();
+
+#ifdef USE_TESTLIB
+    qDebug("... by click simulation...");
+    simulateClick->clear();
+    simulateClick->addMouseClick(Qt::LeftButton, 0, this->pos(), -1);
+    simulateClick->simulate(this);
+#endif
+
 }
 
 /**

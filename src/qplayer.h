@@ -1,24 +1,16 @@
 #ifndef QPLAYER_H
 #define QPLAYER_H
 
-#include <QtCore>
-#include <QtMultimedia/QMediaPlayer>
+#ifdef PLAYER_MULTIMEDIA
+#include "player/multimedia.h"
+#endif
 
-class QPlayer : public QObject
-{
-    Q_OBJECT
+#ifdef PLAYER_PHONON
+#include "player/phonon.h"
+#endif
 
-public:
-    explicit QPlayer();
-
-    void play(QString soundFile);
-
-protected:
-
-private:
-
-    QMediaPlayer *player;
-
-};
+#ifdef PLAYER_NULL
+#include "player/null.h"
+#endif
 
 #endif // QPLAYER_H
