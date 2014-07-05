@@ -13,7 +13,7 @@ Also hides printer dialog and uses default or defined printer.
 
 ##Downloads
 
-Downloads now on public [gDrive Folder](https://drive.google.com/folderview?id=0B6CU04AyADvoV19PMlhJSVA2TDQ&usp=sharing):
+Downloads now on public [gDrive Folder](https://drive.google.com/folderview?id=0B6CU04AyADvoV19PMlhJSVA2TDQ&usp=sharing).
 
 For windows available [Qt bundles](https://drive.google.com/folderview?id=0B6CU04AyADvoXzUxdW5KeEt5cW8&usp=sharing) public folder. It needed by installer without Qt.
 
