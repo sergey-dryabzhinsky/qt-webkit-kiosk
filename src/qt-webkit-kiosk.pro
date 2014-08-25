@@ -134,7 +134,8 @@ SOURCES += main.cpp\
     fakewebview.cpp \
     cachingnm.cpp \
     unixsignals.cpp \
-    socketpair.cpp
+    socketpair.cpp \
+    persistentcookiejar.cpp
 
 HEADERS  += mainwindow.h \
     webview.h \
@@ -144,7 +145,8 @@ HEADERS  += mainwindow.h \
     fakewebview.h \
     cachingnm.h \
     unixsignals.h \
-    socketpair.h
+    socketpair.h \
+    persistentcookiejar.h
 
 # DEBUG
 #message(- SOURCES: $${SOURCES})

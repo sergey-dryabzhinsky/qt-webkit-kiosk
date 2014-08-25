@@ -55,6 +55,7 @@
 #endif
 
 #include "cachingnm.h"
+#include "persistentcookiejar.h"
 
 MainWindow::MainWindow() : QMainWindow()
 {
@@ -182,6 +183,10 @@ void MainWindow::init(AnyOption *opts)
         loadProgress->hide();
     }
 
+    if (mainSettings->value("view/hide_mouse_cursor").toBool()) {
+        QApplication::setOverrideCursor(Qt::BlankCursor);
+    }
+
     setCentralWidget(view);
 
     view->setSettings(mainSettings);
@@ -211,6 +216,10 @@ void MainWindow::init(AnyOption *opts)
         CachingNetworkManager *nm = new CachingNetworkManager();
         nm->setCache(diskCache);
         view->page()->setNetworkAccessManager(nm);
+    }
+
+    if (mainSettings->value("browser/cookiejar").toBool()) {
+        view->page()->networkAccessManager()->setCookieJar(new PersistentCookieJar());
     }
 
     view->settings()->setAttribute(QWebSettings::JavascriptEnabled,
@@ -563,6 +572,9 @@ void MainWindow::loadSettings(QString ini_file)
     if (!mainSettings->contains("browser/ignore_ssl_errors")) {
         mainSettings->setValue("browser/ignore_ssl_errors", true);
     }
+    if (!mainSettings->contains("browser/cookiejar")) {
+        mainSettings->setValue("browser/cookiejar", false);
+    }
     // Show default homepage if window closed by javascript
     if (!mainSettings->contains("browser/show_homepage_on_window_close")) {
         mainSettings->setValue("browser/show_homepage_on_window_close", true);
@@ -661,6 +673,9 @@ void MainWindow::loadSettings(QString ini_file)
     }
     if (!mainSettings->contains("attach/styles")) {
         mainSettings->setValue("attach/styles", "");
+    }
+    if (!mainSettings->contains("view/hide_mouse_cursor")) {
+        mainSettings->setValue("view/hide_mouse_cursor", false);
     }
 
     mainSettings->sync();
