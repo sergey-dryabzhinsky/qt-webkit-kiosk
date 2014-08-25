@@ -183,6 +183,10 @@ void MainWindow::init(AnyOption *opts)
         loadProgress->hide();
     }
 
+    if (mainSettings->value("view/hide_mouse_cursor").toBool()) {
+        QApplication::setOverrideCursor(Qt::BlankCursor);
+    }
+
     setCentralWidget(view);
 
     view->setSettings(mainSettings);
@@ -669,6 +673,9 @@ void MainWindow::loadSettings(QString ini_file)
     }
     if (!mainSettings->contains("attach/styles")) {
         mainSettings->setValue("attach/styles", "");
+    }
+    if (!mainSettings->contains("view/hide_mouse_cursor")) {
+        mainSettings->setValue("view/hide_mouse_cursor", false);
     }
 
     mainSettings->sync();
