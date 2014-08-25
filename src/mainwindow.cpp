@@ -55,6 +55,7 @@
 #endif
 
 #include "cachingnm.h"
+#include "persistentcookiejar.h"
 
 MainWindow::MainWindow() : QMainWindow()
 {
@@ -211,6 +212,10 @@ void MainWindow::init(AnyOption *opts)
         CachingNetworkManager *nm = new CachingNetworkManager();
         nm->setCache(diskCache);
         view->page()->setNetworkAccessManager(nm);
+    }
+
+    if (mainSettings->value("browser/cookiejar").toBool()) {
+        view->page()->networkAccessManager()->setCookieJar(new PersistentCookieJar());
     }
 
     view->settings()->setAttribute(QWebSettings::JavascriptEnabled,
@@ -562,6 +567,9 @@ void MainWindow::loadSettings(QString ini_file)
     // Don't break on SSL errors
     if (!mainSettings->contains("browser/ignore_ssl_errors")) {
         mainSettings->setValue("browser/ignore_ssl_errors", true);
+    }
+    if (!mainSettings->contains("browser/cookiejar")) {
+        mainSettings->setValue("browser/cookiejar", false);
     }
     // Show default homepage if window closed by javascript
     if (!mainSettings->contains("browser/show_homepage_on_window_close")) {
