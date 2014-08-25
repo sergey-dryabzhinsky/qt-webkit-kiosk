@@ -1,3 +1,10 @@
+qt-webkit-kiosk (1.99.3-1sergey1) unstable; urgency=medium
+
+  * Add persistent cookie storage. Thanks to quinox.
+  * Add 'Backspace' hot-key to go back through page history.
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Mon, 26 Aug 2014 02:13:00 +0400
+
 qt-webkit-kiosk (1.99.2-1sergey1) unstable; urgency=medium
 
   * Fixed dependencies checks for *nix

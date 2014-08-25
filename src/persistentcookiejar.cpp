@@ -12,7 +12,11 @@ const char *PersistentCookieJar::line_separator = "\n";
 PersistentCookieJar::PersistentCookieJar(QObject *parent) :
     QNetworkCookieJar(parent)
 {
-    QString cookiejar_path = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+#ifdef QT5
+        QString cookiejar_path = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+#else
+        QString cookiejar_path = QDesktopServices::storageLocation(QDesktopServices::DataLocation);
+#endif
 
     if (cookiejar_path.length() == 0) {
         qDebug() << "No data locations available; not storing any cookies.";
@@ -25,7 +29,7 @@ PersistentCookieJar::PersistentCookieJar(QObject *parent) :
         cookiejar_dir.mkpath(".");
     }
 
-    cookiejar_location = cookiejar_path + "/cookiejar.txt";
+    cookiejar_location = cookiejar_path + QDir::toNativeSeparators("/cookiejar.txt");
 
     load();
 }
@@ -49,7 +53,7 @@ void PersistentCookieJar::store() {
 
     for (int i=0; i < cookies.length(); i++)
     {
-        qDebug() << "Writing cookie " + i;
+        qDebug() << "Writing cookie " << i;
         storage.write(cookies[i].toRawForm());
         storage.write(line_separator);
     }
@@ -68,16 +72,14 @@ void PersistentCookieJar::load() {
     QByteArray bytes = storage.readAll();
     QList<QByteArray> cookies = bytes.split(*line_separator);
 
-    int valid_cookies = 0;
+    QList<QNetworkCookie> all_cookies = QNetworkCookie::parseCookies(";");
 
     for (int i=0; i < cookies.length(); i++) {
-        QList<QNetworkCookie> parsed_cookies = QNetworkCookie::parseCookies(cookies[i]);
-        for (int j=0; j < parsed_cookies.length(); j++) {
-            insertCookie(parsed_cookies[j]);
-            valid_cookies++;
-        }
+        all_cookies += QNetworkCookie::parseCookies(cookies[i]);
     }
 
-    qDebug() << "Read" << valid_cookies << "valid cookies from the cookiejar.";
+    setAllCookies(all_cookies);
+
+    qDebug() << "Read" << all_cookies.length() << "valid cookies from the cookiejar.";
     storage.close();
 }

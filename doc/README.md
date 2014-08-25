@@ -48,5 +48,7 @@ PgUp	 Scroll Page Up
 PgDown	 Scroll Page Down
 Home	 Scroll to top
 End	 Scroll to bottom
+
 Ctrl+Home,
 HomePage	Load home page
+Backspace       Go back via pages history

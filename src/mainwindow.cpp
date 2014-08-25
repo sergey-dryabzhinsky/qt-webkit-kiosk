@@ -399,6 +399,9 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             view->scrollHome();
         }
         break;
+    case Qt::Key_Backspace:
+        view->page()->triggerAction(QWebPage::Back);
+        break;
     case Qt::Key_Q:
         if (int(event->modifiers()) == Qt::CTRL) {
             clearCacheOnExit();
