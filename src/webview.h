@@ -6,11 +6,14 @@
 #include <QtWebKitWidgets/QWebView>
 #include <QtWebKitWidgets/QWebFrame>
 
+#include <QtWebEngineWidgets/QWebEnginePage>
+#include <QtWebEngineWidgets/QWebEngineView>
+
 #include <QPrinter>
 #include <qplayer.h>
 #include <fakewebview.h>
 
-class WebView : public QWebView
+class WebView : public QWebEngineView
 {
     Q_OBJECT
 
@@ -22,22 +25,16 @@ public:
     void loadHomepage();
     void initSignals();
 
-    void setPage(QWebPage* page);
+    void setPage(QWebEnginePage* page);
 
-    QWebView *createWindow(QWebPage::WebWindowType type);
+    QWebEngineView *createWindow(QWebEnginePage::WebWindowType type);
 
     void playSound(QString soundSetting);
 
-    // http://slow-tone.blogspot.com/2011/04/qt-hide-scrollbars-qwebview.html?showComment=1318404188431#c5258624438625837585
-    void scrollUp();
-    void scrollDown();
-    void scrollPageUp();
-    void scrollPageDown();
-    void scrollHome();
-    void scrollEnd();
+
 
 public slots:
-    void handlePrintRequested(QWebFrame *);
+    void handlePrintRequested(QWebEnginePage *);
     void handleUrlChanged(const QUrl &);
 
 protected:

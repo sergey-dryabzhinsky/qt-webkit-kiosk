@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       = core gui network webkit widgets webkitwidgets printsupport multimedia testlib
+QT       = core gui network webkit widgets webkitwidgets printsupport multimedia testlib webenginewidgets
 
 CONFIG += console link_pkgconfig
 TARGET = qt-webkit-kiosk

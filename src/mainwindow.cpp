@@ -44,6 +44,7 @@
 #include <QtGui>
 #include <QtNetwork>
 #include <QtWebKit>
+#include <QtWebEngine>
 #include <QDebug>
 #include "mainwindow.h"
 
@@ -51,6 +52,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QtWebKitWidgets/QWebFrame>
+#include <QtWebEngineWidgets>
 
 #include "cachingnm.h"
 #include "persistentcookiejar.h"
@@ -188,67 +190,18 @@ void MainWindow::init(AnyOption *opts)
     setCentralWidget(view);
 
     view->setSettings(mainSettings);
-    view->setPage(new QWebPage(view));
+    view->setPage(new QWebEnginePage(view));
 
-    // --- Disk cache --- //
-    if (mainSettings->value("cache/enable").toBool()) {
-        diskCache = new QNetworkDiskCache(this);
-        QString location = mainSettings->value("cache/location").toString();
-        if (!location.length()) {
-            location = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-        }
-        diskCache->setCacheDirectory(location);
-        diskCache->setMaximumCacheSize(mainSettings->value("cache/size").toUInt());
 
-        if (mainSettings->value("cache/clear-on-start").toBool()) {
-            diskCache->clear();
-        }
-        else if (cmdopts->getFlag('C') || cmdopts->getFlag("clear-cache")) {
-            diskCache->clear();
-        }
-
-        CachingNetworkManager *nm = new CachingNetworkManager();
-        nm->setCache(diskCache);
-        view->page()->setNetworkAccessManager(nm);
-    }
-
-    if (mainSettings->value("browser/cookiejar").toBool()) {
-        view->page()->networkAccessManager()->setCookieJar(new PersistentCookieJar());
-    }
-
-    view->settings()->setAttribute(QWebSettings::JavascriptEnabled,
+    view->settings()->setAttribute(QWebEngineSettings::JavascriptEnabled,
         mainSettings->value("browser/javascript").toBool()
     );
 
-    view->settings()->setAttribute(QWebSettings::JavascriptCanOpenWindows,
+    view->settings()->setAttribute(QWebEngineSettings::JavascriptCanOpenWindows,
         mainSettings->value("browser/javascript_can_open_windows").toBool()
     );
 
-    view->settings()->setAttribute(QWebSettings::JavascriptCanCloseWindows,
-        mainSettings->value("browser/javascript_can_close_windows").toBool()
-    );
 
-    view->settings()->setAttribute(QWebSettings::WebGLEnabled,
-        mainSettings->value("browser/webgl").toBool()
-    );
-
-    view->settings()->setAttribute(QWebSettings::JavaEnabled,
-        mainSettings->value("browser/java").toBool()
-    );
-    view->settings()->setAttribute(QWebSettings::PluginsEnabled,
-        mainSettings->value("browser/plugins").toBool()
-    );
-
-    if (mainSettings->value("inspector/enable").toBool()) {
-        view->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
-
-        inspector = new QWebInspector();
-        inspector->setVisible(mainSettings->value("inspector/visible").toBool());
-        inspector->setMinimumSize(800, 600);
-        inspector->setWindowTitle(mainSettings->value("application/name").toString() + " - WebInspector");
-        inspector->setWindowIcon(this->windowIcon());
-        inspector->setPage(view->page());
-    }
 
     connect(view, SIGNAL(titleChanged(QString)), SLOT(adjustTitle()));
     connect(view, SIGNAL(loadStarted()), SLOT(startLoading()));
@@ -369,19 +322,19 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
     switch (event->key()) {
     case Qt::Key_Up:
-        view->scrollUp();
+        //view->scrollUp();
         break;
     case Qt::Key_Down:
-        view->scrollDown();
+        //view->scrollDown();
         break;
     case Qt::Key_PageUp:
-        view->scrollPageUp();
+        //view->scrollPageUp();
         break;
     case Qt::Key_PageDown:
-        view->scrollPageDown();
+        //view->scrollPageDown();
         break;
     case Qt::Key_End:
-        view->scrollEnd();
+        //view->scrollEnd();
         break;
     case Qt::Key_HomePage:
         view->loadHomepage();
@@ -390,11 +343,11 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         if (int(event->modifiers()) == Qt::CTRL) {
             view->loadHomepage();
         } else {
-            view->scrollHome();
+            //view->scrollHome();
         }
         break;
     case Qt::Key_Backspace:
-        view->page()->triggerAction(QWebPage::Back);
+        view->page()->triggerAction(QWebEnginePage::Back);
         break;
     case Qt::Key_Q:
         if (int(event->modifiers()) == Qt::CTRL) {
@@ -725,14 +678,7 @@ void MainWindow::setProgress(int p)
         loadProgress->setValue(p);
     }
 
-    // 1. Hide scrollbars (and add some styles)
-    // If there complete head and body start loaded...
-    if (!isScrollBarsHidden && isUrlRealyChanged) {
-        isScrollBarsHidden = hideScrollbars();
-    }
-    if (!isSelectionDisabled && isUrlRealyChanged) {
-        isSelectionDisabled = disableSelection();
-    }
+
 }
 
 void MainWindow::urlChanged(const QUrl &url)
@@ -745,7 +691,7 @@ void MainWindow::urlChanged(const QUrl &url)
     isUrlRealyChanged = true;
 
     if (mainSettings->contains("view/page_scale")) {
-        view->page()->mainFrame()->setZoomFactor(mainSettings->value("view/page_scale").toReal());
+        view->page()->setZoomFactor(mainSettings->value("view/page_scale").toReal());
     }
 
     // This is real link clicked
@@ -763,13 +709,7 @@ void MainWindow::finishLoading(bool)
         loadProgress->hide();
     }
 
-    // 1. Hide scrollbars (and add some styles)
-    if (!isScrollBarsHidden) {
-        isScrollBarsHidden = hideScrollbars();
-    }
-    if (!isSelectionDisabled) {
-        isSelectionDisabled = disableSelection();
-    }
+
     // 2. Add more styles which can override previous styles...
     attachStyles();
     attachJavascripts();
@@ -778,181 +718,24 @@ void MainWindow::finishLoading(bool)
     putWindowUp();
 }
 
-/**
- * @return bool - true - if don't need to hide scrollbars or hide them, false - if need, but there is no html body loaded.
- * @brief MainWindow::hideScrollbars
- */
-bool MainWindow::hideScrollbars()
-{
-    if (mainSettings->value("view/hide_scrollbars").toBool()) {
-        qDebug("Try to hide scrollbars...");
-
-        view->page()->mainFrame()->setScrollBarPolicy( Qt::Vertical, Qt::ScrollBarAlwaysOff );
-        view->page()->mainFrame()->setScrollBarPolicy( Qt::Horizontal, Qt::ScrollBarAlwaysOff );
-    }
-
-    return true;
-}
-
-bool MainWindow::disableSelection()
-{
-    if (mainSettings->value("view/disable_selection").toBool()) {
-        qDebug("Try to disable text selection...");
-
-        // Then webkit loads page and it's "empty" - empty html DOM loaded...
-        // So we wait before real page DOM loaded...
-        QWebElement bodyElem = view->page()->mainFrame()->findFirstElement("body");
-        if (!bodyElem.isNull() && !bodyElem.toInnerXml().trimmed().isEmpty()) {
-            QWebElement headElem = view->page()->mainFrame()->findFirstElement("head");
-            if (headElem.isNull() || headElem.toInnerXml().trimmed().isEmpty()) {
-                qDebug("... html head not loaded ... wait...");
-                return false;
-            }
-
-            //qDebug() << "... head element content:\n" << headElem.toInnerXml();
-
-            // http://stackoverflow.com/a/5313735
-            QString content;
-            content = "<style type=\"text/css\">\n";
-            content += "body, div, p, span, h1, h2, h3, h4, h5, h6, caption, td, li, dt, dd {\n";
-            content += " -moz-user-select: none;\n";
-            content += " -khtml-user-select: none;\n";
-            content += " -webkit-user-select: none;\n";
-            content += " user-select: none;\n";
-            content += " }\n";
-            content += "</style>\n";
-
-            // Ugly hack, but it's works...
-            if (!headElem.toInnerXml().contains(content)) {
-                headElem.setInnerXml(headElem.toInnerXml() + content);
-                qDebug("... html head loaded ... hack inserted...");
-            } else {
-                qDebug("... html head loaded ... hack already inserted...");
-            }
-
-            //headElem = view->page()->mainFrame()->findFirstElement("head");
-            //qDebug() << "... head element content after:\n" << headElem.toInnerXml() ;
-
-        } else {
-            qDebug("... html body not loaded ... wait...");
-            return false;
-        }
-    }
-
-    return true;
-}
 
 void MainWindow::attachJavascripts()
 {
-    if (!mainSettings->contains("attach/javascripts")) {
-        return;
-    }
-    QStringList scripts = mainSettings->value("attach/javascripts").toStringList();
-    if (!scripts.length()) {
-        return;
-    }
-
-    QWebElement bodyElem = view->page()->mainFrame()->findFirstElement("body");
-    QString content = "";
-    if (bodyElem.isNull() || bodyElem.toInnerXml().trimmed().isEmpty()) {
-        // No body here... We need something in <body> to interact with?
-        return;
-    }
-
-    QStringListIterator scriptsIterator(scripts);
-    QFileInfo finfo = QFileInfo();
-    QString file_name;
-    quint32 countScripts = 0;
-
-    while (scriptsIterator.hasNext()) {
-        file_name = scriptsIterator.next();
-
-        if (!file_name.trimmed().length()) continue;
-
-        qDebug() << "-- attach " << file_name;
-
-        countScripts++;
-
-        finfo.setFile(file_name);
-        if (finfo.isFile()) {
-            qDebug("-- it's local file");
-            QFile f(file_name);
-            content += "\n<script type=\"text/javascript\">";
-            content += QString(f.readAll());
-            content += "</script>\n";
-            f.close();
-        } else {
-            qDebug("-- it's remote file");
-            content += "\n<script type=\"text/javascript\" src=\"";
-            content += file_name;
-            content += "\"></script>\n";
-        }
-    }
-    if (countScripts > 0 && content.trimmed().length() > 0) {
-        bodyElem.setInnerXml(bodyElem.toInnerXml() + content);
-
-        qDebug() << "Page loaded, found " << countScripts << " user javascript files...";
-    }
+    //TODO: use runJavascript()
+    return;
 }
 
 void MainWindow::attachStyles()
 {
-    if (!mainSettings->contains("attach/styles")) {
-        return;
-    }
-    QStringList styles = mainSettings->value("attach/styles").toStringList();
-    if (!styles.length()) {
-        return;
-    }
-
-    QWebElement headElem = view->page()->mainFrame()->findFirstElement("head");
-    QString content = "";
-    if (headElem.isNull() || headElem.toInnerXml().trimmed().isEmpty()) {
-        // Page without head... We need something in <head> to interact with?
-        return;
-    }
-
-    QStringListIterator stylesIterator(styles);
-    QString file_name;
-    QFileInfo finfo = QFileInfo();
-    quint32 countStyles = 0;
-
-    while (stylesIterator.hasNext()) {
-        file_name = stylesIterator.next();
-
-        if (!file_name.trimmed().length()) continue;
-
-        qDebug() << "-- attach " << file_name;
-        countStyles++;
-
-        finfo.setFile(file_name);
-
-        if (finfo.isFile()) {
-            qDebug("-- it's local file");
-            QFile f(file_name);
-            content += "\n<style type=\"text/css\">\n";
-            content += QString(f.readAll());
-            content += "</style>\n";
-            f.close();
-        } else {
-            qDebug("-- it's remote file");
-            content += "\n<link type=\"text/css\" rel=\"stylesheet\" href=\"";
-            content += file_name;
-            content += "\"/>\n";
-        }
-    }
-
-    if (countStyles > 0 && content.trimmed().length() > 0) {
-        headElem.setInnerXml(headElem.toInnerXml() + content);
-
-        qDebug() << "Page loaded, found " << countStyles << " user style files...";
-    }
+    //TODO: probably impossible :(
+    return;
 }
 
 
 void MainWindow::pageIconLoaded()
 {
-    setWindowIcon(view->icon());
+    //TODO: fix;
+    //setWindowIcon(view->icon());
 }
 
 // ----------------------- SIGNALS -----------------------------
