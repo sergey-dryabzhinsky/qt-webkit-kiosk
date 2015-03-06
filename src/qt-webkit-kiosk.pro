@@ -4,12 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       = core gui network webkit
-
-contains(QT_VERSION, ^5\\.[0-9]\\..*) {
-    QT       += widgets webkitwidgets printsupport
-    DEFINES  += QT5
-}
+QT       = core gui network webkit widgets webkitwidgets printsupport multimedia testlib
 
 CONFIG += console link_pkgconfig
 TARGET = qt-webkit-kiosk
@@ -27,7 +22,9 @@ CONFIG(debug, debug|release) {
 
 DEFINES += VERSION=\\\"$${VERSION}\\\"
 
-PLAYER = NONE
+DEFINES += PLAYER_MULTIMEDIA
+DEFINES += USE_TESTLIB
+PLAYER = MULTIMEDIA
 
 !win32 {
     isEmpty( PREFIX ) {
@@ -38,85 +35,13 @@ PLAYER = NONE
     DEFINES += RESOURCES=\\\"$${PREFIX}/share/$${TARGET}/\\\"
     DEFINES += ICON=\\\"$${ICON}\\\"
 
-    PKG_TEST=QtTest
-
-contains(QT_VERSION, ^5\\.[0-9]\\..*) {
-
-    PKG_TEST=Qt5Test
-
-    packagesExist(Qt5Multimedia) {
-        message('Multimedia framework found. Using Multimedia-player.')
-        DEFINES += PLAYER_MULTIMEDIA
-        QT += multimedia
-        PLAYER = MULTIMEDIA
-        SOURCES += player/multimedia.cpp
-        HEADERS += player/multimedia.h
-    }
 }
 
-    contains(PLAYER, NONE) {
-        packagesExist(phonon) {
-            message('Phonon framework found. Using Phonon-player.')
-            DEFINES += PLAYER_PHONON
-            QT += phonon
-            PLAYER = PHONON
-            SOURCES += player/phonon.cpp
-            HEADERS += player/phonon.h
-        }
-    }
-
-    packagesExist($${PKG_TEST}) {
-        message('Test framework found.')
-        DEFINES += USE_TESTLIB
-        QT += testlib
-    } else {
-        warning('No QtTest framework found! Will not do hacks with window...')
-    }
-}
 win32 {
     ICON = ./$${TARGET}.png
     DEFINES += RESOURCES=\\\"./\\\"
     DEFINES += ICON=\\\"$${ICON}\\\"
 
-# Windows don't have pkg-config
-# So we check generic paths...
-
-contains(QT_VERSION, ^5\\.[0-9]\\..*) {
-    exists($$[QT_INSTALL_PREFIX]\\bin\\Qt*Multimedia*) {
-        message('Multimedia framework found. Using Multimedia-player.')
-        DEFINES += PLAYER_MULTIMEDIA
-        QT += multimedia
-        PLAYER = MULTIMEDIA
-        SOURCES += player/multimedia.cpp
-        HEADERS += player/multimedia.h
-    }
-}
-    contains(PLAYER, NONE) {
-        exists($$[QT_INSTALL_PREFIX]\\bin\\phonon*) {
-            message('Phonon framework found. Using Phonon-player.')
-            DEFINES += PLAYER_PHONON
-            QT += phonon
-            PLAYER = PHONON
-            SOURCES += player/phonon.cpp
-            HEADERS += player/phonon.h
-        }
-    }
-    exists($$[QT_INSTALL_PREFIX]\\bin\\Qt*Test*) {
-        message('Test framework found.')
-        DEFINES += USE_TESTLIB
-        QT += testlib
-    } else {
-        warning('No QtTest framework found! Will not do hacks with window...')
-    }
-}
-
-message(Qt player: $${PLAYER})
-
-contains(PLAYER, NONE) {
-    warning('No multimedia framework found! Using NULL-player.')
-    DEFINES += PLAYER_NULL
-    SOURCES += player/null.cpp
-    HEADERS += player/null.h
 }
 
 message(Qt version: $$[QT_VERSION])
@@ -135,7 +60,8 @@ SOURCES += main.cpp\
     cachingnm.cpp \
     unixsignals.cpp \
     socketpair.cpp \
-    persistentcookiejar.cpp
+    persistentcookiejar.cpp\
+    player/multimedia.cpp
 
 HEADERS  += mainwindow.h \
     webview.h \
@@ -146,7 +72,8 @@ HEADERS  += mainwindow.h \
     cachingnm.h \
     unixsignals.h \
     socketpair.h \
-    persistentcookiejar.h
+    persistentcookiejar.h \
+    player/multimedia.h
 
 # DEBUG
 #message(- SOURCES: $${SOURCES})

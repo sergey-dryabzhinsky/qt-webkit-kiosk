@@ -7,9 +7,7 @@
  */
 
 #include <QtCore>
-#ifdef QT5
 #include <QtMultimedia/QMediaPlayer>
-#endif
 
 class QPlayer : public QObject
 {

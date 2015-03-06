@@ -58,11 +58,8 @@ bool launch(AnyOption *cmdopts)
 
     cmdopts->setVersion(VERSION);
 
-#ifdef QT5
     cmdopts->processCommandArgs( QCoreApplication::arguments().length(), QCoreApplication::arguments() );
-#else
-    cmdopts->processCommandArgs( QCoreApplication::argc(), QCoreApplication::argv() );
-#endif
+
 
     if (cmdopts->getFlag('h') || cmdopts->getFlag("help")) {
         qDebug(">> Help option in command prompt...");

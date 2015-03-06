@@ -47,12 +47,10 @@
 #include <QDebug>
 #include "mainwindow.h"
 
-#ifdef QT5
 #include <QStandardPaths>
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QtWebKitWidgets/QWebFrame>
-#endif
 
 #include "cachingnm.h"
 #include "persistentcookiejar.h"
@@ -197,11 +195,7 @@ void MainWindow::init(AnyOption *opts)
         diskCache = new QNetworkDiskCache(this);
         QString location = mainSettings->value("cache/location").toString();
         if (!location.length()) {
-#ifdef QT5
             location = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-#else
-            location = QDesktopServices::storageLocation(QDesktopServices::CacheLocation);
-#endif
         }
         diskCache->setCacheDirectory(location);
         diskCache->setMaximumCacheSize(mainSettings->value("cache/size").toUInt());
@@ -628,11 +622,8 @@ void MainWindow::loadSettings(QString ini_file)
         mainSettings->setValue("cache/enable", false);
     }
     if (!mainSettings->contains("cache/location")) {
-#ifdef QT5
         QString location = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-#else
-        QString location = QDesktopServices::storageLocation(QDesktopServices::CacheLocation);
-#endif
+
         QDir d = QDir(location);
         location += d.separator();
         location += mainSettings->value("application/name").toString();

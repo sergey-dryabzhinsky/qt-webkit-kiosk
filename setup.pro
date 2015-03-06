@@ -16,7 +16,7 @@ CONFIG(debug, debug|release) {
     CONFIG -= debug
     DEFINES += QT_NO_DEBUG_OUTPUT
 }
-
+message(testing)
 SUBDIRS += src/qt-webkit-kiosk.pro
 
 # INSTALL

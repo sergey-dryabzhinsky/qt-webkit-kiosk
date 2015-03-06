@@ -49,9 +49,7 @@
 #include <QtTest/QTestEventList>
 #endif
 
-#ifdef QT5
 #include <QtWebKitWidgets/QWebInspector>
-#endif
 
 #include "webview.h"
 #include "anyoption.h"

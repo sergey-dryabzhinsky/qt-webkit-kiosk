@@ -7,10 +7,8 @@
 #include <signal.h>
 #include "unixsignals.h"
 
-#ifdef QT5
 #include <QNetworkReply>
 #include <QSslError>
-#endif
 
 
 WebView::WebView(QWidget* parent): QWebView(parent)

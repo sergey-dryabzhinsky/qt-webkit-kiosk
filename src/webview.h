@@ -3,10 +3,8 @@
 
 #include <QtWebKit>
 
-#ifdef QT5
 #include <QtWebKitWidgets/QWebView>
 #include <QtWebKitWidgets/QWebFrame>
-#endif
 
 #include <QPrinter>
 #include <qplayer.h>
