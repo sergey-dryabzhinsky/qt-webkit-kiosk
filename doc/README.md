@@ -2,13 +2,9 @@
 
 === About ===
 
-This is simple browser application written on Qt & QtWebkit?.
+This is simple browser application written on Qt & QtWebEngine, and is a dirty hackport of Sergey Dryabzhinsky's much more stable qt-webkit-kiosk.
 
-Versions:
-
-- 1.05 supports Qt5,
-
-- 1.04 supports Qt4.
+It requires Qt5.4, as this is the first version of Qt to officially include QtWebEngine.
 
 Usualy runing in fullscreen mode, but supports maximized and fixed size window mode.
 
@@ -37,7 +33,6 @@ Usage:
 Ctrl+Q	 Close program
 F5	 Reload page
 Ctrl+R	 Reload page with cache clean
-F12	 Toggle inspector (developer tools)
 F11	 Toggle fullscreen mode
 
 - added in version 1.05.10, 1.04.07
