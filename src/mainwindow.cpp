@@ -64,7 +64,6 @@ MainWindow::MainWindow() : QMainWindow()
     mainSettings = NULL;
 
     isUrlRealyChanged = false;
-
     handler = new UnixSignals();
     connect(handler, SIGNAL(sigBREAK()), SLOT(unixSignalQuit()));
     connect(handler, SIGNAL(sigTERM()), SLOT(unixSignalQuit()));
@@ -83,7 +82,8 @@ MainWindow::MainWindow() : QMainWindow()
 void MainWindow::init(AnyOption *opts)
 {
     cmdopts = opts;
-
+    nam = new QNetworkAccessManager(this);
+    manualScreen = 0;
     if (cmdopts->getValue("config") || cmdopts->getValue('c')) {
         qDebug(">> Config option in command prompt...");
         QString cfgPath = cmdopts->getValue('c');
@@ -93,6 +93,23 @@ void MainWindow::init(AnyOption *opts)
         loadSettings(cfgPath);
     } else {
         loadSettings(QString(""));
+    }
+
+    if (cmdopts->getValue('m')) {
+        qDebug("setting monitor");
+        QString monitorString = cmdopts->getValue('m');
+        bool ok;
+        int monitorNum = monitorString.toInt(&ok);
+        if (ok) {
+            const QList<QScreen*> screens = qApp->screens();
+            int numScreens = screens.size();
+            if (false && monitorNum >= numScreens) {
+                qDebug() << "invalid monitor" << monitorNum << ", you only have " << numScreens << "screens.";
+            } else {
+                qDebug() << "setting screen" << monitorNum << "/" << numScreens;
+                manualScreen = monitorNum;
+            }
+        }
     }
 
     if (mainSettings->value("signals/enable").toBool()) {
@@ -214,7 +231,6 @@ void MainWindow::init(AnyOption *opts)
     connect(desktop, SIGNAL(resized(int)), SLOT(desktopResized(int)));
 
     show();
-
     view->page()->view()->setFocusPolicy(Qt::StrongFocus);
     view->setFocusPolicy(Qt::StrongFocus);
 
@@ -234,6 +250,8 @@ void MainWindow::init(AnyOption *opts)
 
 void MainWindow::delayedWindowResize()
 {
+
+    this->windowHandle()->setScreen(qApp->screens()[manualScreen]);
     if (mainSettings->value("view/fullscreen").toBool()) {
         showFullScreen();
     } else if (mainSettings->value("view/maximized").toBool()) {
@@ -734,8 +752,7 @@ void MainWindow::attachStyles()
 
 void MainWindow::pageIconLoaded()
 {
-    //TODO: fix;
-    //setWindowIcon(view->icon());
+    setWindowIcon(view->icon());
 }
 
 // ----------------------- SIGNALS -----------------------------

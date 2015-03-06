@@ -55,6 +55,7 @@ bool launch(AnyOption *cmdopts)
 
     cmdopts->setOption("config", 'c');
     cmdopts->setOption("uri", 'u');
+    cmdopts->setOption("monitors", 'm');
 
     cmdopts->setVersion(VERSION);
 

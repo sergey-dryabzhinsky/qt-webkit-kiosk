@@ -11,11 +11,13 @@
 #include <QNetworkReply>
 #include <QSslError>
 
+#include "mainwindow.h"
 
 WebView::WebView(QWidget* parent): QWebEngineView(parent)
 {
     player = NULL;
     loader = NULL;
+    pageIcon = QIcon();
 }
 
 /**
@@ -34,6 +36,11 @@ void WebView::initSignals()
             SIGNAL(printRequested(QWebEnginePage*)),
             this,
             SLOT(handlePrintRequested(QWebEnginePage*)));
+
+    connect(page(),
+            SIGNAL(iconUrlChanged(QUrl)),
+            this,
+            SLOT(onIconUrlChanged(QUrl)));
 }
 
 void WebView::setPage(QWebEnginePage *page)
@@ -97,21 +104,38 @@ void WebView::loadCustomPage(QString uri)
     }
 }
 
-
-void WebView::handleSslErrors(QNetworkReply* reply, const QList<QSslError> &errors)
-{
-    qDebug() << "handleSslErrors: ";
-    foreach (QSslError e, errors)
-    {
-        qDebug() << "ssl error: " << e;
+QIcon WebView::icon() {
+    if (!pageIcon.isNull()) {
+        return pageIcon;
     }
-
-    if (mainSettings->value("browser/ignore_ssl_errors").toBool()) {
-        reply->ignoreSslErrors();
-    } else {
-        reply->abort();
-    }
+    return static_cast<MainWindow*>(this->parent())->windowIcon();
 }
+
+void WebView::onIconUrlChanged(const QUrl &url) {
+    qDebug() << "icon changed";
+    QNetworkRequest iconRequest(url);
+    iconRequest.setSslConfiguration(QSslConfiguration::defaultConfiguration());
+    QNetworkAccessManager* nam = static_cast<MainWindow*>(this->parent())->nam;
+    pageIconReply = nam->get(iconRequest);
+    pageIconReply->setParent(this);
+
+    connect(pageIconReply, SIGNAL(finished()), this, SLOT(onIconLoaded()));
+
+}
+
+void WebView::onIconLoaded() {
+    pageIcon = QIcon();
+    if (pageIconReply) {
+        QByteArray data = pageIconReply->readAll();
+        QPixmap pixmap;
+        pixmap.loadFromData(data);
+        pageIcon.addPixmap(pixmap);
+        pageIconReply->deleteLater();
+        pageIconReply = 0;
+    }
+    emit iconChanged();
+}
+
 
 void WebView::handleWindowCloseRequested()
 {

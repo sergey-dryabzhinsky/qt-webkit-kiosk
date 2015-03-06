@@ -31,11 +31,15 @@ public:
 
     void playSound(QString soundSetting);
 
+    QIcon icon();
 
 
 public slots:
     void handlePrintRequested(QWebEnginePage *);
     void handleUrlChanged(const QUrl &);
+
+signals:
+    void iconChanged();
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -47,9 +51,13 @@ private:
     FakeWebView *loader;
     QPrinter *printer;
 
+    QIcon pageIcon;
+    QNetworkReply* pageIconReply;
+
 private slots:
-    void handleSslErrors(QNetworkReply* reply, const QList<QSslError> &errors);
     void handleWindowCloseRequested();
+    void onIconLoaded();
+    void onIconUrlChanged(const QUrl&);
 
 };
 
