@@ -7,7 +7,7 @@
 QT       = core gui network webkit widgets webkitwidgets printsupport multimedia testlib webenginewidgets
 
 CONFIG += console link_pkgconfig
-TARGET = qt-webkit-kiosk
+TARGET = qt-webengine-kiosk
 TEMPLATE = app
 VERSION = 1.99.3
 
