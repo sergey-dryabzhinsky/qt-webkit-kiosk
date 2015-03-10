@@ -71,6 +71,8 @@ public:
     void clearCache();
     void clearCacheOnExit();
 
+    void showFullScreen();
+
     QNetworkAccessManager *nam;
 
 protected slots:
@@ -120,6 +122,7 @@ private:
     AnyOption *cmdopts;
     UnixSignals *handler;
     int manualScreen;
+    int computedScreen();
 
 #ifdef USE_TESTLIB
     QTestEventList *simulateClick;

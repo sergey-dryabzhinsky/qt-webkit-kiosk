@@ -100,16 +100,7 @@ void MainWindow::init(AnyOption *opts)
         QString monitorString = cmdopts->getValue('m');
         bool ok;
         int monitorNum = monitorString.toInt(&ok);
-        if (ok) {
-            const QList<QScreen*> screens = qApp->screens();
-            int numScreens = screens.size();
-            if (false && monitorNum >= numScreens) {
-                qDebug() << "invalid monitor" << monitorNum << ", you only have " << numScreens << "screens.";
-            } else {
-                qDebug() << "setting screen" << monitorNum << "/" << numScreens;
-                manualScreen = monitorNum;
-            }
-        }
+        manualScreen = ok ? monitorNum : 0;
     }
 
     if (mainSettings->value("signals/enable").toBool()) {
@@ -251,7 +242,6 @@ void MainWindow::init(AnyOption *opts)
 void MainWindow::delayedWindowResize()
 {
 
-    this->windowHandle()->setScreen(qApp->screens()[manualScreen]);
     if (mainSettings->value("view/fullscreen").toBool()) {
         showFullScreen();
     } else if (mainSettings->value("view/maximized").toBool()) {
@@ -301,14 +291,43 @@ void MainWindow::cleanupSlot()
     QWebSettings::clearMemoryCaches();
 }
 
+void MainWindow::showFullScreen() {
+
+    int screen = computedScreen();
+    if (screen >= 0) {
+        if (this->windowHandle()) {
+            this->windowHandle()->setScreen(qApp->screens()[screen]);
+        }
+        QRect screenGeometry = qApp->desktop()->availableGeometry(screen);
+        setGeometry(screenGeometry);
+        qDebug() << "setting geometry:" << screenGeometry;
+    }
+
+    QMainWindow::showFullScreen();
+}
+
+int MainWindow::computedScreen() {
+    const QList<QScreen*> screens = qApp->screens();
+    int numScreens = screens.size();
+    if (manualScreen >= numScreens) {
+        qDebug() << "invalid monitor" << manualScreen << ", you only have " << numScreens << "screens.";
+        return -1;
+    } else {
+        qDebug() << "setting screen" << manualScreen+1 << "/" << numScreens;
+        return manualScreen;
+    }
+}
 
 void MainWindow::centerFixedSizeWindow()
 {
     quint16 widowWidth = mainSettings->value("view/fixed-width").toUInt();
     quint16 widowHeight = mainSettings->value("view/fixed-height").toUInt();
 
-    quint16 screenWidth = QApplication::desktop()->screenGeometry().width();
-    quint16 screenHeight = QApplication::desktop()->screenGeometry().height();
+    int screen = computedScreen();
+    QRect screenRect = qApp->desktop()->screenGeometry(screen);
+    quint16 screenWidth = screenRect.width();
+    quint16 screenHeight = screenRect.height();
+    QPoint screenOrigin = screenRect.topLeft();
 
     qDebug() << "Screen size: " << screenWidth << "x" << screenHeight;
 
@@ -316,8 +335,8 @@ void MainWindow::centerFixedSizeWindow()
     quint16 y = 0;
 
     if (mainSettings->value("view/fixed-centered").toBool()) {
-        x = (screenWidth - widowWidth) / 2;
-        y = (screenHeight - widowHeight) / 2;
+        x = screenOrigin.x() + (screenWidth - widowWidth) / 2;
+        y = screenOrigin.y() + (screenHeight - widowHeight) / 2;
     } else {
         x = mainSettings->value("view/fixed-x").toUInt();
         y = mainSettings->value("view/fixed-y").toUInt();
@@ -337,7 +356,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         QMainWindow::keyPressEvent(event);
         return;
     }
-
+    qDebug() << "got key: " << event->key();
     switch (event->key()) {
     case Qt::Key_Up:
         //view->scrollUp();
