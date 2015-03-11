@@ -44,18 +44,20 @@
 #include <QMainWindow>
 #include <QtNetwork>
 #include <QtWebKit>
+#include <QtWebEngine>
 
 #ifdef USE_TESTLIB
 #include <QtTest/QTestEventList>
 #endif
 
-#ifdef QT5
 #include <QtWebKitWidgets/QWebInspector>
-#endif
 
 #include "webview.h"
 #include "anyoption.h"
 #include "unixsignals.h"
+
+#ifndef MAIN_WINDOW_H
+#define MAIN_WINDOW_H
 
 class MainWindow : public QMainWindow
 {
@@ -68,6 +70,10 @@ public:
 
     void clearCache();
     void clearCacheOnExit();
+
+    void showFullScreen();
+
+    QNetworkAccessManager *nam;
 
 protected slots:
 
@@ -101,8 +107,6 @@ protected:
     void attachJavascripts();
     void attachStyles();
     void putWindowUp();
-    bool hideScrollbars();
-    bool disableSelection();
     void keyPressEvent(QKeyEvent *event);
 
 private:
@@ -117,6 +121,8 @@ private:
 
     AnyOption *cmdopts;
     UnixSignals *handler;
+    int manualScreen;
+    int computedScreen();
 
 #ifdef USE_TESTLIB
     QTestEventList *simulateClick;
@@ -132,3 +138,5 @@ private:
     QTimer *delayedResize;
     QTimer *delayedLoad;
 };
+
+#endif

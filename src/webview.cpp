@@ -3,20 +3,21 @@
 #include <QtDebug>
 #include <QtGui>
 #include <QtWebKit>
+#include <QtWebEngine>
 #include "webview.h"
 #include <signal.h>
 #include "unixsignals.h"
 
-#ifdef QT5
 #include <QNetworkReply>
 #include <QSslError>
-#endif
 
+#include "mainwindow.h"
 
-WebView::WebView(QWidget* parent): QWebView(parent)
+WebView::WebView(QWidget* parent): QWebEngineView(parent)
 {
     player = NULL;
     loader = NULL;
+    pageIcon = QIcon();
 }
 
 /**
@@ -25,10 +26,6 @@ WebView::WebView(QWidget* parent): QWebView(parent)
  */
 void WebView::initSignals()
 {
-    connect(page()->networkAccessManager(),
-            SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError> & )),
-            this,
-            SLOT(handleSslErrors(QNetworkReply*, const QList<QSslError> & )));
 
     connect(page(),
             SIGNAL(windowCloseRequested()),
@@ -36,14 +33,19 @@ void WebView::initSignals()
             SLOT(handleWindowCloseRequested()));
 
     connect(page(),
-            SIGNAL(printRequested(QWebFrame*)),
+            SIGNAL(printRequested(QWebEnginePage*)),
             this,
-            SLOT(handlePrintRequested(QWebFrame*)));
+            SLOT(handlePrintRequested(QWebEnginePage*)));
+
+    connect(page(),
+            SIGNAL(iconUrlChanged(QUrl)),
+            this,
+            SLOT(onIconUrlChanged(QUrl)));
 }
 
-void WebView::setPage(QWebPage *page)
+void WebView::setPage(QWebEnginePage *page)
 {
-    QWebView::setPage(page);
+    QWebEngineView::setPage(page);
     initSignals();
 }
 
@@ -102,21 +104,38 @@ void WebView::loadCustomPage(QString uri)
     }
 }
 
-
-void WebView::handleSslErrors(QNetworkReply* reply, const QList<QSslError> &errors)
-{
-    qDebug() << "handleSslErrors: ";
-    foreach (QSslError e, errors)
-    {
-        qDebug() << "ssl error: " << e;
+QIcon WebView::icon() {
+    if (!pageIcon.isNull()) {
+        return pageIcon;
     }
-
-    if (mainSettings->value("browser/ignore_ssl_errors").toBool()) {
-        reply->ignoreSslErrors();
-    } else {
-        reply->abort();
-    }
+    return static_cast<MainWindow*>(this->parent())->windowIcon();
 }
+
+void WebView::onIconUrlChanged(const QUrl &url) {
+    qDebug() << "icon changed";
+    QNetworkRequest iconRequest(url);
+    iconRequest.setSslConfiguration(QSslConfiguration::defaultConfiguration());
+    QNetworkAccessManager* nam = static_cast<MainWindow*>(this->parent())->nam;
+    pageIconReply = nam->get(iconRequest);
+    pageIconReply->setParent(this);
+
+    connect(pageIconReply, SIGNAL(finished()), this, SLOT(onIconLoaded()));
+
+}
+
+void WebView::onIconLoaded() {
+    pageIcon = QIcon();
+    if (pageIconReply) {
+        QByteArray data = pageIconReply->readAll();
+        QPixmap pixmap;
+        pixmap.loadFromData(data);
+        pageIcon.addPixmap(pixmap);
+        pageIconReply->deleteLater();
+        pageIconReply = 0;
+    }
+    emit iconChanged();
+}
+
 
 void WebView::handleWindowCloseRequested()
 {
@@ -136,7 +155,7 @@ void WebView::mousePressEvent(QMouseEvent *event)
         qDebug() << "Window Clicked!";
         playSound("event-sounds/window-clicked");
     }
-    QWebView::mousePressEvent(event);
+    QWebEngineView::mousePressEvent(event);
 }
 
 void WebView::handleUrlChanged(const QUrl &url)
@@ -181,16 +200,16 @@ void WebView::playSound(QString soundSetting)
     }
 }
 
-QWebView *WebView::createWindow(QWebPage::WebWindowType type)
+QWebEngineView *WebView::createWindow(QWebEnginePage::WebWindowType type)
 {
-    if (type != QWebPage::WebBrowserWindow) {
+    if (type != QWebEnginePage::WebBrowserWindow) {
         return NULL;
     }
 
     if (loader == NULL) {
         qDebug() << "New fake webview loader";
         loader = new FakeWebView(this);
-        QWebPage *newWeb = new QWebPage(loader);
+        QWebEnginePage *newWeb = new QWebEnginePage(loader);
         loader->setAttribute(Qt::WA_DeleteOnClose, true);
         loader->setPage(newWeb);
 
@@ -200,8 +219,10 @@ QWebView *WebView::createWindow(QWebPage::WebWindowType type)
     return loader;
 }
 
-void WebView::handlePrintRequested(QWebFrame *wf)
+void WebView::handlePrintRequested(QWebEnginePage *wf)
 {
+    //TODO: currently probably impossible;
+    #if 0
     qDebug() << "Handle printRequested...";
     if (mainSettings->value("printing/enable").toBool()) {
         if (!mainSettings->value("printing/show-printer-dialog").toBool()) {
@@ -211,45 +232,5 @@ void WebView::handlePrintRequested(QWebFrame *wf)
             }
         }
     }
+    #endif
 }
-
-void WebView::scrollDown()
-{
-    QWebFrame* frame = this->page()->mainFrame();
-    QPoint point = frame->scrollPosition();
-    frame->setScrollPosition(point + QPoint(0, 100));
-}
-
-void WebView::scrollPageDown()
-{
-    QWebFrame* frame = this->page()->mainFrame();
-    QPoint point = frame->scrollPosition();
-    frame->setScrollPosition(point + QPoint(0, this->page()->mainFrame()->geometry().height()));
-}
-
-void WebView::scrollEnd()
-{
-    QWebFrame* frame = this->page()->mainFrame();
-    frame->setScrollPosition(QPoint(0, frame->contentsSize().height()));
-}
-
-void WebView::scrollUp()
-{
-    QWebFrame* frame = this->page()->mainFrame();
-    QPoint point = frame->scrollPosition();
-    frame->setScrollPosition(point - QPoint(0, 100));
-}
-
-void WebView::scrollPageUp()
-{
-    QWebFrame* frame = this->page()->mainFrame();
-    QPoint point = frame->scrollPosition();
-    frame->setScrollPosition(point - QPoint(0, this->page()->mainFrame()->geometry().height()));
-}
-
-void WebView::scrollHome()
-{
-    QWebFrame* frame = this->page()->mainFrame();
-    frame->setScrollPosition(QPoint(0, 0));
-}
-

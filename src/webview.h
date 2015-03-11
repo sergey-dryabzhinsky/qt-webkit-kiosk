@@ -3,16 +3,17 @@
 
 #include <QtWebKit>
 
-#ifdef QT5
 #include <QtWebKitWidgets/QWebView>
 #include <QtWebKitWidgets/QWebFrame>
-#endif
+
+#include <QtWebEngineWidgets/QWebEnginePage>
+#include <QtWebEngineWidgets/QWebEngineView>
 
 #include <QPrinter>
 #include <qplayer.h>
 #include <fakewebview.h>
 
-class WebView : public QWebView
+class WebView : public QWebEngineView
 {
     Q_OBJECT
 
@@ -24,23 +25,21 @@ public:
     void loadHomepage();
     void initSignals();
 
-    void setPage(QWebPage* page);
+    void setPage(QWebEnginePage* page);
 
-    QWebView *createWindow(QWebPage::WebWindowType type);
+    QWebEngineView *createWindow(QWebEnginePage::WebWindowType type);
 
     void playSound(QString soundSetting);
 
-    // http://slow-tone.blogspot.com/2011/04/qt-hide-scrollbars-qwebview.html?showComment=1318404188431#c5258624438625837585
-    void scrollUp();
-    void scrollDown();
-    void scrollPageUp();
-    void scrollPageDown();
-    void scrollHome();
-    void scrollEnd();
+    QIcon icon();
+
 
 public slots:
-    void handlePrintRequested(QWebFrame *);
+    void handlePrintRequested(QWebEnginePage *);
     void handleUrlChanged(const QUrl &);
+
+signals:
+    void iconChanged();
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -52,9 +51,13 @@ private:
     FakeWebView *loader;
     QPrinter *printer;
 
+    QIcon pageIcon;
+    QNetworkReply* pageIconReply;
+
 private slots:
-    void handleSslErrors(QNetworkReply* reply, const QList<QSslError> &errors);
     void handleWindowCloseRequested();
+    void onIconLoaded();
+    void onIconUrlChanged(const QUrl&);
 
 };
 

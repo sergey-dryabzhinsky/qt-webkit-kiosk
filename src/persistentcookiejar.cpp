@@ -12,11 +12,8 @@ const char *PersistentCookieJar::line_separator = "\n";
 PersistentCookieJar::PersistentCookieJar(QObject *parent) :
     QNetworkCookieJar(parent)
 {
-#ifdef QT5
         QString cookiejar_path = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
-#else
-        QString cookiejar_path = QDesktopServices::storageLocation(QDesktopServices::DataLocation);
-#endif
+
 
     if (cookiejar_path.length() == 0) {
         qDebug() << "No data locations available; not storing any cookies.";

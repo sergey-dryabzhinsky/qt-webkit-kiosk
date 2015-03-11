@@ -1,7 +1,7 @@
-qt-webkit-kiosk
+qt-webengine-kiosk
 ===============
 
-This is simple browser application written on Qt &amp; QtWebkit. 
+This is simple browser application written on Qt &amp; QtWebEngine, and is a dirty hackport of Sergey Dryabzhinsky's much more stable qt-webkit-kiosk. It requires Qt >= 5.4, as this is the first version to officially include qtwebengine.
 
 Usualy runing in fullscreen mode, but supports maximized and fixed size window mode.
 
@@ -13,11 +13,4 @@ Also hides printer dialog and uses default or defined printer.
 
 ##Downloads
 
-Downloads now on public [gDrive Folder](https://drive.google.com/folderview?id=0B6CU04AyADvoV19PMlhJSVA2TDQ&usp=sharing).
-
-For windows available [Qt bundles](https://drive.google.com/folderview?id=0B6CU04AyADvoXzUxdW5KeEt5cW8&usp=sharing) public folder. It needed by installer without Qt.
-
-###Launchpad
-
-- Main PPA: ppa:sergey-dryabzhinsky/qt-webkit-kiosk
-- Additional: ppa:sergey-dryabzhinsky/qt48
+TBA when I get some windows builds happening

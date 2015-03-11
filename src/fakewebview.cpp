@@ -1,6 +1,6 @@
 #include <fakewebview.h>
 
-FakeWebView::FakeWebView(QWidget *parent) : QWebView(parent)
+FakeWebView::FakeWebView(QWidget *parent) : QWebEngineView(parent)
 {
 }
 

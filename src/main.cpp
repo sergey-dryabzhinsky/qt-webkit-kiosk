@@ -55,14 +55,12 @@ bool launch(AnyOption *cmdopts)
 
     cmdopts->setOption("config", 'c');
     cmdopts->setOption("uri", 'u');
+    cmdopts->setOption("monitors", 'm');
 
     cmdopts->setVersion(VERSION);
 
-#ifdef QT5
     cmdopts->processCommandArgs( QCoreApplication::arguments().length(), QCoreApplication::arguments() );
-#else
-    cmdopts->processCommandArgs( QCoreApplication::argc(), QCoreApplication::argv() );
-#endif
+
 
     if (cmdopts->getFlag('h') || cmdopts->getFlag("help")) {
         qDebug(">> Help option in command prompt...");

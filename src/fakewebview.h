@@ -3,13 +3,10 @@
 
 #include <QtNetwork>
 
-#ifdef QT5
 #include <QtWebKitWidgets/QWebView>
-#else
-#include <QWebView>
-#endif
+#include <QWebEngineView>
 
-class FakeWebView : public QWebView
+class FakeWebView : public QWebEngineView
 {
     Q_OBJECT
 
