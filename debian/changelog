@@ -1,3 +1,10 @@
+qt-webkit-kiosk (1.99.4-1sergey1) unstable; urgency=medium
+
+  * move code with hidding mouse cursor after main window show
+  * fix qt-5 version detection
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Mon, 27 Jul 2015 22:25:00 +0400
+
 qt-webkit-kiosk (1.99.3-1sergey1) unstable; urgency=medium
 
   * Add persistent cookie storage. Thanks to quinox.
