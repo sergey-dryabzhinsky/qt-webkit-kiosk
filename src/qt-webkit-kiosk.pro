@@ -6,7 +6,7 @@
 
 QT       = core gui network webkit
 
-contains(QT_VERSION, ^5\\.[0-9]\\..*) {
+contains(QT_VERSION, ^5\\.[0-9]+\\..*) {
     QT       += widgets webkitwidgets printsupport
     DEFINES  += QT5
 }
@@ -14,7 +14,7 @@ contains(QT_VERSION, ^5\\.[0-9]\\..*) {
 CONFIG += console link_pkgconfig
 TARGET = qt-webkit-kiosk
 TEMPLATE = app
-VERSION = 1.99.3
+VERSION = 1.99.4
 
 CONFIG(debug, debug|release) {
 # here comes debug specific statements
@@ -40,7 +40,7 @@ PLAYER = NONE
 
     PKG_TEST=QtTest
 
-contains(QT_VERSION, ^5\\.[0-9]\\..*) {
+contains(QT_VERSION, ^5\\.[0-9]+\\..*) {
 
     PKG_TEST=Qt5Test
 
@@ -81,7 +81,7 @@ win32 {
 # Windows don't have pkg-config
 # So we check generic paths...
 
-contains(QT_VERSION, ^5\\.[0-9]\\..*) {
+contains(QT_VERSION, ^5\\.[0-9]+\\..*) {
     exists($$[QT_INSTALL_PREFIX]\\bin\\Qt*Multimedia*) {
         message('Multimedia framework found. Using Multimedia-player.')
         DEFINES += PLAYER_MULTIMEDIA

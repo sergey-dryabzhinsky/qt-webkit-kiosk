@@ -113,6 +113,8 @@ void MainWindow::init(AnyOption *opts)
         setMinimumHeight(minimalHeight);
     }
 
+    hiddenCurdor = new QCursor(Qt::BlankCursor);
+
     qDebug() << "Application icon: " << mainSettings->value("application/icon").toString();
     setWindowIcon(QIcon(
        mainSettings->value("application/icon").toString()
@@ -181,10 +183,6 @@ void MainWindow::init(AnyOption *opts)
         loadProgress->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
         loadProgress->hide();
-    }
-
-    if (mainSettings->value("view/hide_mouse_cursor").toBool()) {
-        QApplication::setOverrideCursor(Qt::BlankCursor);
     }
 
     setCentralWidget(view);
@@ -266,10 +264,16 @@ void MainWindow::init(AnyOption *opts)
     QDesktopWidget *desktop = QApplication::desktop();
     connect(desktop, SIGNAL(resized(int)), SLOT(desktopResized(int)));
 
+    // Window show, start events loop
     show();
 
     view->page()->view()->setFocusPolicy(Qt::StrongFocus);
     view->setFocusPolicy(Qt::StrongFocus);
+
+    if (mainSettings->value("view/hide_mouse_cursor").toBool()) {
+        QApplication::setOverrideCursor(Qt::BlankCursor);
+        view->setCursor(*hiddenCurdor);
+    }
 
     int delay_resize = 0;
     if (mainSettings->value("view/startup_resize_delayed").toBool()) {

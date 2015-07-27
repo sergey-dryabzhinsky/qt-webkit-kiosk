@@ -113,9 +113,10 @@ private:
     QNetworkDiskCache *diskCache;
     QWebInspector *inspector;
 
-    QKeyEvent * eventExit;
+    QCursor     *hiddenCurdor;
+    QKeyEvent   *eventExit;
 
-    AnyOption *cmdopts;
+    AnyOption   *cmdopts;
     UnixSignals *handler;
 
 #ifdef USE_TESTLIB
