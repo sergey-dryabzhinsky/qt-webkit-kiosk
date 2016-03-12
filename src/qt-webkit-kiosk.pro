@@ -4,17 +4,40 @@
 #
 #-------------------------------------------------
 
-QT       = core gui network webkit
+QT       = core gui network
 
-contains(QT_VERSION, ^5\\.[0-9]+\\..*) {
-    QT       += widgets webkitwidgets printsupport
-    DEFINES  += QT5
+CONFIG	+= console link_pkgconfig c++11
+TARGET	= qt-webkit-kiosk
+TEMPLATE = app
+VERSION	= 1.99.5
+
+
+qtHaveModule(webenginewidgets): {
+	QT += webenginewidgets
+	DEFINES += WEB_ENGINE
+	SOURCES += webengine/webview.cpp \
+				webengine/fakewebview.cpp
+	HEADERS += webengine/webview.h \
+				webengine/fakewebview.h
+}
+else: {
+	QT += webkit
+	DEFINES += WEB_KIT
+
+	contains(QT_VERSION, ^5\\.[0-9]+\\..*) {
+		QT += webkitwidgets
+	}
+
+	SOURCES += webkit/webview.cpp \
+				webkit/fakewebview.cpp
+	HEADERS += webkit/webview.h \
+				webkit/fakewebview.h
 }
 
-CONFIG += console link_pkgconfig
-TARGET = qt-webkit-kiosk
-TEMPLATE = app
-VERSION = 1.99.5
+contains(QT_VERSION, ^5\\.[0-9]+\\..*) {
+    QT       += widgets printsupport
+    DEFINES  += QT5
+}
 
 CONFIG(debug, debug|release) {
 # here comes debug specific statements
@@ -129,20 +152,17 @@ message(- VERSION: $${VERSION})
 
 SOURCES += main.cpp\
     mainwindow.cpp \
-    webview.cpp \
     anyoption.cpp \
-    fakewebview.cpp \
     cachingnm.cpp \
     unixsignals.cpp \
     socketpair.cpp \
     persistentcookiejar.cpp
 
 HEADERS  += mainwindow.h \
-    webview.h \
     anyoption.h \
     config.h \
     qplayer.h \
-    fakewebview.h \
+    qweb.h \
     cachingnm.h \
     unixsignals.h \
     socketpair.h \

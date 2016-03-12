@@ -4,7 +4,7 @@
 #ifdef WEB_ENGINE
 
 #include <QtWebEngine>
-#include <QtWebEngineWidgents>
+#include <QtWebEngineWidgets>
 
 #include "webengine/fakewebview.h"
 #include "webengine/webview.h"

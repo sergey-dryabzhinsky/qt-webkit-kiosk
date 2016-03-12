@@ -1,18 +1,14 @@
 #ifndef WEBVIEW_H
 #define WEBVIEW_H
 
-#include <QtWebKit>
-
-#ifdef QT5
-#include <QtWebKitWidgets/QWebView>
-#include <QtWebKitWidgets/QWebFrame>
-#endif
+#include <QtWebEngineWidgets/QWebEngineView>
+#include <QtWebEngineWidgets/QWebEnginePage>
 
 #include <QPrinter>
 #include <qplayer.h>
 #include "fakewebview.h"
 
-class WebView : public QWebView
+class WebView : public QWebEngineView
 {
     Q_OBJECT
 
@@ -24,9 +20,9 @@ public:
     void loadHomepage();
     void initSignals();
 
-    void setPage(QWebPage* page);
+    void setPage(QWebEnginePage* page);
 
-    QWebView *createWindow(QWebPage::WebWindowType type);
+    QWebEngineView *createWindow(QWebEnginePage::WebWindowType type);
 
     void playSound(QString soundSetting);
 
@@ -39,13 +35,13 @@ public:
     void scrollEnd();
 
 public slots:
-    void handlePrintRequested(QWebFrame *);
+//    void handlePrintRequested(QWebEnginePage *);
     void handleUrlChanged(const QUrl &);
 
 protected:
     void mousePressEvent(QMouseEvent *event);
     QPlayer *getPlayer();
-    QWebView *getFakeLoader();
+    QWebEngineView *getFakeLoader();
 
 private:
     QPlayer *player;
@@ -54,7 +50,7 @@ private:
     QPrinter *printer;
 
 private slots:
-    void handleSslErrors(QNetworkReply* reply, const QList<QSslError> &errors);
+//    void handleSslErrors(QNetworkReply* reply, const QList<QSslError> &errors);
     void handleWindowCloseRequested();
 
 };

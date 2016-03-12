@@ -43,7 +43,6 @@
 
 #include <QtGui>
 #include <QtNetwork>
-#include <QtWebKit>
 #include <QDebug>
 #include "mainwindow.h"
 
@@ -51,7 +50,6 @@
 #include <QStandardPaths>
 #include <QApplication>
 #include <QDesktopWidget>
-#include <QtWebKitWidgets/QWebFrame>
 #endif
 
 #include "cachingnm.h"
@@ -188,7 +186,7 @@ void MainWindow::init(AnyOption *opts)
     setCentralWidget(view);
 
     view->setSettings(mainSettings);
-    view->setPage(new QWebPage(view));
+    view->setPage(new QWebEnginePage(view));
 
     // --- Disk cache --- //
     if (mainSettings->value("cache/enable").toBool()) {
@@ -256,12 +254,12 @@ void MainWindow::init(AnyOption *opts)
     if (mainSettings->value("inspector/enable").toBool()) {
         view->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
 
-        inspector = new QWebInspector();
+/*        inspector = new QWebInspector();
         inspector->setVisible(mainSettings->value("inspector/visible").toBool());
         inspector->setMinimumSize(800, 600);
         inspector->setWindowTitle(mainSettings->value("application/name").toString() + " - WebInspector");
         inspector->setWindowIcon(this->windowIcon());
-        inspector->setPage(view->page());
+        inspector->setPage(view->page());*/
     }
 
     connect(view, SIGNAL(titleChanged(QString)), SLOT(adjustTitle()));
