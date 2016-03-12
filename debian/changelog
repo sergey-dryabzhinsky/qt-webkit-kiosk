@@ -1,3 +1,10 @@
+qt-webkit-kiosk (1.99.5-1sergey1) unstable; urgency=medium
+
+  * Activate more settings for WebView - acceleration
+  * Don't leak by FakeLoader - just stop load
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sat, 12 Mar 2016 20:46:00 +0400
+
 qt-webkit-kiosk (1.99.4-1sergey1) unstable; urgency=medium
 
   * move code with hidding mouse cursor after main window show
