@@ -45,6 +45,7 @@ public slots:
 protected:
     void mousePressEvent(QMouseEvent *event);
     QPlayer *getPlayer();
+    QWebView *getFakeLoader();
 
 private:
     QPlayer *player;

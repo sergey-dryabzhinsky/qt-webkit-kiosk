@@ -150,9 +150,7 @@ void WebView::handleUrlChanged(const QUrl &url)
     }
 
     if (loader) {
-        loader->close();
-        qDebug() << "-- close loader";
-        loader = NULL;
+        loader->stop();
     }
 }
 
@@ -164,6 +162,21 @@ QPlayer *WebView::getPlayer()
         }
     }
     return player;
+}
+
+QWebView *WebView::getFakeLoader()
+{
+    if (!loader) {
+        qDebug() << "New fake webview loader";
+        loader = new FakeWebView(this);
+        loader->hide();
+        QWebPage *newWeb = new QWebPage(loader);
+//        loader->setAttribute(Qt::WA_DeleteOnClose, true);
+        loader->setPage(newWeb);
+
+        connect(loader, SIGNAL(urlChanged(const QUrl&)), SLOT(handleUrlChanged(const QUrl&)));
+    }
+    return loader;
 }
 
 void WebView::playSound(QString soundSetting)
@@ -186,18 +199,9 @@ QWebView *WebView::createWindow(QWebPage::WebWindowType type)
     if (type != QWebPage::WebBrowserWindow) {
         return NULL;
     }
+    qDebug() << "Handle createWindow...";
 
-    if (loader == NULL) {
-        qDebug() << "New fake webview loader";
-        loader = new FakeWebView(this);
-        QWebPage *newWeb = new QWebPage(loader);
-        loader->setAttribute(Qt::WA_DeleteOnClose, true);
-        loader->setPage(newWeb);
-
-        connect(loader, SIGNAL(urlChanged(const QUrl&)), SLOT(handleUrlChanged(const QUrl&)));
-    }
-
-    return loader;
+    return getFakeLoader();
 }
 
 void WebView::handlePrintRequested(QWebFrame *wf)

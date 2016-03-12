@@ -243,6 +243,16 @@ void MainWindow::init(AnyOption *opts)
         mainSettings->value("browser/plugins").toBool()
     );
 
+#if QT_VERSION >= 0x050400
+    view->settings()->setAttribute(QWebSettings::Accelerated2dCanvasEnabled, true);
+#endif
+    view->settings()->setAttribute(QWebSettings::AcceleratedCompositingEnabled, true);
+#if QT_VERSION >= 0x050200
+    view->settings()->setAttribute(QWebSettings::CSSRegionsEnabled, true);
+    view->settings()->setAttribute(QWebSettings::CSSGridLayoutEnabled, true);
+#endif
+    view->settings()->setAttribute(QWebSettings::SiteSpecificQuirksEnabled, true);
+
     if (mainSettings->value("inspector/enable").toBool()) {
         view->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
 
