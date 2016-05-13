@@ -283,6 +283,7 @@ void MainWindow::init(AnyOption *opts)
     if (mainSettings->value("view/hide_mouse_cursor").toBool()) {
         QApplication::setOverrideCursor(Qt::BlankCursor);
         view->setCursor(*hiddenCurdor);
+        QApplication::processEvents(); //process events to force cursor update before press
     }
 
     int delay_resize = 0;
