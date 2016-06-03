@@ -39,6 +39,19 @@ void WebView::initSignals()
             SIGNAL(printRequested(QWebFrame*)),
             this,
             SLOT(handlePrintRequested(QWebFrame*)));
+
+    /*handle network errors*/
+    connect(page()->networkAccessManager(),
+            SIGNAL(finished(QNetworkReply*)),
+            this,
+            SLOT(handleNetworkReply(QNetworkReply*)));
+
+    /*handle auth request to be in stable state*/
+    connect(page()->networkAccessManager(),
+           SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)),
+            this,
+            SLOT(handleAuthReply(QNetworkReply*,QAuthenticator*)));
+
 }
 
 void WebView::setPage(QWebPage *page)
@@ -115,6 +128,29 @@ void WebView::handleSslErrors(QNetworkReply* reply, const QList<QSslError> &erro
         reply->ignoreSslErrors();
     } else {
         reply->abort();
+    }
+}
+
+void WebView::handleNetworkReply(QNetworkReply* reply)
+{
+    if( reply )
+    {
+        if( reply->error())
+        {
+            qDebug() <<"handleNetworkReply ERROR:" << reply->errorString();
+        }
+        else
+        {
+             //qDebug() <<"handleNetworkReply OK";
+        }
+    }
+}
+
+void WebView::handleAuthReply(QNetworkReply* aReply,QAuthenticator* aAuth)
+{
+    if( aReply && aAuth )
+    {
+        qDebug() << "handleAuthReply, do nothing for now";
     }
 }
 
