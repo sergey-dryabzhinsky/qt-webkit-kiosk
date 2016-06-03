@@ -57,6 +57,8 @@ private slots:
     void handleSslErrors(QNetworkReply* reply, const QList<QSslError> &errors);
     void handleWindowCloseRequested();
 
+    void handleNetworkReply(QNetworkReply *reply);
+    void handleAuthReply(QNetworkReply *aReply, QAuthenticator *aAuth);
 };
 
 #endif // WEBVIEW_H
