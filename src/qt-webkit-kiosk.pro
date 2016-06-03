@@ -52,9 +52,19 @@ contains(QT_VERSION, ^5\\.[0-9]+\\..*) {
         SOURCES += player/multimedia.cpp
         HEADERS += player/multimedia.h
     }
+
+    packagesExist(phonon4qt5) {
+        message('Phonon framework found. Using Phonon-player.')
+        DEFINES += PLAYER_PHONON
+        QT += phonon4qt5
+        PLAYER = PHONON
+        SOURCES += player/phonon.cpp
+        HEADERS += player/phonon.h
+    }
 }
 
     contains(PLAYER, NONE) {
+
         packagesExist(phonon) {
             message('Phonon framework found. Using Phonon-player.')
             DEFINES += PLAYER_PHONON
@@ -63,6 +73,7 @@ contains(QT_VERSION, ^5\\.[0-9]+\\..*) {
             SOURCES += player/phonon.cpp
             HEADERS += player/phonon.h
         }
+
     }
 
     packagesExist($${PKG_TEST}) {
@@ -130,6 +141,7 @@ message(- VERSION: $${VERSION})
 SOURCES += main.cpp\
     mainwindow.cpp \
     webview.cpp \
+    qwk-webpage.cpp \
     anyoption.cpp \
     fakewebview.cpp \
     cachingnm.cpp \
@@ -139,6 +151,7 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     webview.h \
+    qwk-webpage.h \
     anyoption.h \
     config.h \
     qplayer.h \

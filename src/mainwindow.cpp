@@ -46,6 +46,7 @@
 #include <QtWebKit>
 #include <QDebug>
 #include "mainwindow.h"
+#include "qwk-webpage.h"
 
 #ifdef QT5
 #include <QStandardPaths>
@@ -188,7 +189,7 @@ void MainWindow::init(AnyOption *opts)
     setCentralWidget(view);
 
     view->setSettings(mainSettings);
-    view->setPage(new QWebPage(view));
+    view->setPage(new QwkWebPage(view));
 
     // --- Disk cache --- //
     if (mainSettings->value("cache/enable").toBool()) {

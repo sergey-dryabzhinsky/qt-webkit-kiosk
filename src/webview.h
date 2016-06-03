@@ -9,8 +9,9 @@
 #endif
 
 #include <QPrinter>
-#include <qplayer.h>
-#include <fakewebview.h>
+#include "qplayer.h"
+#include "qwk-webpage.h"
+#include "fakewebview.h"
 
 class WebView : public QWebView
 {
@@ -20,11 +21,13 @@ public:
     explicit WebView(QWidget* parent = 0);
 
     void setSettings(QSettings *settings);
+    QSettings* getSettings();
+
     void loadCustomPage(QString uri);
     void loadHomepage();
     void initSignals();
 
-    void setPage(QWebPage* page);
+    void setPage(QwkWebPage* page);
 
     QWebView *createWindow(QWebPage::WebWindowType type);
 

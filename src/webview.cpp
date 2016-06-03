@@ -54,7 +54,7 @@ void WebView::initSignals()
 
 }
 
-void WebView::setPage(QWebPage *page)
+void WebView::setPage(QwkWebPage *page)
 {
     QWebView::setPage(page);
     initSignals();
@@ -81,6 +81,11 @@ void WebView::setSettings(QSettings *settings)
         }
     }
 
+}
+
+QSettings* WebView::getSettings()
+{
+    return mainSettings;
 }
 
 void WebView::loadHomepage()
@@ -206,9 +211,8 @@ QWebView *WebView::getFakeLoader()
         qDebug() << "New fake webview loader";
         loader = new FakeWebView(this);
         loader->hide();
-        QWebPage *newWeb = new QWebPage(loader);
-//        loader->setAttribute(Qt::WA_DeleteOnClose, true);
-        loader->setPage(newWeb);
+
+        loader->setPage(new QwkWebPage(loader));
 
         connect(loader, SIGNAL(urlChanged(const QUrl&)), SLOT(handleUrlChanged(const QUrl&)));
     }
@@ -292,4 +296,3 @@ void WebView::scrollHome()
     QWebFrame* frame = this->page()->mainFrame();
     frame->setScrollPosition(QPoint(0, 0));
 }
-
