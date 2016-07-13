@@ -52,6 +52,18 @@ contains(QT_VERSION, ^5\\.[0-9]+\\..*) {
         SOURCES += player/multimedia.cpp
         HEADERS += player/multimedia.h
     }
+
+    contains(PLAYER, NONE) {
+        # Ubuntu / Debian version?
+        packagesExist(phonon4qt5) {
+            message('Phonon framework found. Using Phonon-player.')
+            DEFINES += PLAYER_PHONON
+            QT += phonon4qt5
+            PLAYER = PHONON
+            SOURCES += player/phonon.cpp
+            HEADERS += player/phonon.h
+        }
+    }
 }
 
     contains(PLAYER, NONE) {
