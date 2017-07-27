@@ -46,6 +46,7 @@ public slots:
     void handlePrintRequested(QWebFrame *);
     void handleFakeviewUrlChanged(const QUrl &);
     void handleFakeviewLoadFinished(bool);
+    virtual bool shouldInterruptJavaScript();
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -56,6 +57,7 @@ protected:
 signals:
 
     void qwkError(QString message);
+    void qwkNetworkReplyUrl(QUrl url);
 
 private:
     QPlayer     *player;

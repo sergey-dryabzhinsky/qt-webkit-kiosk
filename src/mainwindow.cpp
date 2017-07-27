@@ -200,7 +200,7 @@ void MainWindow::init(AnyOption *opts)
         messagesBox->setContentsMargins(2, 2, 2, 2);
         //messagesBox->setMinimumSize(200, 24);
         // Need something to stretch label. WordWrap works strange. And layout too.
-        //messagesBox->setWordWrap(true);
+        messagesBox->setWordWrap(true);
         messagesBox->setAutoFillBackground(true);
         messagesBox->setPalette(palette);
         messagesBox->setFrameStyle(QFrame::Panel | QFrame::Raised);
@@ -208,11 +208,11 @@ void MainWindow::init(AnyOption *opts)
 
         // Do not work... Need Layout...
         messagesBox->setAlignment(Qt::AlignTop | Qt::AlignJustify);
-        messagesBox->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
+        messagesBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::MinimumExpanding);
 
         messagesBox->hide();
 
-        topBox->addWidget(messagesBox, 2, Qt::AlignTop | Qt::AlignLeft);
+        topBox->addWidget(messagesBox, 1, Qt::AlignTop | Qt::AlignLeft);
     }
 
     //topBox->addStretch();
@@ -296,13 +296,21 @@ void MainWindow::init(AnyOption *opts)
         inspector->setPage(view->page());
     }
 
-    connect(view, SIGNAL(titleChanged(QString)), SLOT(adjustTitle(QString)));
-    connect(view, SIGNAL(loadStarted()), SLOT(startLoading()));
-    connect(view, SIGNAL(urlChanged(const QUrl &)), SLOT(urlChanged(const QUrl &)));
-    connect(view, SIGNAL(loadProgress(int)), SLOT(setProgress(int)));
-    connect(view, SIGNAL(loadFinished(bool)), SLOT(finishLoading(bool)));
-    connect(view, SIGNAL(iconChanged()), SLOT(pageIconLoaded()));
+    connect(view->page()->mainFrame(), SIGNAL(titleChanged(QString)), SLOT(adjustTitle(QString)));
+    connect(view->page()->mainFrame(), SIGNAL(loadStarted()), SLOT(startLoading()));
+    connect(view->page()->mainFrame(), SIGNAL(urlChanged(const QUrl &)), SLOT(urlChanged(const QUrl &)));
+    connect(view->page(), SIGNAL(loadProgress(int)), SLOT(setProgress(int)));
+    connect(view->page()->mainFrame(), SIGNAL(loadFinished(bool)), SLOT(finishLoading(bool)));
+    connect(view->page()->mainFrame(), SIGNAL(iconChanged()), SLOT(pageIconLoaded()));
     connect(view, SIGNAL(qwkError(QString)), SLOT(handleQwkError(QString)));
+    connect(view, SIGNAL(qwkNetworkReplyUrl(QUrl)), SLOT(handleQwkNetworkReplyUrl(QUrl)));
+
+    QNetworkConfigurationManager manager;
+    QNetworkConfiguration cfg = manager.defaultConfiguration();
+
+    n_session = new QNetworkSession(cfg);
+    connect(n_session, SIGNAL(stateChanged(QNetworkSession::State)), this, SLOT(networkStateChanged(QNetworkSession::State)));
+    n_session->open();
 
     QDesktopWidget *desktop = QApplication::desktop();
     connect(desktop, SIGNAL(resized(int)), SLOT(desktopResized(int)));
@@ -319,13 +327,13 @@ void MainWindow::init(AnyOption *opts)
         QApplication::processEvents(); //process events to force cursor update before press
     }
 
-    int delay_resize = 0;
+    int delay_resize = 1;
     if (qwkSettings->getBool("view/startup_resize_delayed")) {
         delay_resize = qwkSettings->getUInt("view/startup_resize_delay");
     }
     delayedResize->singleShot(delay_resize, this, SLOT(delayedWindowResize()));
 
-    int delay_load = 0;
+    int delay_load = 1;
     if (qwkSettings->getBool("browser/startup_load_delayed")) {
         delay_load = qwkSettings->getUInt("browser/startup_load_delay");
     }
@@ -342,6 +350,11 @@ void MainWindow::delayedWindowResize()
     } else if (qwkSettings->getBool("view/fixed-size")) {
         centerFixedSizeWindow();
     }
+    QApplication::processEvents(); //process events to force update
+
+    quint16 msgWidth = view->width() - loadProgress->width() - 16;
+    messagesBox->setMinimumWidth(msgWidth);
+    messagesBox->setMaximumWidth(view->width());
 
     this->setFocusPolicy(Qt::StrongFocus);
     this->focusWidget();
@@ -354,6 +367,9 @@ void MainWindow::delayedWindowResize()
 
 void MainWindow::delayedPageLoad()
 {
+    // Wait 1 second. May be not here?
+    n_session->waitForOpened(1000);
+
     view->loadHomepage();
 }
 
@@ -465,6 +481,9 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_F5:
         view->reload();
         break;
+    case Qt::Key_F8:
+        view->stop();
+        break;
     case Qt::Key_F12:
         if (qwkSettings->getUInt("inspector/enable")) {
             if (!inspector->isVisible()) {
@@ -488,19 +507,16 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
 void MainWindow::handleQwkError(QString message)
 {
+    qDebug() << QDateTime::currentDateTime().toString()
+             << "MainWindow::handleQwkError"
+                ;
     if (messagesBox) {
         messagesBox->show();
         QString txt = messagesBox->text();
-        messagesBox->setText(txt + "; " + message);
-    }
-}
-
-void MainWindow::adjustTitle(QString title)
-{
-    if (progress <= 0 || progress >= 100) {
-        setWindowTitle(title);
-    } else {
-        setWindowTitle(QString("%1 (%2%)").arg(title).arg(progress));
+        if (txt.length()) {
+            txt += "\n";
+        }
+        messagesBox->setText(txt + QDateTime::currentDateTime().toString() + " :: " + message);
     }
 }
 
@@ -514,13 +530,33 @@ void MainWindow::desktopResized(int p)
     } else if (qwkSettings->getBool("view/fixed-size")) {
         centerFixedSizeWindow();
     }
+
+    QApplication::processEvents(); //process events to force update
+
+    quint16 msgWidth = view->width() - loadProgress->width() - 16;
+    messagesBox->setMinimumWidth(msgWidth);
+    messagesBox->setMaximumWidth(view->width());
 }
 
+/**
+ * @brief MainWindow::pageIconLoaded
+ * This is triggered by WebView->page()->mainFrame now
+ */
+void MainWindow::pageIconLoaded()
+{
+    setWindowIcon(view->icon());
+}
+
+/**
+ * @brief MainWindow::startLoading
+ * This is triggered by WebView->page()->mainFrame now
+ */
 void MainWindow::startLoading()
 {
+    qDebug()  << QDateTime::currentDateTime().toString() << "Start loading...";
+
     progress = 0;
-    isScrollBarsHidden = false;
-    isSelectionDisabled = false;
+
     isUrlRealyChanged = false;
 
     adjustTitle(view->title());
@@ -532,21 +568,42 @@ void MainWindow::startLoading()
     }
 
     if (messagesBox) {
+        messagesBox->setText("");
         messagesBox->hide();
     }
 
-    qDebug("Start loading...");
 }
 
+void MainWindow::adjustTitle(QString title)
+{
+    if (progress <= 0 || progress >= 100) {
+        setWindowTitle(title);
+    } else {
+        setWindowTitle(QString("%1 (%2%)").arg(title).arg(progress));
+    }
+}
+
+/**
+ * @brief MainWindow::setProgress
+ * This is triggered every resource loaded by WebView->page->all frames
+ * @param p
+ */
 void MainWindow::setProgress(int p)
 {
     progress = p;
     adjustTitle(view->title());
 
-    qDebug() << "Loading progress: " << p;
+    qDebug() << QDateTime::currentDateTime().toString() << "Loading progress: " << p;
 
     if (loadProgress) {
         loadProgress->setValue(p);
+        if (p != 100) {
+            loadProgress->show();
+            view->resetLoadTimer();
+        } else {
+            loadProgress->hide();
+            view->stopLoadTimer();
+        }
     }
 
     // 1. Hide scrollbars (and add some styles)
@@ -554,14 +611,16 @@ void MainWindow::setProgress(int p)
     if (!isScrollBarsHidden && isUrlRealyChanged) {
         isScrollBarsHidden = hideScrollbars();
     }
-    if (!isSelectionDisabled && isUrlRealyChanged) {
-        isSelectionDisabled = disableSelection();
-    }
 }
 
+/**
+ * @brief MainWindow::urlChanged
+ * This is triggered by WebView->page()->mainFrame now
+ * @param url
+ */
 void MainWindow::urlChanged(const QUrl &url)
 {
-    qDebug() << "URL changes: " << url.toString();
+    qDebug() << QDateTime::currentDateTime().toString() << "URL changes: " << url.toString();
 
     // Where is a real change in webframe! Drop flags.
     isScrollBarsHidden = false;
@@ -572,52 +631,69 @@ void MainWindow::urlChanged(const QUrl &url)
         view->page()->mainFrame()->setZoomFactor(qwkSettings->getReal("view/page_scale"));
     }
 
+    view->resetLoadTimer();
+
     // This is real link clicked
     view->playSound("event-sounds/link-clicked");
 }
 
+/**
+ * @brief MainWindow::finishLoading
+ * This is triggered by WebView->page()->mainFrame now
+ * @param ok
+ */
 void MainWindow::finishLoading(bool ok)
 {
-    qDebug() << "MainWindow::finishLoading: ok=" << (int)ok;
+    qDebug() << QDateTime::currentDateTime().toString()
+             << "MainWindow::finishLoading - "
+             << "ok =" << (int)ok
+                ;
 
     view->stopLoadTimer();
 
-    if (ok) {
-        progress = 100;
-        adjustTitle(view->title());
-    } else {
-
+    if (!ok) {
         if (messagesBox) {
             messagesBox->show();
             QString txt = messagesBox->text();
             if (txt.length()) {
-                txt += "; ";
+                txt += "\n";
             }
-            messagesBox->setText(txt + "Page not fully loaded! Check network connection.");
+            messagesBox->setText(txt + QDateTime::currentDateTime().toString() +  " :: Page not fully loaded! Loosed network connection or page load timeout.");
         }
 
         // Don't do any action
         return;
+    }
 
+    progress = 100;
+    adjustTitle(view->title());
+
+    if (messagesBox) {
+        if (!messagesBox->text().length() && !messagesBox->isHidden() ) {
+            messagesBox->hide();
+        }
     }
 
     if (loadProgress) {
         loadProgress->hide();
     }
 
-    // 1. Hide scrollbars (and add some styles)
-    if (!isScrollBarsHidden) {
-        isScrollBarsHidden = hideScrollbars();
-    }
-    if (!isSelectionDisabled) {
-        isSelectionDisabled = disableSelection();
-    }
-    // 2. Add more styles which can override previous styles...
-    attachStyles();
-    attachJavascripts();
+    // On AJAX it's triggered too?
+    if (isUrlRealyChanged) {
+        // 1. Hide scrollbars (and add some styles)
+        if (!isScrollBarsHidden) {
+            isScrollBarsHidden = hideScrollbars();
+        }
+        if (!isSelectionDisabled) {
+            isSelectionDisabled = disableSelection();
+        }
+        // 2. Add more styles which can override previous styles...
+        attachStyles();
+        attachJavascripts();
 
-    // 3. Focus window and click into it to stimulate event loop after signal handling
-    putWindowUp();
+        // 3. Focus window and click into it to stimulate event loop after signal handling
+        putWindowUp();
+    }
 }
 
 /**
@@ -793,12 +869,6 @@ void MainWindow::attachStyles()
     }
 }
 
-
-void MainWindow::pageIconLoaded()
-{
-    setWindowIcon(view->icon());
-}
-
 // ----------------------- SIGNALS -----------------------------
 
 /**
@@ -898,4 +968,48 @@ void MainWindow::unixSignalUsr2()
         qDebug(">> SIGUSR2 >> Load homepage URI...");
         view->loadHomepage();
     }
+}
+
+// ----------------------- NETWORK -----------------------------
+
+void MainWindow::networkStateChanged(QNetworkSession::State state)
+{
+    qDebug() << QDateTime::currentDateTime().toString()
+             << "MainWindow::networkStateChanged -"
+             << state
+                ;
+   if (state == QNetworkSession::Connected) {
+       // Reload current page, network here again!
+       view->reload();
+       return;
+   }
+   QString errStr = "";
+   switch (state) {
+   case QNetworkSession::NotAvailable:
+       errStr = "Network not available! Check your cable!";
+       break;
+   case QNetworkSession::Disconnected:
+       errStr = "Network is down! Check your network settings!";
+       break;
+   default:
+       break;
+   }
+   if (errStr.length()) {
+       if (messagesBox) {
+           messagesBox->show();
+           QString txt = messagesBox->text();
+           if (txt.length()) {
+               txt += "\n";
+           }
+           messagesBox->setText(txt + QDateTime::currentDateTime().toString() +  " :: " + errStr);
+       }
+   }
+}
+
+void MainWindow::handleQwkNetworkReplyUrl(QUrl url)
+{
+    qDebug() << QDateTime::currentDateTime().toString()
+             << "MainWindow::handleQwkNetworkReplyUrl - "
+             << "url=" << url.toString()
+                ;
 }

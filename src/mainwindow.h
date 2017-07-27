@@ -40,6 +40,8 @@
 ****************************************************************************/
 
 #include <QtGui>
+#include <QHBoxLayout>
+#include <QLabel>
 #include <QProgressBar>
 #include <QMainWindow>
 #include <QtNetwork>
@@ -87,6 +89,9 @@ protected slots:
     void delayedPageLoad();
 
     void handleQwkError(QString);
+    void handleQwkNetworkReplyUrl(QUrl);
+
+    void networkStateChanged(QNetworkSession::State state);
 
     // TERM or INT - Quit from App
     void unixSignalQuit();
@@ -131,6 +136,8 @@ private:
     bool isScrollBarsHidden;
     bool isSelectionDisabled;
     bool isUrlRealyChanged;
+
+    QNetworkSession *n_session;
 
     QTimer *delayedResize;
     QTimer *delayedLoad;

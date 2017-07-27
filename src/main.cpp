@@ -96,5 +96,5 @@ int main(int argc, char * argv[])
                      browser, SLOT(cleanupSlot()));
 
     int ret = app.exec();
-    qDebug() << "Application return:" << ret;
+    qDebug() << "Application return: " << ret;
 }

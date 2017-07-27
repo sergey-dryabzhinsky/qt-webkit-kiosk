@@ -41,7 +41,7 @@ void WebView::initSignals()
             this,
             SLOT(handlePrintRequested(QWebFrame*)));
 
-    /*handle network errors*/
+    /*handle network reply*/
     connect(page()->networkAccessManager(),
             SIGNAL(finished(QNetworkReply*)),
             this,
@@ -128,7 +128,7 @@ void WebView::loadCustomPage(QString uri)
 
 void WebView::handleSslErrors(QNetworkReply* reply, const QList<QSslError> &errors)
 {
-    qDebug() << "handleSslErrors: ";
+    qDebug() << QDateTime::currentDateTime().toString() << "handleSslErrors: ";
     QString errStr = "";
     foreach (QSslError e, errors) {
         qDebug() << "ssl error: " << e.errorString();
@@ -146,11 +146,18 @@ void WebView::handleSslErrors(QNetworkReply* reply, const QList<QSslError> &erro
 void WebView::handleNetworkReply(QNetworkReply* reply)
 {
     if( reply ) {
+        qDebug() << QDateTime::currentDateTime().toString() << "handleNetworkReply URL:" << reply->request().url().toString();
         if( reply->error()) {
-            qDebug() <<"handleNetworkReply ERROR:" << reply->errorString();
-            emit qwkError(QString("Network error: ") + reply->errorString());
+            QString errStr = reply->errorString();
+            qWarning() << QDateTime::currentDateTime().toString() << "handleNetworkReply ERROR:" << reply->error() << "=" << errStr;
+            if (errStr.contains("Host ") && errStr.contains(" not found")) {
+                // skip
+            } else {
+                emit qwkError(QString("Network error: ") + reply->errorString());
+            }
         } else {
-            qDebug() <<"handleNetworkReply OK";
+            qDebug() << QDateTime::currentDateTime().toString() << "handleNetworkReply OK";
+            // emit qwkNetworkReplyUrl(reply->request().url());
         }
     }
 }
@@ -158,7 +165,7 @@ void WebView::handleNetworkReply(QNetworkReply* reply)
 void WebView::handleAuthReply(QNetworkReply* aReply, QAuthenticator* aAuth)
 {
     if( aReply && aAuth ) {
-        qDebug() << "handleAuthReply, need authorization, do nothing for now";
+        qDebug() << QDateTime::currentDateTime().toString() << "handleAuthReply, need authorization, do nothing for now";
         emit qwkError(QString("Web-site need authorization! Nothing to do for now :("));
     }
 }
@@ -167,14 +174,14 @@ void WebView::handleProxyAuthReply(const QNetworkProxy &proxy, QAuthenticator* a
 {
     Q_UNUSED(proxy);
     if( aAuth ) {
-        qDebug() << "handleProxyAuthReply, need proxy authorization, do nothing for now";
+        qDebug() << QDateTime::currentDateTime().toString() << "handleProxyAuthReply, need proxy authorization, do nothing for now";
         emit qwkError(QString("Proxy need authorization! Check your proxy auth settings!"));
     }
 }
 
 void WebView::handleWindowCloseRequested()
 {
-    qDebug() << "Handle windowCloseRequested: " << qwkSettings->getQString("browser/show_homepage_on_window_close");
+    qDebug() << QDateTime::currentDateTime().toString() << "Handle windowCloseRequested: " << qwkSettings->getQString("browser/show_homepage_on_window_close");
     if (qwkSettings->getBool("browser/show_homepage_on_window_close")) {
         qDebug() << "-- load homepage";
         loadHomepage();
@@ -203,7 +210,7 @@ void WebView::mousePressEvent(QMouseEvent *event)
 QWebView *WebView::getFakeLoader()
 {
     if (!loader) {
-        qDebug() << "New fake webview loader";
+        qDebug() << QDateTime::currentDateTime().toString() << "New fake webview loader";
         loader = new FakeWebView(this);
         loader->hide();
         QWebPage *newWeb = new QWebPage(loader);
@@ -217,7 +224,7 @@ QWebView *WebView::getFakeLoader()
 
 void WebView::handleFakeviewUrlChanged(const QUrl &url)
 {
-    qDebug() << "WebView::handleFakeviewUrlChanged";
+    qDebug() << QDateTime::currentDateTime().toString() << "WebView::handleFakeviewUrlChanged";
     Q_UNUSED(url);
     if (loader) {
         loader->stop();
@@ -226,7 +233,7 @@ void WebView::handleFakeviewUrlChanged(const QUrl &url)
 
 void WebView::handleFakeviewLoadFinished(bool ok)
 {
-    qDebug() << "WebView::handleFakeviewLoadFinished: ok=" << (int)ok;
+    qDebug() << QDateTime::currentDateTime().toString() << "WebView::handleFakeviewLoadFinished: ok=" << (int)ok;
     if (loader) {
         QUrl url = loader->url();
         if (this->url().toString() != url.toString()) {
@@ -318,14 +325,14 @@ QWebView *WebView::createWindow(QWebPage::WebWindowType type)
     if (type != QWebPage::WebBrowserWindow) {
         return NULL;
     }
-    qDebug() << "Handle createWindow...";
+    qDebug() << QDateTime::currentDateTime().toString() << "Handle createWindow...";
 
     return getFakeLoader();
 }
 
 void WebView::handlePrintRequested(QWebFrame *wf)
 {
-    qDebug() << "Handle printRequested...";
+    qDebug() << QDateTime::currentDateTime().toString() << "Handle printRequested...";
     if (qwkSettings->getBool("printing/enable")) {
         if (!qwkSettings->getBool("printing/show-printer-dialog")) {
             if (printer->printerState() != QPrinter::Error) {
@@ -374,4 +381,10 @@ void WebView::scrollHome()
 {
     QWebFrame* frame = this->page()->mainFrame();
     frame->setScrollPosition(QPoint(0, 0));
+}
+
+bool WebView::shouldInterruptJavaScript()
+{
+    qDebug() << QDateTime::currentDateTime().toString() << "WebView::shouldInterruptJavaScript" ;
+    return false;
 }
