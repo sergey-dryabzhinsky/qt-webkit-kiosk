@@ -59,9 +59,13 @@
 
 MainWindow::MainWindow() : QMainWindow()
 {
-    progress = 0;
-    diskCache = NULL;
-    mainSettings = NULL;
+    progress        = 0;
+    diskCache       = NULL;
+    topBox          = NULL;
+    loadProgress    = NULL;
+    messagesBox     = NULL;
+
+    qwkSettings     = new QwkSettings();
 
     isUrlRealyChanged = false;
 
@@ -90,12 +94,12 @@ void MainWindow::init(AnyOption *opts)
         if (cfgPath.isEmpty()) {
             cfgPath = cmdopts->getValue("config");
         }
-        loadSettings(cfgPath);
+        qwkSettings->loadSettings(cfgPath);
     } else {
-        loadSettings(QString(""));
+        qwkSettings->loadSettings(QString(""));
     }
 
-    if (mainSettings->value("signals/enable").toBool()) {
+    if (qwkSettings->getBool("signals/enable")) {
         connect(handler, SIGNAL(sigUSR1()), SLOT(unixSignalUsr1()));
         connect(handler, SIGNAL(sigUSR2()), SLOT(unixSignalUsr2()));
     }
@@ -104,8 +108,8 @@ void MainWindow::init(AnyOption *opts)
     setMinimumWidth(320);
     setMinimumHeight(200);
 
-    quint16 minimalWidth = mainSettings->value("view/minimal-width").toUInt();
-    quint16 minimalHeight = mainSettings->value("view/minimal-height").toUInt();
+    quint16 minimalWidth = qwkSettings->getUInt("view/minimal-width");
+    quint16 minimalHeight = qwkSettings->getUInt("view/minimal-height");
     if (minimalWidth) {
         setMinimumWidth(minimalWidth);
     }
@@ -115,9 +119,9 @@ void MainWindow::init(AnyOption *opts)
 
     hiddenCurdor = new QCursor(Qt::BlankCursor);
 
-    qDebug() << "Application icon: " << mainSettings->value("application/icon").toString();
+    qDebug() << "Application icon: " << qwkSettings->getQString("application/icon");
     setWindowIcon(QIcon(
-       mainSettings->value("application/icon").toString()
+       qwkSettings->getQString("application/icon")
     ));
 
     if (cmdopts->getValue("uri") || cmdopts->getValue('u')) {
@@ -126,38 +130,38 @@ void MainWindow::init(AnyOption *opts)
         if (uri.isEmpty()) {
             uri = cmdopts->getValue("uri");
         }
-        mainSettings->setValue("browser/homepage", uri);
+        qwkSettings->setValue("browser/homepage", uri);
     }
 
     QCoreApplication::setOrganizationName(
-            mainSettings->value("application/organization").toString()
+            qwkSettings->getQString("application/organization")
             );
     QCoreApplication::setOrganizationDomain(
-            mainSettings->value("application/organization-domain").toString()
+            qwkSettings->getQString("application/organization-domain")
             );
     QCoreApplication::setApplicationName(
-            mainSettings->value("application/name").toString()
+            qwkSettings->getQString("application/name")
             );
     QCoreApplication::setApplicationVersion(
-            mainSettings->value("application/version").toString()
+            qwkSettings->getQString("application/version")
             );
 
     // --- Network --- //
 
-    if (mainSettings->value("proxy/enable").toBool()) {
-        bool system = mainSettings->value("proxy/system").toBool();
+    if (qwkSettings->getBool("proxy/enable")) {
+        bool system = qwkSettings->getBool("proxy/system");
         if (system) {
             QNetworkProxyFactory::setUseSystemConfiguration(system);
         } else {
             QNetworkProxy proxy;
             proxy.setType(QNetworkProxy::HttpProxy);
             proxy.setHostName(
-                    mainSettings->value("proxy/host").toString()
+                qwkSettings->getQString("proxy/host")
             );
-            proxy.setPort(mainSettings->value("proxy/port").toUInt());
-            if (mainSettings->value("proxy/auth").toBool()) {
-                proxy.setUser(mainSettings->value("proxy/username").toString());
-                proxy.setPassword(mainSettings->value("proxy/password").toString());
+            proxy.setPort(qwkSettings->getUInt("proxy/port"));
+            if (qwkSettings->getBool("proxy/auth")) {
+                proxy.setUser(qwkSettings->getQString("proxy/username"));
+                proxy.setPassword(qwkSettings->getQString("proxy/password"));
             }
             QNetworkProxy::setApplicationProxy(proxy);
         }
@@ -166,34 +170,62 @@ void MainWindow::init(AnyOption *opts)
     // --- Web View --- //
     view = new WebView(this);
 
-    if (mainSettings->value("view/show_load_progress").toBool()) {
+    QPalette palette = this->palette();
+    palette.setColor(QPalette::Window, QColor(240,240,240,63));
+
+    topBox = new QHBoxLayout(view);
+    topBox->setContentsMargins(2, 2, 2, 2);
+
+    if (qwkSettings->getBool("view/show_load_progress")) {
         // --- Progress Bar --- //
-        loadProgress = new QProgressBar(view);
+        loadProgress = new QProgressBar();
         loadProgress->setContentsMargins(2, 2, 2, 2);
-        loadProgress->setMinimumWidth(100);
-        loadProgress->setMinimumHeight(16);
-        loadProgress->setFixedHeight(16);
+        loadProgress->setMinimumSize(100, 16);
+        loadProgress->setMaximumSize(100, 16);
         loadProgress->setAutoFillBackground(true);
-        QPalette palette = this->palette();
-        palette.setColor(QPalette::Window, QColor(255,255,255,63));
         loadProgress->setPalette(palette);
 
         // Do not work... Need Layout...
-        loadProgress->setAlignment(Qt::AlignTop);
-        loadProgress->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        loadProgress->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+        loadProgress->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
 
         loadProgress->hide();
+
+        topBox->addWidget(loadProgress, 0, Qt::AlignTop | Qt::AlignLeft);
     }
+
+    if (qwkSettings->getBool("browser/show_error_messages")) {
+        // --- Messages Box --- //
+        messagesBox = new QLabel();
+        messagesBox->setContentsMargins(2, 2, 2, 2);
+        //messagesBox->setMinimumSize(200, 24);
+        // Need something to stretch label. WordWrap works strange. And layout too.
+        //messagesBox->setWordWrap(true);
+        messagesBox->setAutoFillBackground(true);
+        messagesBox->setPalette(palette);
+        messagesBox->setFrameStyle(QFrame::Panel | QFrame::Raised);
+        messagesBox->setLineWidth(2);
+
+        // Do not work... Need Layout...
+        messagesBox->setAlignment(Qt::AlignTop | Qt::AlignJustify);
+        messagesBox->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
+
+        messagesBox->hide();
+
+        topBox->addWidget(messagesBox, 2, Qt::AlignTop | Qt::AlignLeft);
+    }
+
+    //topBox->addStretch();
 
     setCentralWidget(view);
 
-    view->setSettings(mainSettings);
+    view->setSettings(qwkSettings);
     view->setPage(new QWebPage(view));
 
     // --- Disk cache --- //
-    if (mainSettings->value("cache/enable").toBool()) {
+    if (qwkSettings->getBool("cache/enable")) {
         diskCache = new QNetworkDiskCache(this);
-        QString location = mainSettings->value("cache/location").toString();
+        QString location = qwkSettings->getQString("cache/location");
         if (!location.length()) {
 #ifdef QT5
             location = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
@@ -202,9 +234,9 @@ void MainWindow::init(AnyOption *opts)
 #endif
         }
         diskCache->setCacheDirectory(location);
-        diskCache->setMaximumCacheSize(mainSettings->value("cache/size").toUInt());
+        diskCache->setMaximumCacheSize(qwkSettings->getUInt("cache/size"));
 
-        if (mainSettings->value("cache/clear-on-start").toBool()) {
+        if (qwkSettings->getBool("cache/clear-on-start")) {
             diskCache->clear();
         }
         else if (cmdopts->getFlag('C') || cmdopts->getFlag("clear-cache")) {
@@ -216,31 +248,31 @@ void MainWindow::init(AnyOption *opts)
         view->page()->setNetworkAccessManager(nm);
     }
 
-    if (mainSettings->value("browser/cookiejar").toBool()) {
+    if (qwkSettings->getBool("browser/cookiejar")) {
         view->page()->networkAccessManager()->setCookieJar(new PersistentCookieJar());
     }
 
     view->settings()->setAttribute(QWebSettings::JavascriptEnabled,
-        mainSettings->value("browser/javascript").toBool()
+        qwkSettings->getBool("browser/javascript")
     );
 
     view->settings()->setAttribute(QWebSettings::JavascriptCanOpenWindows,
-        mainSettings->value("browser/javascript_can_open_windows").toBool()
+        qwkSettings->getBool("browser/javascript_can_open_windows")
     );
 
     view->settings()->setAttribute(QWebSettings::JavascriptCanCloseWindows,
-        mainSettings->value("browser/javascript_can_close_windows").toBool()
+        qwkSettings->getBool("browser/javascript_can_close_windows")
     );
 
     view->settings()->setAttribute(QWebSettings::WebGLEnabled,
-        mainSettings->value("browser/webgl").toBool()
+        qwkSettings->getBool("browser/webgl")
     );
 
     view->settings()->setAttribute(QWebSettings::JavaEnabled,
-        mainSettings->value("browser/java").toBool()
+        qwkSettings->getBool("browser/java")
     );
     view->settings()->setAttribute(QWebSettings::PluginsEnabled,
-        mainSettings->value("browser/plugins").toBool()
+        qwkSettings->getBool("browser/plugins")
     );
 
 #if QT_VERSION >= 0x050400
@@ -253,23 +285,24 @@ void MainWindow::init(AnyOption *opts)
 #endif
     view->settings()->setAttribute(QWebSettings::SiteSpecificQuirksEnabled, true);
 
-    if (mainSettings->value("inspector/enable").toBool()) {
+    if (qwkSettings->getBool("inspector/enable")) {
         view->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
 
         inspector = new QWebInspector();
-        inspector->setVisible(mainSettings->value("inspector/visible").toBool());
+        inspector->setVisible(qwkSettings->getBool("inspector/visible"));
         inspector->setMinimumSize(800, 600);
-        inspector->setWindowTitle(mainSettings->value("application/name").toString() + " - WebInspector");
+        inspector->setWindowTitle(qwkSettings->getQString("application/name") + " - WebInspector");
         inspector->setWindowIcon(this->windowIcon());
         inspector->setPage(view->page());
     }
 
-    connect(view, SIGNAL(titleChanged(QString)), SLOT(adjustTitle()));
+    connect(view, SIGNAL(titleChanged(QString)), SLOT(adjustTitle(QString)));
     connect(view, SIGNAL(loadStarted()), SLOT(startLoading()));
     connect(view, SIGNAL(urlChanged(const QUrl &)), SLOT(urlChanged(const QUrl &)));
     connect(view, SIGNAL(loadProgress(int)), SLOT(setProgress(int)));
     connect(view, SIGNAL(loadFinished(bool)), SLOT(finishLoading(bool)));
     connect(view, SIGNAL(iconChanged()), SLOT(pageIconLoaded()));
+    connect(view, SIGNAL(qwkError(QString)), SLOT(handleQwkError(QString)));
 
     QDesktopWidget *desktop = QApplication::desktop();
     connect(desktop, SIGNAL(resized(int)), SLOT(desktopResized(int)));
@@ -280,21 +313,21 @@ void MainWindow::init(AnyOption *opts)
     view->page()->view()->setFocusPolicy(Qt::StrongFocus);
     view->setFocusPolicy(Qt::StrongFocus);
 
-    if (mainSettings->value("view/hide_mouse_cursor").toBool()) {
+    if (qwkSettings->getBool("view/hide_mouse_cursor")) {
         QApplication::setOverrideCursor(Qt::BlankCursor);
         view->setCursor(*hiddenCurdor);
         QApplication::processEvents(); //process events to force cursor update before press
     }
 
     int delay_resize = 0;
-    if (mainSettings->value("view/startup_resize_delayed").toBool()) {
-        delay_resize = mainSettings->value("view/startup_resize_delay").toInt();
+    if (qwkSettings->getBool("view/startup_resize_delayed")) {
+        delay_resize = qwkSettings->getUInt("view/startup_resize_delay");
     }
     delayedResize->singleShot(delay_resize, this, SLOT(delayedWindowResize()));
 
     int delay_load = 0;
-    if (mainSettings->value("browser/startup_load_delayed").toBool()) {
-        delay_load = mainSettings->value("browser/startup_load_delay").toInt();
+    if (qwkSettings->getBool("browser/startup_load_delayed")) {
+        delay_load = qwkSettings->getUInt("browser/startup_load_delay");
     }
     delayedLoad->singleShot(delay_load, this, SLOT(delayedPageLoad()));
 
@@ -302,20 +335,21 @@ void MainWindow::init(AnyOption *opts)
 
 void MainWindow::delayedWindowResize()
 {
-    if (mainSettings->value("view/fullscreen").toBool()) {
+    if (qwkSettings->getBool("view/fullscreen")) {
         showFullScreen();
-    } else if (mainSettings->value("view/maximized").toBool()) {
+    } else if (qwkSettings->getBool("view/maximized")) {
         showMaximized();
-    } else if (mainSettings->value("view/fixed-size").toBool()) {
+    } else if (qwkSettings->getBool("view/fixed-size")) {
         centerFixedSizeWindow();
     }
 
     this->setFocusPolicy(Qt::StrongFocus);
     this->focusWidget();
 
-    if (mainSettings->value("view/stay_on_top").toBool()) {
+    if (qwkSettings->getBool("view/stay_on_top")) {
         setWindowFlags(Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint);
     }
+    QApplication::processEvents(); //process events to force update
 }
 
 void MainWindow::delayedPageLoad()
@@ -325,7 +359,7 @@ void MainWindow::delayedPageLoad()
 
 void MainWindow::clearCache()
 {
-    if (mainSettings->value("cache/enable").toBool()) {
+    if (qwkSettings->getBool("cache/enable")) {
         if (diskCache) {
             diskCache->clear();
         }
@@ -334,8 +368,8 @@ void MainWindow::clearCache()
 
 void MainWindow::clearCacheOnExit()
 {
-    if (mainSettings->value("cache/enable").toBool()) {
-        if (mainSettings->value("cache/clear-on-exit").toBool()) {
+    if (qwkSettings->getBool("cache/enable")) {
+        if (qwkSettings->getBool("cache/clear-on-exit")) {
             if (diskCache) {
                 diskCache->clear();
             }
@@ -354,8 +388,8 @@ void MainWindow::cleanupSlot()
 
 void MainWindow::centerFixedSizeWindow()
 {
-    quint16 widowWidth = mainSettings->value("view/fixed-width").toUInt();
-    quint16 widowHeight = mainSettings->value("view/fixed-height").toUInt();
+    quint16 widowWidth = qwkSettings->getUInt("view/fixed-width");
+    quint16 widowHeight = qwkSettings->getUInt("view/fixed-height");
 
     quint16 screenWidth = QApplication::desktop()->screenGeometry().width();
     quint16 screenHeight = QApplication::desktop()->screenGeometry().height();
@@ -365,25 +399,24 @@ void MainWindow::centerFixedSizeWindow()
     quint16 x = 0;
     quint16 y = 0;
 
-    if (mainSettings->value("view/fixed-centered").toBool()) {
+    if (qwkSettings->getUInt("view/fixed-centered")) {
         x = (screenWidth - widowWidth) / 2;
         y = (screenHeight - widowHeight) / 2;
     } else {
-        x = mainSettings->value("view/fixed-x").toUInt();
-        y = mainSettings->value("view/fixed-y").toUInt();
+        x = qwkSettings->getUInt("view/fixed-x");
+        y = qwkSettings->getUInt("view/fixed-y");
     }
 
     qDebug() << "Move window to: (" << x << ";" << y << ")";
 
     move ( x, y );
     setFixedSize( widowWidth, widowHeight );
-
 }
 
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-    if (mainSettings->value("browser/disable_hotkeys").toBool()) {
+    if (qwkSettings->getUInt("browser/disable_hotkeys")) {
         QMainWindow::keyPressEvent(event);
         return;
     }
@@ -433,7 +466,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         view->reload();
         break;
     case Qt::Key_F12:
-        if (mainSettings->value("inspector/enable").toBool()) {
+        if (qwkSettings->getUInt("inspector/enable")) {
             if (!inspector->isVisible()) {
                 inspector->setVisible(true);
             } else {
@@ -453,269 +486,32 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     }
 }
 
-/**
- * @TODO: move to separate class
- *
- * @brief MainWindow::loadSettings
- * @param ini_file
- */
-void MainWindow::loadSettings(QString ini_file)
+void MainWindow::handleQwkError(QString message)
 {
-    if (!ini_file.length()) {
-        mainSettings = new QSettings(QSettings::IniFormat, QSettings::UserScope, "QtWebkitKiosk", "config", this);
-    } else {
-        mainSettings = new QSettings(ini_file, QSettings::IniFormat, this);
+    if (messagesBox) {
+        messagesBox->show();
+        QString txt = messagesBox->text();
+        messagesBox->setText(txt + "; " + message);
     }
-    qDebug() << "Ini file: " << mainSettings->fileName();
-
-    if (!mainSettings->contains("application/organization")) {
-        mainSettings->setValue("application/organization", "Organization" );
-    }
-    if (!mainSettings->contains("application/organization-domain")) {
-        mainSettings->setValue("application/organization-domain", "www.example.com" );
-    }
-    if (!mainSettings->contains("application/name")) {
-        mainSettings->setValue("application/name", "QtWebkitKiosk" );
-    }
-    if (!mainSettings->contains("application/version")) {
-        mainSettings->setValue("application/version", VERSION );
-    }
-    if (!mainSettings->contains("application/icon")) {
-        mainSettings->setValue("application/icon", ICON );
-    }
-
-    if (!mainSettings->contains("proxy/enable")) {
-        mainSettings->setValue("proxy/enable", false);
-    }
-    if (!mainSettings->contains("proxy/system")) {
-        mainSettings->setValue("proxy/system", true);
-    }
-    if (!mainSettings->contains("proxy/host")) {
-        mainSettings->setValue("proxy/host", "proxy.example.com");
-    }
-    if (!mainSettings->contains("proxy/port")) {
-        mainSettings->setValue("proxy/port", 3128);
-    }
-    if (!mainSettings->contains("proxy/auth")) {
-        mainSettings->setValue("proxy/auth", false);
-    }
-    if (!mainSettings->contains("proxy/username")) {
-        mainSettings->setValue("proxy/username", "username");
-    }
-    if (!mainSettings->contains("proxy/password")) {
-        mainSettings->setValue("proxy/password", "password");
-    }
-
-    if (!mainSettings->contains("view/fullscreen")) {
-        mainSettings->setValue("view/fullscreen", true);
-    }
-    if (!mainSettings->contains("view/maximized")) {
-        mainSettings->setValue("view/maximized", false);
-    }
-    if (!mainSettings->contains("view/fixed-size")) {
-        mainSettings->setValue("view/fixed-size", false);
-    }
-    if (!mainSettings->contains("view/fixed-width")) {
-        mainSettings->setValue("view/fixed-width", 800);
-    }
-    if (!mainSettings->contains("view/fixed-height")) {
-        mainSettings->setValue("view/fixed-height", 600);
-    }
-    if (!mainSettings->contains("view/minimal-width")) {
-        mainSettings->setValue("view/minimal-width", 320);
-    }
-    if (!mainSettings->contains("view/minimal-height")) {
-        mainSettings->setValue("view/minimal-height", 200);
-    }
-    if (!mainSettings->contains("view/fixed-centered")) {
-        mainSettings->setValue("view/fixed-centered", true);
-    }
-    if (!mainSettings->contains("view/fixed-x")) {
-        mainSettings->setValue("view/fixed-x", 0);
-    }
-    if (!mainSettings->contains("view/fixed-y")) {
-        mainSettings->setValue("view/fixed-y", 0);
-    }
-
-    if (!mainSettings->contains("view/startup_resize_delayed")) {
-        mainSettings->setValue("view/startup_resize_delayed", true);
-    }
-    if (!mainSettings->contains("view/startup_resize_delay")) {
-        mainSettings->setValue("view/startup_resize_delay", 200);
-    }
-
-    if (!mainSettings->contains("view/hide_scrollbars")) {
-        mainSettings->setValue("view/hide_scrollbars", true);
-    }
-
-    if (!mainSettings->contains("view/stay_on_top")) {
-        mainSettings->setValue("view/stay_on_top", false);
-    }
-
-    if (!mainSettings->contains("view/disable_selection")) {
-        mainSettings->setValue("view/disable_selection", true);
-    }
-
-    if (!mainSettings->contains("view/show_load_progress")) {
-        mainSettings->setValue("view/show_load_progress", true);
-    }
-
-    if (!mainSettings->contains("view/page_scale")) {
-        mainSettings->setValue("view/page_scale", 1.0);
-    }
-
-
-    if (!mainSettings->contains("browser/homepage")) {
-        mainSettings->setValue("browser/homepage", RESOURCES"default.html");
-    }
-    if (!mainSettings->contains("browser/javascript")) {
-        mainSettings->setValue("browser/javascript", true);
-    }
-    if (!mainSettings->contains("browser/javascript_can_open_windows")) {
-        mainSettings->setValue("browser/javascript_can_open_windows", false);
-    }
-    if (!mainSettings->contains("browser/javascript_can_close_windows")) {
-        mainSettings->setValue("browser/javascript_can_close_windows", false);
-    }
-    if (!mainSettings->contains("browser/webgl")) {
-        mainSettings->setValue("browser/webgl", false);
-    }
-    if (!mainSettings->contains("browser/java")) {
-        mainSettings->setValue("browser/java", false);
-    }
-    if (!mainSettings->contains("browser/plugins")) {
-        mainSettings->setValue("browser/plugins", true);
-    }
-    // Don't break on SSL errors
-    if (!mainSettings->contains("browser/ignore_ssl_errors")) {
-        mainSettings->setValue("browser/ignore_ssl_errors", true);
-    }
-    if (!mainSettings->contains("browser/cookiejar")) {
-        mainSettings->setValue("browser/cookiejar", false);
-    }
-    // Show default homepage if window closed by javascript
-    if (!mainSettings->contains("browser/show_homepage_on_window_close")) {
-        mainSettings->setValue("browser/show_homepage_on_window_close", true);
-    }
-
-    if (!mainSettings->contains("browser/startup_load_delayed")) {
-        mainSettings->setValue("browser/startup_load_delayed", true);
-    }
-    if (!mainSettings->contains("browser/startup_load_delay")) {
-        mainSettings->setValue("browser/startup_load_delay", 100);
-    }
-
-    if (!mainSettings->contains("browser/disable_hotkeys")) {
-        mainSettings->setValue("browser/disable_hotkeys", false);
-    }
-
-
-    if (!mainSettings->contains("signals/enable")) {
-        mainSettings->setValue("signals/enable", true);
-    }
-    if (!mainSettings->contains("signals/SIGUSR1")) {
-        mainSettings->setValue("signals/SIGUSR1", "");
-    }
-    if (!mainSettings->contains("signals/SIGUSR2")) {
-        mainSettings->setValue("signals/SIGUSR2", "");
-    }
-
-
-    if (!mainSettings->contains("inspector/enable")) {
-        mainSettings->setValue("inspector/enable", false);
-    }
-    if (!mainSettings->contains("inspector/visible")) {
-        mainSettings->setValue("inspector/visible", false);
-    }
-
-
-    if (!mainSettings->contains("event-sounds/enable")) {
-        mainSettings->setValue("event-sounds/enable", false);
-    }
-    if (!mainSettings->contains("event-sounds/window-clicked")) {
-        mainSettings->setValue("event-sounds/window-clicked", RESOURCES"window-clicked.ogg");
-    }
-    if (!mainSettings->contains("event-sounds/link-clicked")) {
-        mainSettings->setValue("event-sounds/link-clicked", RESOURCES"window-clicked.ogg");
-    }
-
-    if (!mainSettings->contains("cache/enable")) {
-        mainSettings->setValue("cache/enable", false);
-    }
-    if (!mainSettings->contains("cache/location")) {
-#ifdef QT5
-        QString location = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-#else
-        QString location = QDesktopServices::storageLocation(QDesktopServices::CacheLocation);
-#endif
-        QDir d = QDir(location);
-        location += d.separator();
-        location += mainSettings->value("application/name").toString();
-        d.setPath(location);
-        mainSettings->setValue("cache/location", d.absolutePath());
-    }
-    if (!mainSettings->contains("cache/size")) {
-        mainSettings->setValue("cache/size", 100*1000*1000);
-    }
-    if (!mainSettings->contains("cache/clear-on-start")) {
-        mainSettings->setValue("cache/clear-on-start", false);
-    }
-    if (!mainSettings->contains("cache/clear-on-exit")) {
-        mainSettings->setValue("cache/clear-on-exit", false);
-    }
-
-    if (!mainSettings->contains("printing/enable")) {
-        mainSettings->setValue("printing/enable", false);
-    }
-    if (!mainSettings->contains("printing/show-printer-dialog")) {
-        mainSettings->setValue("printing/show-printer-dialog", false);
-    }
-    if (!mainSettings->contains("printing/printer")) {
-        mainSettings->setValue("printing/printer", "default");
-    }
-    if (!mainSettings->contains("printing/page_margin_left")) {
-        mainSettings->setValue("printing/page_margin_left", 5);
-    }
-    if (!mainSettings->contains("printing/page_margin_top")) {
-        mainSettings->setValue("printing/page_margin_top", 5);
-    }
-    if (!mainSettings->contains("printing/page_margin_right")) {
-        mainSettings->setValue("printing/page_margin_right", 5);
-    }
-    if (!mainSettings->contains("printing/page_margin_bottom")) {
-        mainSettings->setValue("printing/page_margin_bottom", 5);
-    }
-
-    if (!mainSettings->contains("attach/javascripts")) {
-        mainSettings->setValue("attach/javascripts", "");
-    }
-    if (!mainSettings->contains("attach/styles")) {
-        mainSettings->setValue("attach/styles", "");
-    }
-    if (!mainSettings->contains("view/hide_mouse_cursor")) {
-        mainSettings->setValue("view/hide_mouse_cursor", false);
-    }
-
-    mainSettings->sync();
 }
 
-void MainWindow::adjustTitle()
+void MainWindow::adjustTitle(QString title)
 {
     if (progress <= 0 || progress >= 100) {
-        setWindowTitle(view->title());
+        setWindowTitle(title);
     } else {
-        setWindowTitle(QString("%1 (%2%)").arg(view->title()).arg(progress));
+        setWindowTitle(QString("%1 (%2%)").arg(title).arg(progress));
     }
 }
 
 void MainWindow::desktopResized(int p)
 {
     qDebug() << "Desktop resized event: " << p;
-    if (mainSettings->value("view/fullscreen").toBool()) {
+    if (qwkSettings->getBool("view/fullscreen")) {
         showFullScreen();
-    } else if (mainSettings->value("view/maximized").toBool()) {
+    } else if (qwkSettings->getBool("view/maximized")) {
         showMaximized();
-    } else if (mainSettings->value("view/fixed-size").toBool()) {
+    } else if (qwkSettings->getBool("view/fixed-size")) {
         centerFixedSizeWindow();
     }
 }
@@ -727,12 +523,16 @@ void MainWindow::startLoading()
     isSelectionDisabled = false;
     isUrlRealyChanged = false;
 
-    adjustTitle();
+    adjustTitle(view->title());
 
     QWebSettings::clearMemoryCaches();
 
-    if (mainSettings->value("view/show_load_progress").toBool()) {
+    if (loadProgress) {
         loadProgress->show();
+    }
+
+    if (messagesBox) {
+        messagesBox->hide();
     }
 
     qDebug("Start loading...");
@@ -741,11 +541,11 @@ void MainWindow::startLoading()
 void MainWindow::setProgress(int p)
 {
     progress = p;
-    adjustTitle();
+    adjustTitle(view->title());
 
     qDebug() << "Loading progress: " << p;
 
-    if (mainSettings->value("view/show_load_progress").toBool()) {
+    if (loadProgress) {
         loadProgress->setValue(p);
     }
 
@@ -768,22 +568,40 @@ void MainWindow::urlChanged(const QUrl &url)
     isSelectionDisabled = false;
     isUrlRealyChanged = true;
 
-    if (mainSettings->contains("view/page_scale")) {
-        view->page()->mainFrame()->setZoomFactor(mainSettings->value("view/page_scale").toReal());
+    if (qwkSettings->getReal("view/page_scale")) {
+        view->page()->mainFrame()->setZoomFactor(qwkSettings->getReal("view/page_scale"));
     }
 
     // This is real link clicked
     view->playSound("event-sounds/link-clicked");
 }
 
-void MainWindow::finishLoading(bool)
+void MainWindow::finishLoading(bool ok)
 {
-    qDebug("Finish loading...");
+    qDebug() << "MainWindow::finishLoading: ok=" << (int)ok;
 
-    progress = 100;
-    adjustTitle();
+    view->stopLoadTimer();
 
-    if (mainSettings->value("view/show_load_progress").toBool()) {
+    if (ok) {
+        progress = 100;
+        adjustTitle(view->title());
+    } else {
+
+        if (messagesBox) {
+            messagesBox->show();
+            QString txt = messagesBox->text();
+            if (txt.length()) {
+                txt += "; ";
+            }
+            messagesBox->setText(txt + "Page not fully loaded! Check network connection.");
+        }
+
+        // Don't do any action
+        return;
+
+    }
+
+    if (loadProgress) {
         loadProgress->hide();
     }
 
@@ -808,7 +626,9 @@ void MainWindow::finishLoading(bool)
  */
 bool MainWindow::hideScrollbars()
 {
-    if (mainSettings->value("view/hide_scrollbars").toBool()) {
+    qDebug("MainWindow::hideScrollbars");
+
+    if (qwkSettings->getBool("view/hide_scrollbars")) {
         qDebug("Try to hide scrollbars...");
 
         view->page()->mainFrame()->setScrollBarPolicy( Qt::Vertical, Qt::ScrollBarAlwaysOff );
@@ -820,7 +640,9 @@ bool MainWindow::hideScrollbars()
 
 bool MainWindow::disableSelection()
 {
-    if (mainSettings->value("view/disable_selection").toBool()) {
+    qDebug("MainWindow::disableSelection");
+
+    if (qwkSettings->getBool("view/disable_selection")) {
         qDebug("Try to disable text selection...");
 
         // Then webkit loads page and it's "empty" - empty html DOM loaded...
@@ -868,21 +690,20 @@ bool MainWindow::disableSelection()
 
 void MainWindow::attachJavascripts()
 {
-    if (!mainSettings->contains("attach/javascripts")) {
-        return;
-    }
-    QStringList scripts = mainSettings->value("attach/javascripts").toStringList();
+    qDebug("MainWindow::attachJavascripts");
+
+    QStringList scripts = qwkSettings->getQStringList("attach/javascripts");
     if (!scripts.length()) {
         return;
     }
 
     QWebElement bodyElem = view->page()->mainFrame()->findFirstElement("body");
-    QString content = "";
     if (bodyElem.isNull() || bodyElem.toInnerXml().trimmed().isEmpty()) {
         // No body here... We need something in <body> to interact with?
         return;
     }
 
+    QString content = "";
     QStringListIterator scriptsIterator(scripts);
     QFileInfo finfo = QFileInfo();
     QString file_name;
@@ -921,21 +742,20 @@ void MainWindow::attachJavascripts()
 
 void MainWindow::attachStyles()
 {
-    if (!mainSettings->contains("attach/styles")) {
-        return;
-    }
-    QStringList styles = mainSettings->value("attach/styles").toStringList();
+    qDebug("MainWindow::attachStyles");
+
+    QStringList styles = qwkSettings->getQStringList("attach/styles");
     if (!styles.length()) {
         return;
     }
 
     QWebElement headElem = view->page()->mainFrame()->findFirstElement("head");
-    QString content = "";
     if (headElem.isNull() || headElem.toInnerXml().trimmed().isEmpty()) {
         // Page without head... We need something in <head> to interact with?
         return;
     }
 
+    QString content = "";
     QStringListIterator stylesIterator(styles);
     QString file_name;
     QFileInfo finfo = QFileInfo();
@@ -1026,9 +846,9 @@ void MainWindow::unixSignalHup()
         if (cfgPath.isEmpty()) {
             cfgPath = cmdopts->getValue("config");
         }
-        loadSettings(cfgPath);
+        qwkSettings->loadSettings(cfgPath);
     } else {
-        loadSettings(QString(""));
+        qwkSettings->loadSettings(QString(""));
     }
 }
 
@@ -1042,9 +862,9 @@ void MainWindow::unixSignalHup()
  */
 void MainWindow::unixSignalUsr1()
 {
-    if (mainSettings->contains("signals/SIGUSR1") && !mainSettings->value("signals/SIGUSR1").toString().isEmpty()) {
+    if (!qwkSettings->getQString("signals/SIGUSR1").isEmpty()) {
         qDebug(">> SIGUSR1 >> Load URI from config file...");
-        view->loadCustomPage(mainSettings->value("signals/SIGUSR1").toString());
+        view->loadCustomPage(qwkSettings->getQString("signals/SIGUSR1"));
     } else {
         qDebug(">> SIGUSR1 >> Load config file...");
         if (cmdopts->getValue("config") || cmdopts->getValue('c')) {
@@ -1053,9 +873,9 @@ void MainWindow::unixSignalUsr1()
             if (cfgPath.isEmpty()) {
                 cfgPath = cmdopts->getValue("config");
             }
-            loadSettings(cfgPath);
+            qwkSettings->loadSettings(cfgPath);
         } else {
-            loadSettings(QString(""));
+            qwkSettings->loadSettings(QString(""));
         }
         view->loadHomepage();
     }
@@ -1071,9 +891,9 @@ void MainWindow::unixSignalUsr1()
  */
 void MainWindow::unixSignalUsr2()
 {
-    if (mainSettings->contains("signals/SIGUSR2") && !mainSettings->value("signals/SIGUSR2").toString().isEmpty()) {
+    if (!qwkSettings->getQString("signals/SIGUSR2").isEmpty()) {
         qDebug(">> SIGUSR2 >> Load URI from config file...");
-        view->loadCustomPage(mainSettings->value("signals/SIGUSR2").toString());
+        view->loadCustomPage(qwkSettings->getQString("signals/SIGUSR2"));
     } else {
         qDebug(">> SIGUSR2 >> Load homepage URI...");
         view->loadHomepage();

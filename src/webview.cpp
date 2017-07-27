@@ -17,6 +17,7 @@ WebView::WebView(QWidget* parent): QWebView(parent)
 {
     player = NULL;
     loader = NULL;
+    loadTimer = NULL;
 }
 
 /**
@@ -52,6 +53,12 @@ void WebView::initSignals()
             this,
             SLOT(handleAuthReply(QNetworkReply*,QAuthenticator*)));
 
+    /*handle proxy auth request to be in stable state*/
+    connect(page()->networkAccessManager(),
+           SIGNAL(proxyAuthenticationRequired(QNetworkProxy,QAuthenticator*)),
+            this,
+            SLOT(handleProxyAuthReply(QNetworkProxy,QAuthenticator*)));
+
 }
 
 void WebView::setPage(QWebPage *page)
@@ -61,21 +68,21 @@ void WebView::setPage(QWebPage *page)
 }
 
 
-void WebView::setSettings(QSettings *settings)
+void WebView::setSettings(QwkSettings *settings)
 {
-    mainSettings = settings;
+    qwkSettings = settings;
 
-    if (mainSettings->value("printing/enable").toBool()) {
-        if (!mainSettings->value("printing/show-printer-dialog").toBool()) {
+    if (qwkSettings->getBool("printing/enable")) {
+        if (!qwkSettings->getBool("printing/show-printer-dialog")) {
             if (!printer) {
                 printer = new QPrinter();
             }
-            printer->setPrinterName(mainSettings->value("printing/printer").toString());
+            printer->setPrinterName(qwkSettings->getQString("printing/printer"));
             printer->setPageMargins(
-                mainSettings->value("printing/page_margin_left").toReal(),
-                mainSettings->value("printing/page_margin_top").toReal(),
-                mainSettings->value("printing/page_margin_right").toReal(),
-                mainSettings->value("printing/page_margin_bottom").toReal(),
+                qwkSettings->getReal("printing/page_margin_left"),
+                qwkSettings->getReal("printing/page_margin_top"),
+                qwkSettings->getReal("printing/page_margin_right"),
+                qwkSettings->getReal("printing/page_margin_bottom"),
                 QPrinter::Millimeter
             );
         }
@@ -85,7 +92,7 @@ void WebView::setSettings(QSettings *settings)
 
 void WebView::loadHomepage()
 {
-    loadCustomPage(mainSettings->value("browser/homepage").toString());
+    loadCustomPage(qwkSettings->getQString("browser/homepage"));
 }
 
 void WebView::loadCustomPage(QString uri)
@@ -113,51 +120,62 @@ void WebView::loadCustomPage(QString uri)
         this->stop();
         this->load(QUrl(uri));
     }
+    if (this->getLoadTimer()) {
+        this->getLoadTimer()->start(qwkSettings->getUInt("browser/page_load_timeout"));
+    }
 }
 
 
 void WebView::handleSslErrors(QNetworkReply* reply, const QList<QSslError> &errors)
 {
     qDebug() << "handleSslErrors: ";
-    foreach (QSslError e, errors)
-    {
-        qDebug() << "ssl error: " << e;
+    QString errStr = "";
+    foreach (QSslError e, errors) {
+        qDebug() << "ssl error: " << e.errorString();
+        errStr += " " + e.errorString();
     }
 
-    if (mainSettings->value("browser/ignore_ssl_errors").toBool()) {
+    if (qwkSettings->getBool("browser/ignore_ssl_errors")) {
         reply->ignoreSslErrors();
     } else {
         reply->abort();
+        emit qwkError(QString("Network SSL errors: ") + errStr);
     }
 }
 
 void WebView::handleNetworkReply(QNetworkReply* reply)
 {
-    if( reply )
-    {
-        if( reply->error())
-        {
+    if( reply ) {
+        if( reply->error()) {
             qDebug() <<"handleNetworkReply ERROR:" << reply->errorString();
-        }
-        else
-        {
-             //qDebug() <<"handleNetworkReply OK";
+            emit qwkError(QString("Network error: ") + reply->errorString());
+        } else {
+            qDebug() <<"handleNetworkReply OK";
         }
     }
 }
 
-void WebView::handleAuthReply(QNetworkReply* aReply,QAuthenticator* aAuth)
+void WebView::handleAuthReply(QNetworkReply* aReply, QAuthenticator* aAuth)
 {
-    if( aReply && aAuth )
-    {
-        qDebug() << "handleAuthReply, do nothing for now";
+    if( aReply && aAuth ) {
+        qDebug() << "handleAuthReply, need authorization, do nothing for now";
+        emit qwkError(QString("Web-site need authorization! Nothing to do for now :("));
+    }
+}
+
+void WebView::handleProxyAuthReply(const QNetworkProxy &proxy, QAuthenticator* aAuth)
+{
+    Q_UNUSED(proxy);
+    if( aAuth ) {
+        qDebug() << "handleProxyAuthReply, need proxy authorization, do nothing for now";
+        emit qwkError(QString("Proxy need authorization! Check your proxy auth settings!"));
     }
 }
 
 void WebView::handleWindowCloseRequested()
 {
-    qDebug() << "Handle windowCloseRequested:" << mainSettings->value("browser/show_homepage_on_window_close").toString();
-    if (mainSettings->value("browser/show_homepage_on_window_close").toBool()) {
+    qDebug() << "Handle windowCloseRequested: " << qwkSettings->getQString("browser/show_homepage_on_window_close");
+    if (qwkSettings->getBool("browser/show_homepage_on_window_close")) {
         qDebug() << "-- load homepage";
         loadHomepage();
     } else {
@@ -175,31 +193,13 @@ void WebView::mousePressEvent(QMouseEvent *event)
     QWebView::mousePressEvent(event);
 }
 
-void WebView::handleUrlChanged(const QUrl &url)
-{
-    if (this->url().toString() != url.toString()) {
-        qDebug() << "url Changed!" << url.toString();
 
-        this->stop();
-        this->load(url);
-        qDebug() << "-- load url";
-    }
-
-    if (loader) {
-        loader->stop();
-    }
-}
-
-QPlayer *WebView::getPlayer()
-{
-    if (mainSettings->value("event-sounds/enable").toBool()) {
-        if (player == NULL) {
-            player = new QPlayer();
-        }
-    }
-    return player;
-}
-
+/**
+ * @brief WebView::getFakeLoader
+ * Fake window handler for 'window.open()' and '_blank' target
+ * Just need to catch url setup
+ * @return FakeWebView
+ */
 QWebView *WebView::getFakeLoader()
 {
     if (!loader) {
@@ -207,25 +207,108 @@ QWebView *WebView::getFakeLoader()
         loader = new FakeWebView(this);
         loader->hide();
         QWebPage *newWeb = new QWebPage(loader);
-//        loader->setAttribute(Qt::WA_DeleteOnClose, true);
         loader->setPage(newWeb);
 
-        connect(loader, SIGNAL(urlChanged(const QUrl&)), SLOT(handleUrlChanged(const QUrl&)));
+        connect(loader, SIGNAL(urlChanged(const QUrl&)), SLOT(handleFakeviewUrlChanged(const QUrl&)));
+        connect(loader, SIGNAL(loadFinished(bool)), SLOT(handleFakeviewLoadFinished(bool)));
     }
     return loader;
 }
 
+void WebView::handleFakeviewUrlChanged(const QUrl &url)
+{
+    qDebug() << "WebView::handleFakeviewUrlChanged";
+    Q_UNUSED(url);
+    if (loader) {
+        loader->stop();
+    }
+}
+
+void WebView::handleFakeviewLoadFinished(bool ok)
+{
+    qDebug() << "WebView::handleFakeviewLoadFinished: ok=" << (int)ok;
+    if (loader) {
+        QUrl url = loader->url();
+        if (this->url().toString() != url.toString()) {
+            qDebug() << "url Changed!" << url.toString();
+            this->loadCustomPage(url.toString());
+            qDebug() << "-- load url";
+        }
+    }
+}
+
+
+QPlayer *WebView::getPlayer()
+{
+    if (qwkSettings->getBool("event-sounds/enable")) {
+        if (player == NULL) {
+            player = new QPlayer();
+        }
+    }
+    return player;
+}
+
+
+QTimer *WebView::getLoadTimer()
+{
+    if (qwkSettings->getUInt("browser/page_load_timeout")) {
+        if (loadTimer == NULL) {
+            loadTimer = new QTimer();
+            connect(loadTimer, SIGNAL(timeout()), SLOT(handleLoadTimerTimeout()));
+        }
+    }
+    return loadTimer;
+}
+
+void WebView::handleLoadTimerTimeout()
+{
+    loadTimer->stop();
+    this->stop();
+    if (loader) {
+        loader->stop();
+    }
+    emit qwkError(QString("Page load timed out! Connection problems?"));
+}
+
+
+/**
+ * @brief WebView::resetLoadTimer
+ * If page loading, progress event emited
+ * And we reset timer
+ * If page not loading - timer will be triggered
+ */
+void WebView::resetLoadTimer()
+{
+    if (getLoadTimer()) {
+        getLoadTimer()->stop();
+        getLoadTimer()->start(qwkSettings->getUInt("browser/page_load_timeout"));
+    }
+}
+
+
+/**
+ * @brief WebView::stopLoadTimer
+ * If page loaded, we stop timer
+ */
+void WebView::stopLoadTimer()
+{
+    if (getLoadTimer()) {
+        getLoadTimer()->stop();
+    }
+}
+
+
 void WebView::playSound(QString soundSetting)
 {
-    if (getPlayer() != NULL) {
-        QString sound = mainSettings->value(soundSetting).toString();
+    if (getPlayer()) {
+        QString sound = qwkSettings->getQString(soundSetting);
         QFileInfo finfo = QFileInfo();
         finfo.setFile(sound);
         if (finfo.exists()) {
             qDebug() << "Play sound: " << sound;
             getPlayer()->play(sound);
         } else {
-            qDebug() << "Sound file" << sound << "not found!";
+            qDebug() << "Sound file '" << sound << "' not found!";
         }
     }
 }
@@ -243,8 +326,8 @@ QWebView *WebView::createWindow(QWebPage::WebWindowType type)
 void WebView::handlePrintRequested(QWebFrame *wf)
 {
     qDebug() << "Handle printRequested...";
-    if (mainSettings->value("printing/enable").toBool()) {
-        if (!mainSettings->value("printing/show-printer-dialog").toBool()) {
+    if (qwkSettings->getBool("printing/enable")) {
+        if (!qwkSettings->getBool("printing/show-printer-dialog")) {
             if (printer->printerState() != QPrinter::Error) {
                 qDebug() << "... got printer, try use it";
                 wf->print(printer);
@@ -292,4 +375,3 @@ void WebView::scrollHome()
     QWebFrame* frame = this->page()->mainFrame();
     frame->setScrollPosition(QPoint(0, 0));
 }
-

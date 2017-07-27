@@ -11,6 +11,7 @@
 #include <QPrinter>
 #include <qplayer.h>
 #include <fakewebview.h>
+#include <qwk_settings.h>
 
 class WebView : public QWebView
 {
@@ -19,10 +20,13 @@ class WebView : public QWebView
 public:
     explicit WebView(QWidget* parent = 0);
 
-    void setSettings(QSettings *settings);
+    void setSettings(QwkSettings *settings);
     void loadCustomPage(QString uri);
     void loadHomepage();
     void initSignals();
+
+    void resetLoadTimer();
+    void stopLoadTimer();
 
     void setPage(QWebPage* page);
 
@@ -40,18 +44,25 @@ public:
 
 public slots:
     void handlePrintRequested(QWebFrame *);
-    void handleUrlChanged(const QUrl &);
+    void handleFakeviewUrlChanged(const QUrl &);
+    void handleFakeviewLoadFinished(bool);
 
 protected:
     void mousePressEvent(QMouseEvent *event);
     QPlayer *getPlayer();
     QWebView *getFakeLoader();
+    QTimer *getLoadTimer();
+
+signals:
+
+    void qwkError(QString message);
 
 private:
-    QPlayer *player;
-    QSettings *mainSettings;
+    QPlayer     *player;
+    QwkSettings *qwkSettings;
     FakeWebView *loader;
-    QPrinter *printer;
+    QPrinter    *printer;
+    QTimer      *loadTimer;
 
 private slots:
     void handleSslErrors(QNetworkReply* reply, const QList<QSslError> &errors);
@@ -59,6 +70,9 @@ private slots:
 
     void handleNetworkReply(QNetworkReply *reply);
     void handleAuthReply(QNetworkReply *aReply, QAuthenticator *aAuth);
+    void handleProxyAuthReply(const QNetworkProxy &proxy, QAuthenticator *aAuth);
+
+    void handleLoadTimerTimeout();
 };
 
 #endif // WEBVIEW_H
