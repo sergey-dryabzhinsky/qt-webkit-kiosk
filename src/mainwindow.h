@@ -87,8 +87,9 @@ protected slots:
 
     void delayedWindowResize();
     void delayedPageLoad();
+    void delayedPageReload();
 
-    void handleQwkError(QString);
+    void handleQwkNetworkError(QNetworkReply::NetworkError, QString);
     void handleQwkNetworkReplyUrl(QUrl);
 
     void networkStateChanged(QNetworkSession::State state);

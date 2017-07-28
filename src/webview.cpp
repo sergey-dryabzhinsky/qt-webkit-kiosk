@@ -139,7 +139,7 @@ void WebView::handleSslErrors(QNetworkReply* reply, const QList<QSslError> &erro
         reply->ignoreSslErrors();
     } else {
         reply->abort();
-        emit qwkError(QString("Network SSL errors: ") + errStr);
+        emit qwkNetworkError(reply->error(), QString("Network SSL errors: ") + errStr);
     }
 }
 
@@ -150,11 +150,7 @@ void WebView::handleNetworkReply(QNetworkReply* reply)
         if( reply->error()) {
             QString errStr = reply->errorString();
             qWarning() << QDateTime::currentDateTime().toString() << "handleNetworkReply ERROR:" << reply->error() << "=" << errStr;
-            if (errStr.contains("Host ") && errStr.contains(" not found")) {
-                // skip
-            } else {
-                emit qwkError(QString("Network error: ") + reply->errorString());
-            }
+            emit qwkNetworkError(reply->error(), reply->errorString());
         } else {
             qDebug() << QDateTime::currentDateTime().toString() << "handleNetworkReply OK";
             // emit qwkNetworkReplyUrl(reply->request().url());
@@ -166,7 +162,7 @@ void WebView::handleAuthReply(QNetworkReply* aReply, QAuthenticator* aAuth)
 {
     if( aReply && aAuth ) {
         qDebug() << QDateTime::currentDateTime().toString() << "handleAuthReply, need authorization, do nothing for now";
-        emit qwkError(QString("Web-site need authorization! Nothing to do for now :("));
+        emit qwkNetworkError(QNetworkReply::AuthenticationRequiredError, QString("Web-site need authorization! Nothing to do for now :("));
     }
 }
 
@@ -175,7 +171,7 @@ void WebView::handleProxyAuthReply(const QNetworkProxy &proxy, QAuthenticator* a
     Q_UNUSED(proxy);
     if( aAuth ) {
         qDebug() << QDateTime::currentDateTime().toString() << "handleProxyAuthReply, need proxy authorization, do nothing for now";
-        emit qwkError(QString("Proxy need authorization! Check your proxy auth settings!"));
+        emit qwkNetworkError(QNetworkReply::AuthenticationRequiredError, QString("Proxy need authorization! Check your proxy auth settings!"));
     }
 }
 
@@ -274,7 +270,7 @@ void WebView::handleLoadTimerTimeout()
     if (loader) {
         loader->stop();
     }
-    emit qwkError(QString("Page load timed out! Connection problems?"));
+    emit qwkNetworkError(QNetworkReply::TimeoutError, QString("Page load timed out! Connection problems?"));
 }
 
 

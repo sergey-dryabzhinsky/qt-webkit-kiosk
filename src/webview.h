@@ -56,7 +56,7 @@ protected:
 
 signals:
 
-    void qwkError(QString message);
+    void qwkNetworkError(QNetworkReply::NetworkError error, QString message);
     void qwkNetworkReplyUrl(QUrl url);
 
 private:

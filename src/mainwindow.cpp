@@ -302,7 +302,7 @@ void MainWindow::init(AnyOption *opts)
     connect(view->page(), SIGNAL(loadProgress(int)), SLOT(setProgress(int)));
     connect(view->page()->mainFrame(), SIGNAL(loadFinished(bool)), SLOT(finishLoading(bool)));
     connect(view->page()->mainFrame(), SIGNAL(iconChanged()), SLOT(pageIconLoaded()));
-    connect(view, SIGNAL(qwkError(QString)), SLOT(handleQwkError(QString)));
+    connect(view, SIGNAL(qwkNetworkError(NetworkError,QString)), SLOT(handleQwkError(QString)));
     connect(view, SIGNAL(qwkNetworkReplyUrl(QUrl)), SLOT(handleQwkNetworkReplyUrl(QUrl)));
 
     QNetworkConfigurationManager manager;
@@ -371,6 +371,14 @@ void MainWindow::delayedPageLoad()
     n_session->waitForOpened(1000);
 
     view->loadHomepage();
+}
+
+void MainWindow::delayedPageReload()
+{
+    // Wait 1 second. May be not here?
+    n_session->waitForOpened(1000);
+
+    view->reload();
 }
 
 void MainWindow::clearCache()
@@ -505,11 +513,51 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     }
 }
 
-void MainWindow::handleQwkError(QString message)
+void MainWindow::handleQwkNetworkError(QNetworkReply::NetworkError error, QString message)
 {
     qDebug() << QDateTime::currentDateTime().toString()
              << "MainWindow::handleQwkError"
                 ;
+    if (message.contains("Host ") && message.contains(" not found")) {
+        // Don't give a damn
+        return;
+    }
+
+    // Unknown error if eth0 if up but cable out
+    if (error == QNetworkReply::UnknownNetworkError) {
+        if (message.contains("Network access is disabled")) {
+            // Check all interfaces if them has link up
+
+            bool hasLinkUp = false;
+            QNetworkInterface *network_interface = new QNetworkInterface();
+            foreach (QNetworkInterface interface, network_interface->allInterfaces()) {
+                if ((interface.flags() & QNetworkInterface::IsUp) &&
+                        (interface.flags() & QNetworkInterface::IsRunning)
+                        )
+                    hasLinkUp = true;
+            }
+            delete network_interface;
+
+            if (hasLinkUp && view->page()->networkAccessManager()->networkAccessible() != QNetworkAccessManager::Accessible) {
+
+                qDebug() << QDateTime::currentDateTime().toString()
+                         << "MainWindow::networkStateChanged -"
+                         << "Has loopBack interface and network not accessible? Force accessible state!"
+                            ;
+
+                // force network accessibility to get local content
+                view->page()->networkAccessManager()->setNetworkAccessible(QNetworkAccessManager::Accessible);
+                // force NetSession restart
+                n_session->close();
+                n_session->open();
+
+                // Try reload broken view downloads
+                delayedLoad->singleShot(100, this, SLOT(delayedPageReload()));
+            }
+
+        }
+    }
+
     if (messagesBox) {
         messagesBox->show();
         QString txt = messagesBox->text();
@@ -1033,9 +1081,12 @@ void MainWindow::networkStateChanged(QNetworkSession::State state)
 
             // force network accessibility to get local content
             view->page()->networkAccessManager()->setNetworkAccessible(QNetworkAccessManager::Accessible);
+            // force NetSession restart
+            n_session->close();
+            n_session->open();
         }
 
-        view->reload();
+        delayedLoad->singleShot(100, this, SLOT(delayedPageReload()));
     }
 }
 
