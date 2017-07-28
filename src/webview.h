@@ -46,7 +46,7 @@ public slots:
     void handlePrintRequested(QWebFrame *);
     void handleFakeviewUrlChanged(const QUrl &);
     void handleFakeviewLoadFinished(bool);
-    virtual bool shouldInterruptJavaScript();
+    bool shouldInterruptJavaScript();
 
 protected:
     void mousePressEvent(QMouseEvent *event);

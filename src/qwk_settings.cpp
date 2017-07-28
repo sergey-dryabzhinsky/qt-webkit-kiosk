@@ -170,8 +170,12 @@ void QwkSettings::loadSettings(QString ini_file)
     if (!qsettings->contains("browser/page_load_timeout")) {
         qsettings->setValue("browser/page_load_timeout", 15000);
     }
+    if (!qsettings->contains("browser/network_error_reload_delay")) {
+        qsettings->setValue("browser/network_error_reload_delay", 15000);
+    }
+
     if (!qsettings->contains("browser/show_error_messages")) {
-        qsettings->setValue("browser/show_error_messages", true);
+        qsettings->setValue("browser/show_error_messages", false);
     }
 
 
@@ -272,6 +276,16 @@ bool QwkSettings::getBool(QString key, bool defval)
     if (qsettings) {
         if (qsettings->contains(key)) {
             return qsettings->value(key).toBool();
+        }
+    }
+    return defval;
+}
+
+int QwkSettings::getInt(QString key, int defval)
+{
+    if (qsettings) {
+        if (qsettings->contains(key)) {
+            return qsettings->value(key).toInt();
         }
     }
     return defval;

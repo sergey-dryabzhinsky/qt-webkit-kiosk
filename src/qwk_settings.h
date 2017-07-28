@@ -12,10 +12,11 @@ public:
 
     void loadSettings(QString ini_file);
 
-    bool getBool(QString key, bool defval=false);
-    uint getUInt(QString key, uint defval=0);
-    qreal getReal(QString key, qreal defval=0);
-    QString getQString(QString key, QString defval=QString());
+    bool        getBool(QString key, bool defval=false);
+    int         getInt(QString key, int defval=0);
+    uint        getUInt(QString key, uint defval=0);
+    qreal       getReal(QString key, qreal defval=0);
+    QString     getQString(QString key, QString defval=QString());
     QStringList getQStringList(QString key, QStringList defval=QStringList());
 
     void setValue(QString key, QVariant value);

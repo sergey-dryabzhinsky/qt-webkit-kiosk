@@ -38,6 +38,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#ifndef QWK_MAINWINDOW_H
+#define QWK_MAINWINDOW_H
 
 #include <QtGui>
 #include <QHBoxLayout>
@@ -143,3 +145,5 @@ private:
     QTimer *delayedResize;
     QTimer *delayedLoad;
 };
+
+#endif // QWK_MAINWINDOW_H
