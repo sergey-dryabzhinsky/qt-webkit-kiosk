@@ -972,29 +972,36 @@ void MainWindow::unixSignalUsr2()
 
 // ----------------------- NETWORK -----------------------------
 
+/**
+ * @brief MainWindow::networkStateChanged
+ * It's triggered if global network online status changed
+ * @param state
+ */
 void MainWindow::networkStateChanged(QNetworkSession::State state)
 {
     qDebug() << QDateTime::currentDateTime().toString()
              << "MainWindow::networkStateChanged -"
              << state
                 ;
-   if (state == QNetworkSession::Connected) {
-       // Reload current page, network here again!
-       view->reload();
-       return;
-   }
-   QString errStr = "";
-   switch (state) {
-   case QNetworkSession::NotAvailable:
-       errStr = "Network not available! Check your cable!";
-       break;
-   case QNetworkSession::Disconnected:
-       errStr = "Network is down! Check your network settings!";
-       break;
-   default:
-       break;
-   }
-   if (errStr.length()) {
+    bool doReload = false;
+    if (state == QNetworkSession::Connected) {
+        // Reload current page, network here again!
+        doReload = true;
+    }
+    QString errStr = "";
+    switch (state) {
+    case QNetworkSession::NotAvailable:
+        errStr = "Network not available! Check your cable!";
+        doReload = true;
+        break;
+    case QNetworkSession::Disconnected:
+        errStr = "Network is down! Check your network settings!";
+        doReload = true;
+        break;
+    default:
+        break;
+    }
+    if (errStr.length()) {
        if (messagesBox) {
            messagesBox->show();
            QString txt = messagesBox->text();
@@ -1003,7 +1010,33 @@ void MainWindow::networkStateChanged(QNetworkSession::State state)
            }
            messagesBox->setText(txt + QDateTime::currentDateTime().toString() +  " :: " + errStr);
        }
-   }
+    }
+    if (doReload) {
+
+        bool hasLoFace = false;
+        QNetworkInterface *network_interface = new QNetworkInterface();
+        foreach (QNetworkInterface interface, network_interface->allInterfaces()) {
+            if ((interface.flags() & QNetworkInterface::IsUp) &&
+                    (interface.flags() & QNetworkInterface::IsRunning) &&
+                    (interface.flags() & QNetworkInterface::IsLoopBack)
+                    )
+                hasLoFace = true;
+        }
+        delete network_interface;
+
+        if (hasLoFace && view->page()->networkAccessManager()->networkAccessible() != QNetworkAccessManager::Accessible) {
+
+            qDebug() << QDateTime::currentDateTime().toString()
+                     << "MainWindow::networkStateChanged -"
+                     << "Has loopBack interface and network not accessible? Force accessible state!"
+                        ;
+
+            // force network accessibility to get local content
+            view->page()->networkAccessManager()->setNetworkAccessible(QNetworkAccessManager::Accessible);
+        }
+
+        view->reload();
+    }
 }
 
 void MainWindow::handleQwkNetworkReplyUrl(QUrl url)
