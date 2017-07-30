@@ -39,12 +39,8 @@
 **
 ****************************************************************************/
 
-#include "config.h"
-
-#include <QtGui>
-#include <QtNetwork>
-#include <QtWebKit>
 #include <QDebug>
+#include "config.h"
 #include "mainwindow.h"
 
 #ifdef QT5
@@ -514,7 +510,7 @@ void MainWindow::handleQwkNetworkError(QNetworkReply::NetworkError error, QStrin
                 ;
     if (message.contains("Host ") && message.contains(" not found")) {
         // Don't give a damn
-        //return;
+        return;
     }
 
     // Unknown error if eth0 if up but cable out
