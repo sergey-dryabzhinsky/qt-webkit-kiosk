@@ -540,6 +540,7 @@ void MainWindow::handleQwkNetworkError(QNetworkReply::NetworkError error, QStrin
                 // force NetSession restart
                 n_session->close();
                 n_session->open();
+                message += QString("\nNetwork session restarted!");
 
                 qint32 delay_reload = qwkSettings->getInt("browser/network_error_reload_delay", 15000);
 
@@ -548,6 +549,7 @@ void MainWindow::handleQwkNetworkError(QNetworkReply::NetworkError error, QStrin
                          << "Delay WebView reload by" << delay_reload << "msec."
                             ;
                 if (delay_reload >= 0) {
+                    message += QString("\nPage reload queued! Plase wait ") + QVariant(delay_reload / 1000.).toString() + QString(" seconds...");
                     // Try reload broken view downloads
                     delayedLoad->singleShot(
                         delay_reload,
@@ -1050,16 +1052,6 @@ void MainWindow::networkStateChanged(QNetworkSession::State state)
     default:
         break;
     }
-    if (errStr.length()) {
-       if (messagesBox) {
-           messagesBox->show();
-           QString txt = messagesBox->text();
-           if (txt.length()) {
-               txt += "\n";
-           }
-           messagesBox->setText(txt + QDateTime::currentDateTime().toString() +  " :: " + errStr);
-       }
-    }
     if (doReload) {
 
         bool hasLoFace = false;
@@ -1085,6 +1077,7 @@ void MainWindow::networkStateChanged(QNetworkSession::State state)
             // force NetSession restart
             n_session->close();
             n_session->open();
+            errStr += QString("\nNetwork session restarted!");
         }
 
         qint32 delay_reload = qwkSettings->getInt("browser/network_error_reload_delay", 15000);
@@ -1095,8 +1088,19 @@ void MainWindow::networkStateChanged(QNetworkSession::State state)
                     ;
 
         if (delay_reload >= 0) {
+            errStr += QString("\nPage reload queued! Plase wait ") + QVariant(delay_reload / 1000.).toString() + QString(" seconds...");
             delayedLoad->singleShot(delay_reload, this, SLOT(delayedPageReload()));
         }
+    }
+    if (errStr.length()) {
+       if (messagesBox) {
+           messagesBox->show();
+           QString txt = messagesBox->text();
+           if (txt.length()) {
+               txt += "\n";
+           }
+           messagesBox->setText(txt + QDateTime::currentDateTime().toString() +  " :: " + errStr);
+       }
     }
 }
 
