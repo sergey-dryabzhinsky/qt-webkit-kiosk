@@ -114,6 +114,7 @@ protected:
     bool hideScrollbars();
     bool disableSelection();
     void keyPressEvent(QKeyEvent *event);
+    void resizeEvent(QResizeEvent* event);
 
 private:
     WebView         *view;              // Webkit Page View
@@ -141,6 +142,7 @@ private:
     bool isUrlRealyChanged;
 
     QNetworkSession *n_session;
+    QNetworkInterface *network_interface;
 
     QTimer *delayedResize;
     QTimer *delayedLoad;

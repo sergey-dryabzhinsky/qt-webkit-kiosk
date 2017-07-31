@@ -71,6 +71,8 @@ MainWindow::MainWindow() : QMainWindow()
     connect(handler, SIGNAL(sigINT()), SLOT(unixSignalQuit()));
     connect(handler, SIGNAL(sigHUP()), SLOT(unixSignalHup()));
 
+    network_interface = new QNetworkInterface();
+
     delayedResize = new QTimer();
     delayedLoad = new QTimer();
 
@@ -166,8 +168,11 @@ void MainWindow::init(AnyOption *opts)
     // --- Web View --- //
     view = new WebView(this);
 
-    QPalette palette = this->palette();
-    palette.setColor(QPalette::Window, QColor(230,230,230,127));
+    QPalette paletteG = this->palette();
+    paletteG.setColor(QPalette::Window, QColor(220,240,220,127));
+
+    QPalette paletteR = this->palette();
+    paletteR.setColor(QPalette::Window, QColor(240,220,220,127));
 
     topBox = new QHBoxLayout(view);
     topBox->setContentsMargins(2, 2, 2, 2);
@@ -179,7 +184,7 @@ void MainWindow::init(AnyOption *opts)
         loadProgress->setMinimumSize(100, 16);
         loadProgress->setMaximumSize(100, 16);
         loadProgress->setAutoFillBackground(true);
-        loadProgress->setPalette(palette);
+        loadProgress->setPalette(paletteG);
 
         // Do not work... Need Layout...
         loadProgress->setAlignment(Qt::AlignTop | Qt::AlignLeft);
@@ -194,17 +199,17 @@ void MainWindow::init(AnyOption *opts)
         // --- Messages Box --- //
         messagesBox = new QLabel();
         messagesBox->setContentsMargins(2, 2, 2, 2);
-        messagesBox->setWordWrap(true);
+        // messagesBox->setWordWrap(true);
         messagesBox->setAutoFillBackground(true);
-        messagesBox->setPalette(palette);
+        messagesBox->setPalette(paletteR);
 
         // Do not work... Need Layout...
-        messagesBox->setAlignment(Qt::AlignTop | Qt::AlignJustify);
-        messagesBox->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        messagesBox->setAlignment(Qt::AlignVCenter);
+        messagesBox->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::MinimumExpanding);
 
         messagesBox->hide();
 
-        topBox->addStretch(1);
+        topBox->addStretch(2);
         topBox->addWidget(messagesBox, 1, Qt::AlignTop | Qt::AlignLeft);
     }
 
@@ -343,9 +348,6 @@ void MainWindow::delayedWindowResize()
     }
     QApplication::processEvents(); //process events to force update
 
-    quint16 msgWidth = view->width() - loadProgress->width() - 16;
-    messagesBox->setMinimumWidth(msgWidth);
-
     this->setFocusPolicy(Qt::StrongFocus);
     this->focusWidget();
 
@@ -353,6 +355,12 @@ void MainWindow::delayedWindowResize()
         setWindowFlags(Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint);
     }
     QApplication::processEvents(); //process events to force update
+}
+
+void MainWindow::resizeEvent(QResizeEvent* event)
+{
+   QMainWindow::resizeEvent(event);
+   // Your code here.
 }
 
 void MainWindow::delayedPageLoad()
@@ -506,12 +514,18 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 void MainWindow::handleQwkNetworkError(QNetworkReply::NetworkError error, QString message)
 {
     qDebug() << QDateTime::currentDateTime().toString()
-             << "MainWindow::handleQwkError"
+             << "MainWindow::handleQwkNetworkError"
                 ;
     if (message.contains("Host ") && message.contains(" not found")) {
         // Don't give a damn
+        qDebug() << "Don't give a damn";
         return;
     }
+/*    if (message.contains("Error downloading ") && message.contains("server replied: Not Found")) {
+        // Don't give a damn
+        qDebug() << "Don't give a damn";
+        return;
+    }*/
 
     // Unknown error if eth0 if up but cable out
     if (error == QNetworkReply::UnknownNetworkError) {
@@ -519,14 +533,12 @@ void MainWindow::handleQwkNetworkError(QNetworkReply::NetworkError error, QStrin
             // Check all interfaces if them has link up
 
             bool hasLinkUp = false;
-            QNetworkInterface *network_interface = new QNetworkInterface();
             foreach (QNetworkInterface interface, network_interface->allInterfaces()) {
                 if ((interface.flags() & QNetworkInterface::IsUp) &&
                         (interface.flags() & QNetworkInterface::IsRunning)
                         )
                     hasLinkUp = true;
             }
-            delete network_interface;
 
             if (hasLinkUp && view->page()->networkAccessManager()->networkAccessible() != QNetworkAccessManager::Accessible) {
 
@@ -544,11 +556,11 @@ void MainWindow::handleQwkNetworkError(QNetworkReply::NetworkError error, QStrin
 
                 qint32 delay_reload = qwkSettings->getInt("browser/network_error_reload_delay", 15000);
 
-                qDebug() << QDateTime::currentDateTime().toString()
-                         << "MainWindow::networkStateChanged -"
-                         << "Delay WebView reload by" << delay_reload << "msec."
-                            ;
                 if (delay_reload >= 0) {
+                    qDebug() << QDateTime::currentDateTime().toString()
+                             << "MainWindow::networkStateChanged -"
+                             << "Delay WebView reload by" << delay_reload/1000. << "sec."
+                                ;
                     message += QString("\nPage reload queued! Plase wait ") + QVariant(delay_reload / 1000.).toString() + QString(" seconds...");
                     // Try reload broken view downloads
                     delayedLoad->singleShot(
@@ -581,12 +593,6 @@ void MainWindow::desktopResized(int p)
     } else if (qwkSettings->getBool("view/fixed-size")) {
         centerFixedSizeWindow();
     }
-
-    QApplication::processEvents(); //process events to force update
-
-    quint16 msgWidth = view->width() - loadProgress->width() - 16;
-    messagesBox->setMinimumWidth(msgWidth);
-    messagesBox->setMaximumWidth(view->width());
 }
 
 /**
@@ -1055,7 +1061,6 @@ void MainWindow::networkStateChanged(QNetworkSession::State state)
     if (doReload) {
 
         bool hasLoFace = false;
-        QNetworkInterface *network_interface = new QNetworkInterface();
         foreach (QNetworkInterface interface, network_interface->allInterfaces()) {
             if ((interface.flags() & QNetworkInterface::IsUp) &&
                     (interface.flags() & QNetworkInterface::IsRunning) &&
@@ -1063,7 +1068,6 @@ void MainWindow::networkStateChanged(QNetworkSession::State state)
                     )
                 hasLoFace = true;
         }
-        delete network_interface;
 
         if (hasLoFace && view->page()->networkAccessManager()->networkAccessible() != QNetworkAccessManager::Accessible) {
 
@@ -1082,12 +1086,12 @@ void MainWindow::networkStateChanged(QNetworkSession::State state)
 
         qint32 delay_reload = qwkSettings->getInt("browser/network_error_reload_delay", 15000);
 
-        qDebug() << QDateTime::currentDateTime().toString()
-                 << "MainWindow::networkStateChanged -"
-                 << "Delay WebView reload by" << delay_reload << "msec."
-                    ;
-
         if (delay_reload >= 0) {
+            qDebug() << QDateTime::currentDateTime().toString()
+                     << "MainWindow::networkStateChanged -"
+                     << "Delay WebView reload by" << delay_reload/1000. << "msec."
+                        ;
+
             errStr += QString("\nPage reload queued! Plase wait ") + QVariant(delay_reload / 1000.).toString() + QString(" seconds...");
             delayedLoad->singleShot(delay_reload, this, SLOT(delayedPageReload()));
         }
