@@ -19,7 +19,7 @@ Qt WebKit Kiosk-mode browser
 
 ## TODO
 
-- Поддержка версий Qt 5.6+ в помощью QtWebEngine
+- Поддержка версий Qt 5.6+ с помощью QtWebEngine
 
 ## Загрузки
 
