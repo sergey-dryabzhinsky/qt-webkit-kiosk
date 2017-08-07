@@ -1,4 +1,4 @@
-qt-webkit-kiosk
+Qt WebKit Kiosk-mode browser
 ===============
 
 This is simple browser application written on Qt &amp; QtWebkit. 
@@ -15,7 +15,7 @@ Also hides printer dialog, uses default or defined printer, adds custom js/css f
 
 ## TODO
 
-- Support Qt 5.6+ via QWebEngine
+- Support Qt 5.6+ via QtWebEngine
 
 ## Downloads
 

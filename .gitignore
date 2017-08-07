@@ -1,0 +1,8 @@
+.idea
+
+# Build artefacts
+*.o
+moc_*.cpp
+Makefile*
+# Main binary
+src/qt-webkit-kiosk
