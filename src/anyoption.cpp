@@ -382,7 +382,7 @@ AnyOption::useCommandArgs( int _argc, QStringList _argv)
 		argv[i] = new char[strlen(_argv.at(i).toStdString().c_str())+1];
 		memcpy(argv[i], _argv.at(i).toStdString().c_str(), strlen(_argv.at(i).toStdString().c_str())+1);
 	}
-	argv[_argv.size()] = ((char)NULL);
+	argv[_argv.size()] = (char*)NULL;
 
 	argc = _argc;
 	command_set = true;
