@@ -122,7 +122,11 @@ protected:
     bool disableSelection();
     void keyPressEvent(QKeyEvent *event);
     void resizeEvent(QResizeEvent* event);
-
+    void appReboot(); 
+private slots:
+    void onTimeOutCheckTime(); 
+    void checkPageStoppedLoading();
+	
 private:
     WebView         *view;              // Webkit Page View
     QHBoxLayout     *topBox;            // Box for progress and messages
