@@ -946,9 +946,7 @@ void MainWindow::attachCustomJavascript()
     bodyEle.appendInside("<div id=\"customTimeTagQT\" style=\"display:none;\"></div>");
 
     QString content = "";
-
-
-    content += "var idIntervalQtTimeCheck = -1; \n\n ";
+    content += "clearInterval( window.idIntervalQtTimeCheck ); \n\n "; //clear global Interval always first to prevent interval overlaps
     content += "function setTimeHeadQT()\n";
     content += "{\n";
     content += "    if( document.getElementById('customTimeTagQT') !== null ) { \n";
@@ -956,18 +954,17 @@ void MainWindow::attachCustomJavascript()
     content += "    }\n";
     content += "}\n";
     content += "function startQtTimer(){ \n";
-    content += "  if( idIntervalQtTimeCheck == -1 ){ \n";
-    content += "        idIntervalQtTimeCheck = setInterval(function(){\n";
+    content += "  if( typeof window.idIntervalQtTimeCheck == \"undefined\"  || window.idIntervalQtTimeCheck == -1 ){ \n";
+    content += "        window.idIntervalQtTimeCheck = setInterval(function(){\n";
     content += "          setTimeHeadQT(); \n";
     content += "        },1500);\n";
     content += "    } ";
     content += "} \n\n ";
     content += "function stopQtTimer(){ \n";
-    content += "    clearInterval( idIntervalQtTimeCheck ); idIntervalQtTimeCheck = -1; \n";
+    content += "    clearInterval( window.idIntervalQtTimeCheck ); window.idIntervalQtTimeCheck = -1; \n";
     content += "} \n\n ";
     content += " setTimeHeadQT(); \n";
     content += " startQtTimer();  \n";
- 
 
 
     view->page()->mainFrame()->evaluateJavaScript(content);
