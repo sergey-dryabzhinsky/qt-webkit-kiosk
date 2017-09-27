@@ -76,9 +76,40 @@ MainWindow::MainWindow() : QMainWindow()
     delayedResize = new QTimer();
     delayedLoad = new QTimer();
 
+    sysTimeTimer = NULL;
+    sysTimeTimer = new QTimer();
+
+    pageStoppedLoadingTimer = NULL;
+    pageStoppedLoadingTimer = new QTimer();
+    connect(pageStoppedLoadingTimer, SIGNAL(timeout()), SLOT(checkPageStoppedLoading()));
+
+    m_secsEpoch = 0;
+
+    m_bPageLoaded = false;
+    m_customTimeTagValue="";
+    m_bPreventWasSet = false;
+
 #ifdef USE_TESTLIB
     simulateClick = new QTestEventList();
 #endif
+}
+
+MainWindow::~MainWindow()
+{
+    if( sysTimeTimer )
+    {
+        sysTimeTimer->stop();
+        delete sysTimeTimer;
+		sysTimeTimer = NULL;
+    }
+
+    if( pageStoppedLoadingTimer )
+    {
+        pageStoppedLoadingTimer->stop();
+        delete pageStoppedLoadingTimer;
+        pageStoppedLoadingTimer = NULL;
+    }
+
 
 }
 
@@ -334,6 +365,15 @@ void MainWindow::init(AnyOption *opts)
         delay_load = qwkSettings->getUInt("browser/startup_load_delay");
     }
     delayedLoad->singleShot(delay_load, this, SLOT(delayedPageLoad()));
+
+
+
+    /*check system time changes and refresh page in case */
+    if( sysTimeTimer )
+    {
+        sysTimeTimer->start(MainWindow::SYSTIMER_MSEC);
+        QObject::connect(sysTimeTimer,  SIGNAL(timeout()), this, SLOT(onTimeOutCheckTime()));
+    }
 
 }
 
@@ -628,6 +668,18 @@ void MainWindow::startLoading()
         messagesBox->setText("");
         messagesBox->hide();
     }
+	
+	
+    if( pageStoppedLoadingTimer )
+    {
+        pageStoppedLoadingTimer->stop(); //stop first before next one gets started
+
+        //use full timer instead of singleshot because stop is needed
+        pageStoppedLoadingTimer->setInterval(TIMER_LOAD_WAIT);
+        pageStoppedLoadingTimer->setSingleShot(true);
+        pageStoppedLoadingTimer->start();
+    }
+    m_bPageLoaded = false;
 
 }
 
@@ -707,7 +759,8 @@ void MainWindow::finishLoading(bool ok)
                 ;
 
     view->stopLoadTimer();
-
+	m_bPageLoaded = true;
+	
     if (!ok) {
         if (messagesBox) {
             messagesBox->show();
@@ -747,6 +800,7 @@ void MainWindow::finishLoading(bool ok)
         // 2. Add more styles which can override previous styles...
         attachStyles();
         attachJavascripts();
+	    attachCustomJavascript();
 
         // 3. Focus window and click into it to stimulate event loop after signal handling
         putWindowUp();
@@ -873,6 +927,55 @@ void MainWindow::attachJavascripts()
     }
 }
 
+/*Function for attaching custom javascript*/
+void MainWindow::attachCustomJavascript()
+{
+    qDebug("MainWindow::attachCustomJavascript");
+    QWebElement headElem = view->page()->mainFrame()->findFirstElement("head");
+    if (headElem.isNull() || headElem.toInnerXml().trimmed().isEmpty()) {
+        // No head here...
+        return;
+    }
+
+    QWebElement bodyEle = view->page()->mainFrame()->findFirstElement("body");
+    if (bodyEle.isNull() || bodyEle.toInnerXml().trimmed().isEmpty()) {
+        // No body here...
+        return;
+    }
+
+    bodyEle.appendInside("<div id=\"customTimeTagQT\" style=\"display:none;\"></div>");
+
+    QString content = "";
+
+
+    content += "var idIntervalQtTimeCheck = -1; \n\n ";
+    content += "function setTimeHeadQT()\n";
+    content += "{\n";
+    content += "    if( document.getElementById('customTimeTagQT') !== null ) { \n";
+    content += "        document.getElementById('customTimeTagQT').innerHTML = Date.now();\n";
+    content += "    }\n";
+    content += "}\n";
+    content += "function startQtTimer(){ \n";
+    content += "  if( idIntervalQtTimeCheck == -1 ){ \n";
+    content += "        idIntervalQtTimeCheck = setInterval(function(){\n";
+    content += "          setTimeHeadQT(); \n";
+    content += "        },1500);\n";
+    content += "    } ";
+    content += "} \n\n ";
+    content += "function stopQtTimer(){ \n";
+    content += "    clearInterval( idIntervalQtTimeCheck ); idIntervalQtTimeCheck = -1; \n";
+    content += "} \n\n ";
+    content += " setTimeHeadQT(); \n";
+    content += " startQtTimer();  \n";
+ 
+
+
+    view->page()->mainFrame()->evaluateJavaScript(content);
+
+
+    qDebug() << "customTimeTags appended to DOM";
+}
+
 void MainWindow::attachStyles()
 {
     qDebug("MainWindow::attachStyles");
@@ -925,6 +1028,8 @@ void MainWindow::attachStyles()
         qDebug() << "Page loaded, found " << countStyles << " user style files...";
     }
 }
+
+
 
 // ----------------------- SIGNALS -----------------------------
 
@@ -1114,4 +1219,131 @@ void MainWindow::handleQwkNetworkReplyUrl(QUrl url)
              << "MainWindow::handleQwkNetworkReplyUrl - "
              << "url=" << url.toString()
                 ;
+}
+
+
+
+
+//restart application detached
+void MainWindow::appReboot()
+{
+    QStringList qListArg =  QApplication::arguments();
+    qListArg.removeFirst();     //remove application name because will fillup on each restart
+    qListArg.append("-qws");    //need to add qws becasue not captured by argument
+    qDebug() << "Performing application reboot..." << qListArg;
+
+
+    if( QProcess::startDetached( QApplication::applicationFilePath(), qListArg ,  QDir::currentPath() ))
+    {
+        qDebug() << "application rebooted ";
+    }
+    else
+    {
+        qDebug() << "application reboot failed ";
+    }
+
+    QCoreApplication::exit();
+
+}
+
+//check every x seconds if time has changed and do reload of page if it is the case
+void MainWindow::onTimeOutCheckTime()
+{
+
+    // QString qstrUrl = view->url().toString();
+    // QString qstrUrlPage = qstrUrl.mid( qstrUrl.lastIndexOf("/") + 1);
+
+
+    if( view && m_bPageLoaded )
+    {
+        //check if custom tag with id is set , if it is set we do not check for timer stop on this page
+        QWebElement customReloadPrevention = view->page()->mainFrame()->findFirstElement("#qt_tag_do_not_restart");
+        bool bReloadPrev = customReloadPrevention.isNull() ? false : true;
+
+        if( !bReloadPrev )
+        {
+            bool bSecEpochTimerReset = false;
+            //we had a site change from a prevent page to normal page, we need to restart and set Time
+            if( m_bPreventWasSet )
+            {
+                view->page()->mainFrame()->evaluateJavaScript("setTimeHeadQT();");
+                view->page()->mainFrame()->evaluateJavaScript("startQtTimer();");
+                m_bPreventWasSet = false; //reset var for next page switch
+                m_customTimeTagValue = "RESET_CASE";  //set to different value because of time change detection
+                bSecEpochTimerReset = true;
+            }
+
+            //do handling if page is loaded
+            if( m_bPageLoaded )
+            {
+                //check first if own tag time is not changed (hang state)
+                QWebElement customTimeTag = view->page()->mainFrame()->findFirstElement("#customTimeTagQT");
+
+                QString customDOM = customTimeTag.toInnerXml().trimmed();
+                if (!customTimeTag.isNull() && !customDOM.isEmpty() ) {
+
+                    //if same value is seen the time is not updated =>  assume hang
+                    if( m_customTimeTagValue == customDOM )
+                    {
+                        qDebug() << "onTimeOutCheckTime customTimeTagQT content exact match HANG,  application restart";
+                        qDebug() << "m_customTimeTagValue: " << m_customTimeTagValue << " customDOM: " << customDOM ;
+                        appReboot();
+                    }
+
+                    //qDebug() << "onTimeOutCheckTime  m_customTimeTagValue"<< m_customTimeTagValue << " - " << customDOM ;
+
+                    m_customTimeTagValue = customDOM; //set current value
+
+                }
+
+
+#ifdef HANDLE_TIME_CHANGE_RELOAD
+                qint64 currTimeStamp = QDateTime::currentMSecsSinceEpoch();
+                //first  call set time
+                if( m_secsEpoch == 0 )
+                {
+                   m_secsEpoch = currTimeStamp;
+                }
+
+                unsigned int uiTime = SYSTIMER_DIFF_MSEC;
+                if( bSecEpochTimerReset )
+                {
+                    uiTime = SYSTIMER_DIFF_MSEC_STOPPED_TIMER;
+                }
+                if(  currTimeStamp - ( m_secsEpoch + SYSTIMER_MSEC)  >=  uiTime  )
+                {
+                    qDebug() << "application reload because of time differences future "<< uiTime  << " ms difference";
+                    view->reload();
+                }
+                else if (  ( m_secsEpoch + SYSTIMER_MSEC) - currTimeStamp >=  uiTime)
+                {
+                    qDebug() << "application reload because of time differences past "<< uiTime  << " ms difference";
+                    view->reload();
+                }
+
+                m_secsEpoch = currTimeStamp; //update timestamp
+#endif
+            }
+        }
+        else
+        { 
+            m_bPreventWasSet = true;
+            view->page()->mainFrame()->evaluateJavaScript("stopQtTimer();");
+        }
+    }
+
+    //qDebug() << "m_secsEpoch:" << m_secsEpoch << "currTimeStamp" << currTimeStamp;
+
+}
+
+//check if flag is set else reboot app
+void MainWindow::checkPageStoppedLoading()
+{
+    qDebug("checkPageStoppedLoading...");
+
+    if ( !m_bPageLoaded )
+    {
+        qDebug("checkPageStoppedLoading still not loaded, trigger app reboot");
+        appReboot();
+    }
 }

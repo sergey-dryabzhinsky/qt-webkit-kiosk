@@ -12,6 +12,7 @@
 #include <QSslError>
 #endif
 
+//#define SHOW_ALSO_OKAY_DEBUG
 
 WebView::WebView(QWidget* parent): QWebView(parent)
 {
@@ -146,14 +147,17 @@ void WebView::handleSslErrors(QNetworkReply* reply, const QList<QSslError> &erro
 void WebView::handleNetworkReply(QNetworkReply* reply)
 {
     if( reply ) {
-        qDebug() << QDateTime::currentDateTime().toString() << "handleNetworkReply URL:" << reply->request().url().toString();
         if( reply->error()) {
+            qDebug() << QDateTime::currentDateTime().toString() << "handleNetworkReply URL:" << reply->request().url().toString();
             QString errStr = reply->errorString();
             qWarning() << QDateTime::currentDateTime().toString() << "handleNetworkReply ERROR:" << reply->error() << "=" << errStr;
             emit qwkNetworkError(reply->error(), reply->errorString());
         } else {
+            #ifdef SHOW_ALSO_OKAY_DEBUG
+            qDebug() << QDateTime::currentDateTime().toString() << "handleNetworkReply URL:" << reply->request().url().toString();
             qDebug() << QDateTime::currentDateTime().toString() << "handleNetworkReply OK";
             // emit qwkNetworkReplyUrl(reply->request().url());
+            #endif
         }
     }
 }

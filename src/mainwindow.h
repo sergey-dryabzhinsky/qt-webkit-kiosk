@@ -66,8 +66,14 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+     static const int SYSTIMER_MSEC         = 5000;
+     static const int SYSTIMER_DIFF_MSEC    = 60000;
+     static const int SYSTIMER_DIFF_MSEC_STOPPED_TIMER    = 120000;
+     static const int TIMER_LOAD_WAIT       = 30000;
+
 public:
     explicit MainWindow();
+    ~MainWindow();
 
     void init(AnyOption *cmdopts);
 
@@ -109,6 +115,7 @@ protected:
 
     void centerFixedSizeWindow();
     void attachJavascripts();
+    void attachCustomJavascript(); 
     void attachStyles();
     void putWindowUp();
     bool hideScrollbars();
@@ -132,6 +139,12 @@ private:
     AnyOption   *cmdopts;
     UnixSignals *handler;
 
+    qint64 m_secsEpoch;
+
+    bool m_bPageLoaded;
+    bool m_bPreventWasSet;
+
+
 #ifdef USE_TESTLIB
     QTestEventList *simulateClick;
 #endif
@@ -140,12 +153,17 @@ private:
     bool isScrollBarsHidden;
     bool isSelectionDisabled;
     bool isUrlRealyChanged;
+    QString m_customTimeTagValue;
 
     QNetworkSession *n_session;
     QNetworkInterface *network_interface;
 
     QTimer *delayedResize;
     QTimer *delayedLoad;
+    QTimer *sysTimeTimer;
+    QTimer *pageStoppedLoadingTimer;
+
+
 };
 
 #endif // QWK_MAINWINDOW_H
