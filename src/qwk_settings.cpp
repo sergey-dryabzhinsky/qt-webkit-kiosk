@@ -265,6 +265,10 @@ void QwkSettings::loadSettings(QString ini_file)
         qsettings->setValue("view/hide_mouse_cursor", false);
     }
 
+    if (!qsettings->contains("localstorage/enable")) {
+        qsettings->setValue("localstorage/enable", false);
+    }
+    
     if (qsettings->fileName().length()) {
         qsettings->sync();
     }

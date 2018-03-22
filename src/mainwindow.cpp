@@ -270,7 +270,11 @@ void MainWindow::init(AnyOption *opts)
     view->settings()->setAttribute(QWebSettings::PluginsEnabled,
         qwkSettings->getBool("browser/plugins")
     );
-
+    
+    view->settings()->setAttribute(QWebSettings::LocalStorageEnabled, 
+        qwkSettings->getBool("localstorage/enable")
+    );
+    
 #if QT_VERSION >= 0x050400
     view->settings()->setAttribute(QWebSettings::Accelerated2dCanvasEnabled, true);
 #endif
