@@ -15,9 +15,9 @@
 
 WebView::WebView(QWidget* parent): QWebView(parent)
 {
-    player = nullptr;
-    loader = nullptr;
-    loadTimer = nullptr;
+    player = NULL;
+    loader = NULL;
+    loadTimer = NULL;
 }
 
 /**
@@ -195,7 +195,7 @@ void WebView::handleWindowCloseRequested()
 void WebView::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
-        qDebug() << "Window Clicked!";
+        qDebug() << QDateTime::currentDateTime().toString() << "Window Clicked!";
         playSound("event-sounds/window-clicked");
     }
     QWebView::mousePressEvent(event);
@@ -249,7 +249,7 @@ void WebView::handleFakeviewLoadFinished(bool ok)
 QPlayer *WebView::getPlayer()
 {
     if (qwkSettings->getBool("event-sounds/enable")) {
-        if (player == nullptr) {
+        if (player == NULL) {
             player = new QPlayer();
         }
     }
@@ -260,7 +260,7 @@ QPlayer *WebView::getPlayer()
 QTimer *WebView::getLoadTimer()
 {
     if (qwkSettings->getUInt("browser/page_load_timeout")) {
-        if (loadTimer == nullptr) {
+        if (loadTimer == NULL) {
             loadTimer = new QTimer();
             connect(loadTimer, SIGNAL(timeout()), SLOT(handleLoadTimerTimeout()));
         }
@@ -324,7 +324,7 @@ void WebView::playSound(QString soundSetting)
 QWebView *WebView::createWindow(QWebPage::WebWindowType type)
 {
     if (type != QWebPage::WebBrowserWindow) {
-        return nullptr;
+        return NULL;
     }
     qDebug() << QDateTime::currentDateTime().toString() << "Handle createWindow...";
 

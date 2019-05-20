@@ -19,7 +19,7 @@ class WebView : public QWebView
     Q_OBJECT
 
 public:
-    explicit WebView(QWidget* parent = nullptr);
+    explicit WebView(QWidget* parent = 0);
 
     void setSettings(QwkSettings *settings);
     QwkSettings* getSettings();

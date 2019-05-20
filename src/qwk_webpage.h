@@ -13,7 +13,7 @@ class QwkWebPage : public QWebPage
     Q_OBJECT
 
 public:
-    explicit QwkWebPage(QWidget* parent = nullptr);
+    explicit QwkWebPage(QWidget* parent = 0);
 
     QwkSettings* getSettings();
 

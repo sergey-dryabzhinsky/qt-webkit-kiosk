@@ -14,7 +14,7 @@ class SocketPair: public QObject
 {
     Q_OBJECT
 public:
-    SocketPair(QObject *parent = nullptr);
+    SocketPair(QObject *parent = 0);
 
     bool create();
     void close();
