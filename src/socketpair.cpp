@@ -7,13 +7,13 @@ SocketPair::SocketPair(QObject *parent)
 {
     dataCheck = new QTimer();
     dataCheck->setInterval(100);
-    connect(dataCheck, SIGNAL(timeout()), this, SLOT(readServerData()));
-
-    connect(&server, SIGNAL(newConnection()), this, SLOT(newConnection()));
 }
 
 bool SocketPair::create()
 {
+    connect(dataCheck, SIGNAL(timeout()), this, SLOT(readServerData()));
+    connect(&server, SIGNAL(newConnection()), this, SLOT(newConnection()));
+
     int tries = 5;
     while (tries) {
         if (!server.isListening()) {

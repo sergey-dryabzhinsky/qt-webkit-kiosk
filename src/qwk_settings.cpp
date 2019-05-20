@@ -178,6 +178,13 @@ void QwkSettings::loadSettings(QString ini_file)
         qsettings->setValue("browser/show_error_messages", false);
     }
 
+    if (!qsettings->contains("browser/interrupt_javascript")) {
+        qsettings->setValue("browser/interrupt_javascript", true);
+    }
+    if (!qsettings->contains("browser/interrupt_javascript_interval")) {
+        qsettings->setValue("browser/interrupt_javascript_interval", 30);
+    }
+
 
     if (!qsettings->contains("signals/enable")) {
         qsettings->setValue("signals/enable", true);

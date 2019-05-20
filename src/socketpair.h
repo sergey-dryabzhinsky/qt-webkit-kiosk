@@ -14,7 +14,7 @@ class SocketPair: public QObject
 {
     Q_OBJECT
 public:
-    SocketPair(QObject *parent = 0);
+    SocketPair(QObject *parent = nullptr);
 
     bool create();
     void close();
@@ -24,7 +24,7 @@ public:
 Q_SIGNALS:
     void sigData(QByteArray);
 
-private slots:
+public slots:
     void newConnection();
     void readServerData();
 
