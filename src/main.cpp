@@ -36,7 +36,7 @@
 #include "mainwindow.h"
 #include "anyoption.h"
 
-bool launch(AnyOption *cmdopts)
+bool setupOptions(AnyOption *cmdopts)
 {
     cmdopts->addUsage("This is a simple web-browser working in fullscreen kiosk-mode.");
     cmdopts->addUsage("");
@@ -48,6 +48,25 @@ bool launch(AnyOption *cmdopts)
     cmdopts->addUsage(" -u --uri http://www.example.com/    Open this URI, home page");
     cmdopts->addUsage(" -C --clear-cache                    Clear cached request data");
     cmdopts->addUsage("");
+    cmdopts->addUsage("Build with:");
+    cmdopts->addUsage("        Qt: " QT_VERSION_STR);
+    cmdopts->addUsage("    WebKit: library v" QTWEBKIT_VERSION_STR);
+    cmdopts->addUsage("");
+    cmdopts->addUsage("Runing with:");
+
+    QString qtv = QString("         Qt: ") + QString(qVersion());
+    QByteArray qtvb = qtv.toLocal8Bit();
+    const char * qtvch = qtvb.constData();
+    cmdopts->addUsage(qtvch);
+
+    QString qtwv = QString("     WebKit: engine v") + qWebKitVersion();
+    QByteArray qtwvb = qtwv.toLocal8Bit();
+    const char * qtwvch = qtwvb.constData();
+    cmdopts->addUsage(qtwvch);
+    cmdopts->addUsage("");
+
+    qDebug() << "Build with: Qt = " QT_VERSION_STR << "; WebKit = " QTWEBKIT_VERSION_STR;
+    qDebug() << "Runing with: Qt =" << qVersion() << "; WebKit =" << qWebKitVersion();
 
     cmdopts->setFlag("help", 'h');
     cmdopts->setFlag("version", 'v');
@@ -84,7 +103,7 @@ int main(int argc, char * argv[])
     QApplication app(argc, argv);
 
     AnyOption *cmdopts = new AnyOption();
-    if (!launch(cmdopts)) {
+    if (!setupOptions(cmdopts)) {
         return 0;
     }
 
@@ -96,5 +115,5 @@ int main(int argc, char * argv[])
                      browser, SLOT(cleanupSlot()));
 
     int ret = app.exec();
-    qDebug() << "Application return:" << ret;
+    qDebug() << "Application return: " << ret;
 }

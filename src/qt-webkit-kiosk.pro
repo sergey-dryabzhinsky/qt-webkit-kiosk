@@ -14,7 +14,7 @@ contains(QT_VERSION, ^5\\.[0-9]+\\..*) {
 CONFIG += console link_pkgconfig
 TARGET = qt-webkit-kiosk
 TEMPLATE = app
-VERSION = 1.99.5
+VERSION = 1.99.6
 
 CONFIG(debug, debug|release) {
 # here comes debug specific statements
@@ -53,13 +53,16 @@ contains(QT_VERSION, ^5\\.[0-9]+\\..*) {
         HEADERS += player/multimedia.h
     }
 
-    packagesExist(phonon4qt5) {
-        message('Phonon framework found. Using Phonon-player.')
-        DEFINES += PLAYER_PHONON
-        QT += phonon4qt5
-        PLAYER = PHONON
-        SOURCES += player/phonon.cpp
-        HEADERS += player/phonon.h
+    contains(PLAYER, NONE) {
+        # Ubuntu / Debian version?
+        packagesExist(phonon4qt5) {
+            message('Phonon framework found. Using Phonon-player.')
+            DEFINES += PLAYER_PHONON
+            QT += phonon4qt5
+            PLAYER = PHONON
+            SOURCES += player/phonon.cpp
+            HEADERS += player/phonon.h
+        }
     }
 }
 
@@ -147,7 +150,8 @@ SOURCES += main.cpp\
     cachingnm.cpp \
     unixsignals.cpp \
     socketpair.cpp \
-    persistentcookiejar.cpp
+    persistentcookiejar.cpp \
+    qwk_settings.cpp
 
 HEADERS  += mainwindow.h \
     webview.h \
@@ -159,7 +163,8 @@ HEADERS  += mainwindow.h \
     cachingnm.h \
     unixsignals.h \
     socketpair.h \
-    persistentcookiejar.h
+    persistentcookiejar.h \
+    qwk_settings.h
 
 # DEBUG
 #message(- SOURCES: $${SOURCES})

@@ -1,4 +1,15 @@
-qt-webkit-kiosk (1.99.5-1sergey1) unstable; urgency=medium
+qt-webkit-kiosk (1.99.6-1sergey1) unstable; urgency=medium
+
+  * better network errors handling
+  * add messages box to output network errors and ini-file option for this
+  * better webview signal handling - use mainFrame for main page loading status to not overflow with signals
+  * checkout for network availability and reset qt network session if something going on
+  * delayed page reload if network state changes
+  * new ini-file options: browser/network_error_reload_delay, browser/page_load_timeout, browser/show_error_messaged
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sat, 12 Mar 2016 20:46:00 +0400
+
+ qt-webkit-kiosk (1.99.5-1sergey1) unstable; urgency=medium
 
   * Activate more settings for WebView - acceleration
   * Don't leak by FakeLoader - just stop load

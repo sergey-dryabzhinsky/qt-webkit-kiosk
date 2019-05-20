@@ -12,6 +12,7 @@
 #include "qplayer.h"
 #include "qwk-webpage.h"
 #include "fakewebview.h"
+#include "qwk_settings.h"
 
 class WebView : public QWebView
 {
@@ -20,14 +21,14 @@ class WebView : public QWebView
 public:
     explicit WebView(QWidget* parent = 0);
 
-    void setSettings(QSettings *settings);
-    QSettings* getSettings();
-
+    void setSettings(QwkSettings *settings);
     void loadCustomPage(QString uri);
     void loadHomepage();
     void initSignals();
 
     void setPage(QwkWebPage* page);
+    void resetLoadTimer();
+    void stopLoadTimer();
 
     QWebView *createWindow(QWebPage::WebWindowType type);
 
@@ -43,18 +44,27 @@ public:
 
 public slots:
     void handlePrintRequested(QWebFrame *);
-    void handleUrlChanged(const QUrl &);
+    void handleFakeviewUrlChanged(const QUrl &);
+    void handleFakeviewLoadFinished(bool);
+    bool shouldInterruptJavaScript();
 
 protected:
     void mousePressEvent(QMouseEvent *event);
     QPlayer *getPlayer();
     QWebView *getFakeLoader();
+    QTimer *getLoadTimer();
+
+signals:
+
+    void qwkNetworkError(QNetworkReply::NetworkError error, QString message);
+    void qwkNetworkReplyUrl(QUrl url);
 
 private:
-    QPlayer *player;
-    QSettings *mainSettings;
+    QPlayer     *player;
+    QwkSettings *qwkSettings;
     FakeWebView *loader;
-    QPrinter *printer;
+    QPrinter    *printer;
+    QTimer      *loadTimer;
 
 private slots:
     void handleSslErrors(QNetworkReply* reply, const QList<QSslError> &errors);
@@ -62,6 +72,9 @@ private slots:
 
     void handleNetworkReply(QNetworkReply *reply);
     void handleAuthReply(QNetworkReply *aReply, QAuthenticator *aAuth);
+    void handleProxyAuthReply(const QNetworkProxy &proxy, QAuthenticator *aAuth);
+
+    void handleLoadTimerTimeout();
 };
 
 #endif // WEBVIEW_H

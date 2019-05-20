@@ -38,8 +38,12 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#ifndef QWK_MAINWINDOW_H
+#define QWK_MAINWINDOW_H
 
 #include <QtGui>
+#include <QHBoxLayout>
+#include <QLabel>
 #include <QProgressBar>
 #include <QMainWindow>
 #include <QtNetwork>
@@ -56,6 +60,7 @@
 #include "webview.h"
 #include "anyoption.h"
 #include "unixsignals.h"
+#include "qwk_settings.h"
 
 class MainWindow : public QMainWindow
 {
@@ -73,7 +78,7 @@ protected slots:
 
     void cleanupSlot();
 
-    void adjustTitle();
+    void adjustTitle(QString);
     void setProgress(int p);
     void startLoading();
     void urlChanged(const QUrl &);
@@ -84,7 +89,12 @@ protected slots:
 
     void delayedWindowResize();
     void delayedPageLoad();
+    void delayedPageReload();
 
+    void handleQwkNetworkError(QNetworkReply::NetworkError, QString);
+    void handleQwkNetworkReplyUrl(QUrl);
+
+    void networkStateChanged(QNetworkSession::State state);
 
     // TERM or INT - Quit from App
     void unixSignalQuit();
@@ -104,12 +114,15 @@ protected:
     bool hideScrollbars();
     bool disableSelection();
     void keyPressEvent(QKeyEvent *event);
+    void resizeEvent(QResizeEvent* event);
 
 private:
-    WebView *view;                      // Webkit Page View
-    QProgressBar *loadProgress;         // progress bar to display page loading
+    WebView         *view;              // Webkit Page View
+    QHBoxLayout     *topBox;            // Box for progress and messages
+    QProgressBar    *loadProgress;      // progress bar to display page loading
+    QLabel          *messagesBox;       // error messages
 
-    QSettings *mainSettings;
+    QwkSettings     *qwkSettings;
     QNetworkDiskCache *diskCache;
     QWebInspector *inspector;
 
@@ -128,8 +141,11 @@ private:
     bool isSelectionDisabled;
     bool isUrlRealyChanged;
 
-    void loadSettings(QString ini_file);
+    QNetworkSession *n_session;
+    QNetworkInterface *network_interface;
 
     QTimer *delayedResize;
     QTimer *delayedLoad;
 };
+
+#endif // QWK_MAINWINDOW_H
