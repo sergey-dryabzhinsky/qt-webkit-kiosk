@@ -195,7 +195,7 @@ void WebView::handleWindowCloseRequested()
 void WebView::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
-        qDebug() << "Window Clicked!";
+        qDebug() << QDateTime::currentDateTime().toString() << "Window Clicked!";
         playSound("event-sounds/window-clicked");
     }
     QWebView::mousePressEvent(event);

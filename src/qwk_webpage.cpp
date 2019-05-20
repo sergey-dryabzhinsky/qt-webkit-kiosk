@@ -20,16 +20,16 @@ QwkWebPage::QwkWebPage(QWidget* parent): QWebPage(parent)
 
 QwkSettings* QwkWebPage::getSettings()
 {
-    if (this->view() != nullptr) {
+    if (this->view() != NULL) {
         WebView* v = (WebView *)(this->view());
         return v->getSettings();
     }
-    return nullptr;
+    return NULL;
 }
 
 bool QwkWebPage::shouldInterruptJavaScript()
 {
-    qDebug() << "Handle JavaScript Interrupt...";
+    qWarning() << QDateTime::currentDateTime().toString() << "shouldInterruptJavaScript: Handle JavaScript Interrupt...";
     QwkSettings *s = this->getSettings();
 
     if (s != nullptr) {
@@ -51,7 +51,7 @@ bool QwkWebPage::shouldInterruptJavaScript()
             qDebug() << "-- current hang interval in msec:" << now - javascriptHangStarted;
 
             if (now - javascriptHangStarted >= interval) {
-                qDebug() << "-- stop javascript! hanged too long!";
+                qWarning() << QDateTime::currentDateTime().toString() << "shouldInterruptJavaScript: Stop javascript! Executed too long!";
                 return true;
             }
         }
