@@ -32,7 +32,7 @@ bool QwkWebPage::shouldInterruptJavaScript()
     qWarning() << QDateTime::currentDateTime().toString() << "shouldInterruptJavaScript: Handle JavaScript Interrupt...";
     QwkSettings *s = this->getSettings();
 
-    if (s != nullptr) {
+    if (s != NULL) {
         if (s->getBool("browser/interrupt_javascript")) {
 
             qint64 now = QDateTime::currentMSecsSinceEpoch();
