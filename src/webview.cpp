@@ -15,9 +15,9 @@
 
 WebView::WebView(QWidget* parent): QWebView(parent)
 {
-    player = NULL;
-    loader = NULL;
-    loadTimer = NULL;
+    player = nullptr;
+    loader = nullptr;
+    loadTimer = nullptr;
 }
 
 /**
@@ -90,9 +90,9 @@ void WebView::setSettings(QwkSettings *settings)
 
 }
 
-QSettings* WebView::getSettings()
+QwkSettings* WebView::getSettings()
 {
-    return mainSettings;
+    return qwkSettings;
 }
 
 void WebView::loadHomepage()
@@ -126,7 +126,7 @@ void WebView::loadCustomPage(QString uri)
         this->load(QUrl(uri));
     }
     if (this->getLoadTimer()) {
-        this->getLoadTimer()->start(qwkSettings->getUInt("browser/page_load_timeout"));
+        this->getLoadTimer()->start(qwkSettings->getInt("browser/page_load_timeout"));
     }
 }
 
@@ -249,7 +249,7 @@ void WebView::handleFakeviewLoadFinished(bool ok)
 QPlayer *WebView::getPlayer()
 {
     if (qwkSettings->getBool("event-sounds/enable")) {
-        if (player == NULL) {
+        if (player == nullptr) {
             player = new QPlayer();
         }
     }
@@ -260,7 +260,7 @@ QPlayer *WebView::getPlayer()
 QTimer *WebView::getLoadTimer()
 {
     if (qwkSettings->getUInt("browser/page_load_timeout")) {
-        if (loadTimer == NULL) {
+        if (loadTimer == nullptr) {
             loadTimer = new QTimer();
             connect(loadTimer, SIGNAL(timeout()), SLOT(handleLoadTimerTimeout()));
         }
@@ -289,7 +289,7 @@ void WebView::resetLoadTimer()
 {
     if (getLoadTimer()) {
         getLoadTimer()->stop();
-        getLoadTimer()->start(qwkSettings->getUInt("browser/page_load_timeout"));
+        getLoadTimer()->start(qwkSettings->getInt("browser/page_load_timeout"));
     }
 }
 
@@ -324,7 +324,7 @@ void WebView::playSound(QString soundSetting)
 QWebView *WebView::createWindow(QWebPage::WebWindowType type)
 {
     if (type != QWebPage::WebBrowserWindow) {
-        return NULL;
+        return nullptr;
     }
     qDebug() << QDateTime::currentDateTime().toString() << "Handle createWindow...";
 
@@ -382,10 +382,4 @@ void WebView::scrollHome()
 {
     QWebFrame* frame = this->page()->mainFrame();
     frame->setScrollPosition(QPoint(0, 0));
-}
-
-bool WebView::shouldInterruptJavaScript()
-{
-    qDebug() << QDateTime::currentDateTime().toString() << "WebView::shouldInterruptJavaScript" ;
-    return false;
 }

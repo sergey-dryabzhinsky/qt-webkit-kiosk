@@ -14,7 +14,7 @@ contains(QT_VERSION, ^5\\.[0-9]+\\..*) {
 CONFIG += console link_pkgconfig
 TARGET = qt-webkit-kiosk
 TEMPLATE = app
-VERSION = 1.99.6
+VERSION = 1.99.7
 
 CONFIG(debug, debug|release) {
 # here comes debug specific statements
@@ -143,8 +143,8 @@ message(- VERSION: $${VERSION})
 
 SOURCES += main.cpp\
     mainwindow.cpp \
+    qwk_webpage.cpp \
     webview.cpp \
-    qwk-webpage.cpp \
     anyoption.cpp \
     fakewebview.cpp \
     cachingnm.cpp \
@@ -154,8 +154,8 @@ SOURCES += main.cpp\
     qwk_settings.cpp
 
 HEADERS  += mainwindow.h \
+    qwk_webpage.h \
     webview.h \
-    qwk-webpage.h \
     anyoption.h \
     config.h \
     qplayer.h \

@@ -10,7 +10,7 @@
 #include <QtGui>
 #include <QtWebKit>
 #include "webview.h"
-#include "qwk-webpage.h"
+#include "qwk_webpage.h"
 
 
 QwkWebPage::QwkWebPage(QWidget* parent): QWebPage(parent)
@@ -18,35 +18,37 @@ QwkWebPage::QwkWebPage(QWidget* parent): QWebPage(parent)
     javascriptHangStarted = 0;
 }
 
-QSettings* QwkWebPage::getSettings()
+QwkSettings* QwkWebPage::getSettings()
 {
-    if (this->view() != NULL) {
+    if (this->view() != nullptr) {
         WebView* v = (WebView *)(this->view());
         return v->getSettings();
     }
-    return NULL;
+    return nullptr;
 }
 
 bool QwkWebPage::shouldInterruptJavaScript()
 {
     qDebug() << "Handle JavaScript Interrupt...";
-    QSettings *s = this->getSettings();
+    QwkSettings *s = this->getSettings();
 
-    if (s != NULL) {
-        if (s->value("browser/interrupt_javascript").toBool()) {
+    if (s != nullptr) {
+        if (s->getBool("browser/interrupt_javascript")) {
 
             qint64 now = QDateTime::currentMSecsSinceEpoch();
             if (!javascriptHangStarted) {
                 // hang started 30s back
                 qDebug() << "-- first interrupt attempt?";
-                javascriptHangStarted = now - 30*1000;
+                // In Qt4 - hang interval check - 10 sec
+                javascriptHangStarted = now - 10*1000;
                 qDebug() << "-- hang start time in msec:" << javascriptHangStarted;
             }
 
             qDebug() << "-- current time in msec:" << now;
 
-            qint64 interval = s->value("browser/interrupt_javascript_interval").toInt() * 1000;
+            qint64 interval = s->getInt("browser/interrupt_javascript_interval") * 1000;
             qDebug() << "-- max hang interval in msec:" << interval;
+            qDebug() << "-- current hang interval in msec:" << now - javascriptHangStarted;
 
             if (now - javascriptHangStarted >= interval) {
                 qDebug() << "-- stop javascript! hanged too long!";

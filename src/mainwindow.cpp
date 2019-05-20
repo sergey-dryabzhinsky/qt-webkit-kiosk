@@ -42,7 +42,7 @@
 #include <QDebug>
 #include "config.h"
 #include "mainwindow.h"
-#include "qwk-webpage.h"
+#include "qwk_webpage.h"
 
 #ifdef QT5
 #include <QStandardPaths>

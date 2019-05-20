@@ -1,8 +1,8 @@
 #ifndef QWK_WEBPAGE_H
 #define QWK_WEBPAGE_H
 
-#include <QSettings>
 #include <QtWebKit>
+#include "qwk_settings.h"
 
 #ifdef QT5
 #include <QtWebKitWidgets/QWebView>
@@ -13,9 +13,9 @@ class QwkWebPage : public QWebPage
     Q_OBJECT
 
 public:
-    explicit QwkWebPage(QWidget* parent = 0);
+    explicit QwkWebPage(QWidget* parent = nullptr);
 
-    QSettings* getSettings();
+    QwkSettings* getSettings();
 
 private:
     qint64  javascriptHangStarted;
