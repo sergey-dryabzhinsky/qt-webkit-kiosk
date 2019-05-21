@@ -2,7 +2,7 @@ Source: qt-webkit-kiosk
 Section: web
 Priority: extra
 Maintainer: Sergey Dryabzginsky <sergey.dryabzhinsky@gmail.com>
-Build-Depends: debhelper (>= 7.0.0), qt5-qmake, qt5-default, qtbase5-dev (>=5.0.0), libqt5webkit5-dev, qtmultimedia5-dev, qtdeclarative5-dev, qtsystems5-dev, qtscript5-dev, libpulse-dev, libsqlite3-dev
+Build-Depends: debhelper (>= 7), qt5-qmake, qt5-default, qtbase5-dev (>=5.0.0), libqt5webkit5-dev, qtmultimedia5-dev, qtdeclarative5-dev, qtsystems5-dev | qtbase5-dev (>= 5.6.0), qtscript5-dev, libpulse-dev, libsqlite3-dev
 Standards-Version: 3.9.2
 Homepage: https://github.com/sergey-dryabzhinsky/qt-webkit-kiosk
 
