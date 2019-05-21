@@ -1,3 +1,14 @@
+qt-webkit-kiosk (1.99.9-1sergey1) unstable; urgency=medium
+
+  * LocalStorage support by @BrandonLWhite
+  * fix conflict with std::launch by @joufella
+  * support for js infinite run interruption
+    - sould work everywhere but not - only with Windows Qt4 msvc2010 build
+    - new ini-file options: browser/interrupt_javascript, browser/interrupt_javascript_interval
+  * drop use of c++11 features - not supported by old GCC
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Sat, 12 Mar 2016 20:46:00 +0400
+
 qt-webkit-kiosk (1.99.6-1sergey1) unstable; urgency=medium
 
   * better network errors handling

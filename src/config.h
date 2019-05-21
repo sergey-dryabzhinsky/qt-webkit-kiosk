@@ -14,7 +14,7 @@
 #endif
 
 #ifndef VERSION
-    #define VERSION "1.99.8"
+    #define VERSION "1.99.9"
 #endif
 
 #endif
