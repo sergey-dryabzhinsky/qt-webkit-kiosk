@@ -9,10 +9,11 @@
 
 #ifdef QT5
 #include <QNetworkReply>
+#ifndef QT_NO_OPENSSL
 #include <QSslError>
 #endif
+#endif
 
-//#define SHOW_ALSO_OKAY_DEBUG
 
 WebView::WebView(QWidget* parent): QWebView(parent)
 {
@@ -27,11 +28,12 @@ WebView::WebView(QWidget* parent): QWebView(parent)
  */
 void WebView::initSignals()
 {
+	#ifndef QT_NO_OPENSSL
     connect(page()->networkAccessManager(),
             SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError> & )),
             this,
             SLOT(handleSslErrors(QNetworkReply*, const QList<QSslError> & )));
-
+	#endif
     connect(page(),
             SIGNAL(windowCloseRequested()),
             this,
@@ -62,7 +64,7 @@ void WebView::initSignals()
 
 }
 
-void WebView::setPage(QWebPage *page)
+void WebView::setPage(QwkWebPage *page)
 {
     QWebView::setPage(page);
     initSignals();
@@ -89,6 +91,11 @@ void WebView::setSettings(QwkSettings *settings)
         }
     }
 
+}
+
+QwkSettings* WebView::getSettings()
+{
+    return qwkSettings;
 }
 
 void WebView::loadHomepage()
@@ -122,11 +129,11 @@ void WebView::loadCustomPage(QString uri)
         this->load(QUrl(uri));
     }
     if (this->getLoadTimer()) {
-        this->getLoadTimer()->start(qwkSettings->getUInt("browser/page_load_timeout"));
+        this->getLoadTimer()->start(qwkSettings->getInt("browser/page_load_timeout"));
     }
 }
 
-
+#ifndef QT_NO_OPENSSL
 void WebView::handleSslErrors(QNetworkReply* reply, const QList<QSslError> &errors)
 {
     qDebug() << QDateTime::currentDateTime().toString() << "handleSslErrors: ";
@@ -143,21 +150,19 @@ void WebView::handleSslErrors(QNetworkReply* reply, const QList<QSslError> &erro
         emit qwkNetworkError(reply->error(), QString("Network SSL errors: ") + errStr);
     }
 }
+#endif
 
 void WebView::handleNetworkReply(QNetworkReply* reply)
 {
     if( reply ) {
+        qDebug() << QDateTime::currentDateTime().toString() << "handleNetworkReply URL:" << reply->request().url().toString();
         if( reply->error()) {
-            qDebug() << QDateTime::currentDateTime().toString() << "handleNetworkReply URL:" << reply->request().url().toString();
             QString errStr = reply->errorString();
             qWarning() << QDateTime::currentDateTime().toString() << "handleNetworkReply ERROR:" << reply->error() << "=" << errStr;
             emit qwkNetworkError(reply->error(), reply->errorString());
         } else {
-            #ifdef SHOW_ALSO_OKAY_DEBUG
-            qDebug() << QDateTime::currentDateTime().toString() << "handleNetworkReply URL:" << reply->request().url().toString();
             qDebug() << QDateTime::currentDateTime().toString() << "handleNetworkReply OK";
             // emit qwkNetworkReplyUrl(reply->request().url());
-            #endif
         }
     }
 }
@@ -194,7 +199,7 @@ void WebView::handleWindowCloseRequested()
 void WebView::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
-        qDebug() << "Window Clicked!";
+        qDebug() << QDateTime::currentDateTime().toString() << "Window Clicked!";
         playSound("event-sounds/window-clicked");
     }
     QWebView::mousePressEvent(event);
@@ -288,7 +293,7 @@ void WebView::resetLoadTimer()
 {
     if (getLoadTimer()) {
         getLoadTimer()->stop();
-        getLoadTimer()->start(qwkSettings->getUInt("browser/page_load_timeout"));
+        getLoadTimer()->start(qwkSettings->getInt("browser/page_load_timeout"));
     }
 }
 
@@ -381,10 +386,4 @@ void WebView::scrollHome()
 {
     QWebFrame* frame = this->page()->mainFrame();
     frame->setScrollPosition(QPoint(0, 0));
-}
-
-bool WebView::shouldInterruptJavaScript()
-{
-    qDebug() << QDateTime::currentDateTime().toString() << "WebView::shouldInterruptJavaScript" ;
-    return false;
 }

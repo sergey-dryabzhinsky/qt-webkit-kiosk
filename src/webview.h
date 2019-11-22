@@ -9,9 +9,10 @@
 #endif
 
 #include <QPrinter>
-#include <qplayer.h>
-#include <fakewebview.h>
-#include <qwk_settings.h>
+#include "qplayer.h"
+#include "qwk_webpage.h"
+#include "fakewebview.h"
+#include "qwk_settings.h"
 
 class WebView : public QWebView
 {
@@ -21,14 +22,15 @@ public:
     explicit WebView(QWidget* parent = 0);
 
     void setSettings(QwkSettings *settings);
+    QwkSettings* getSettings();
+
     void loadCustomPage(QString uri);
     void loadHomepage();
     void initSignals();
 
+    void setPage(QwkWebPage* page);
     void resetLoadTimer();
     void stopLoadTimer();
-
-    void setPage(QWebPage* page);
 
     QWebView *createWindow(QWebPage::WebWindowType type);
 
@@ -46,7 +48,6 @@ public slots:
     void handlePrintRequested(QWebFrame *);
     void handleFakeviewUrlChanged(const QUrl &);
     void handleFakeviewLoadFinished(bool);
-    bool shouldInterruptJavaScript();
 
 protected:
     void mousePressEvent(QMouseEvent *event);
@@ -67,7 +68,9 @@ private:
     QTimer      *loadTimer;
 
 private slots:
-    void handleSslErrors(QNetworkReply* reply, const QList<QSslError> &errors);
+	#ifndef QT_NO_OPENSSL
+		void handleSslErrors(QNetworkReply* reply, const QList<QSslError> &errors);
+	#endif 
     void handleWindowCloseRequested();
 
     void handleNetworkReply(QNetworkReply *reply);
