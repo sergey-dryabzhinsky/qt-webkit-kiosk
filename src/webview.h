@@ -68,7 +68,9 @@ private:
     QTimer      *loadTimer;
 
 private slots:
+	#ifndef QT_NO_SSL
     void handleSslErrors(QNetworkReply* reply, const QList<QSslError> &errors);
+	#endif
     void handleWindowCloseRequested();
 
     void handleNetworkReply(QNetworkReply *reply);
