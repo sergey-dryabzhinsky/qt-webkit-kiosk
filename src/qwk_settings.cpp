@@ -126,6 +126,9 @@ void QwkSettings::loadSettings(QString ini_file)
     if (!qsettings->contains("browser/homepage")) {
         qsettings->setValue("browser/homepage", RESOURCES"default.html");
     }
+    if (!qsettings->contains("browser/custom_user_agent_header")) {
+        qsettings->setValue("browser/custom_user_agent_header","");
+    }
     if (!qsettings->contains("browser/javascript")) {
         qsettings->setValue("browser/javascript", true);
     }
@@ -143,6 +146,10 @@ void QwkSettings::loadSettings(QString ini_file)
     }
     if (!qsettings->contains("browser/plugins")) {
         qsettings->setValue("browser/plugins", true);
+    }
+    // Don't output javascript console messages
+    if (!qsettings->contains("browser/show_js_console_messages")) {
+        qsettings->setValue("browser/show_js_console_messages", false);
     }
     // Don't break on SSL errors
     if (!qsettings->contains("browser/ignore_ssl_errors")) {

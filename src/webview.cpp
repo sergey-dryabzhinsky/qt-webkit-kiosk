@@ -67,6 +67,11 @@ void WebView::initSignals()
 
 void WebView::setPage(QwkWebPage *page)
 {
+    QString ua = qwkSettings->getQString("browser/custom_user_agent_header");
+    if (ua.length()) {
+        QwkWebPage::userAgent = ua;
+    }
+
     QWebView::setPage(page);
     initSignals();
 }

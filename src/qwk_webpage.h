@@ -17,11 +17,18 @@ public:
 
     QwkSettings* getSettings();
 
+    static QString userAgent;
+
 private:
     qint64  javascriptHangStarted;
 
 public Q_SLOTS:
     bool shouldInterruptJavaScript();
+
+protected:
+    void javaScriptConsoleMessage( const QString & message, int lineNumber, const QString & sourceID );
+
+    virtual QString userAgentForUrl(const QUrl & url) const;
 
 };
 

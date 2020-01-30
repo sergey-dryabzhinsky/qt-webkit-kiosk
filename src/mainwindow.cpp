@@ -271,11 +271,11 @@ void MainWindow::init(AnyOption *opts)
     view->settings()->setAttribute(QWebSettings::PluginsEnabled,
         qwkSettings->getBool("browser/plugins")
     );
-    
+
     view->settings()->setAttribute(QWebSettings::LocalStorageEnabled, 
         qwkSettings->getBool("localstorage/enable")
     );
-    
+
 #if QT_VERSION >= 0x050400
     view->settings()->setAttribute(QWebSettings::Accelerated2dCanvasEnabled, true);
 #endif
@@ -752,6 +752,8 @@ void MainWindow::finishLoading(bool ok)
         // 2. Add more styles which can override previous styles...
         attachStyles();
         attachJavascripts();
+
+        view->page()->mainFrame()->evaluateJavaScript("console.log('Test console log catchup by Qwk');");
 
         // 3. Focus window and click into it to stimulate event loop after signal handling
         putWindowUp();

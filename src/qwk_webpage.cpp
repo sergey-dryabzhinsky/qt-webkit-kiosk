@@ -64,3 +64,27 @@ bool QwkWebPage::shouldInterruptJavaScript()
     // Interrupt, by default
     return QWebPage::shouldInterruptJavaScript();
 }
+
+void QwkWebPage::javaScriptConsoleMessage( const QString & message, int lineNumber, const QString & sourceID )
+{
+    QwkSettings *s = this->getSettings();
+
+    if (s != NULL) {
+        if (s->getBool("browser/show_js_console_messages")) {
+            //do something!
+            qInfo() << QDateTime::currentDateTime().toString() << "JS Console message:" << message << "Line:" << lineNumber << "Source:" << sourceID;
+        }
+    }
+}
+
+
+QString QwkWebPage::userAgent = "";
+
+QString QwkWebPage::userAgentForUrl(const QUrl & url) const
+{
+    if (QwkWebPage::userAgent.length()) {
+        return QwkWebPage::userAgent;
+    }
+
+    return QWebPage::userAgentForUrl(url);
+}
