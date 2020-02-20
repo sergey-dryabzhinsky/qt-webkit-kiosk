@@ -282,7 +282,11 @@ void QwkSettings::loadSettings(QString ini_file)
     if (!qsettings->contains("localstorage/enable")) {
         qsettings->setValue("localstorage/enable", false);
     }
-    
+
+    if (!qsettings->contains("security/local_content_can_access_remote_urls")) {
+        qsettings->setValue("security/local_content_can_access_remote_urls", false);
+    }
+
     if (qsettings->fileName().length()) {
         qsettings->sync();
     }

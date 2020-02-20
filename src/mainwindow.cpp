@@ -268,6 +268,7 @@ void MainWindow::init(AnyOption *opts)
     view->settings()->setAttribute(QWebSettings::JavaEnabled,
         qwkSettings->getBool("browser/java")
     );
+
     view->settings()->setAttribute(QWebSettings::PluginsEnabled,
         qwkSettings->getBool("browser/plugins")
     );
@@ -296,6 +297,10 @@ void MainWindow::init(AnyOption *opts)
         inspector->setWindowIcon(this->windowIcon());
         inspector->setPage(view->page());
     }
+
+    view->settings()->setAttribute(QWebSettings::LocalContentCanAccessRemoteUrls,
+        qwkSettings->getBool("security/local_content_can_access_remote_urls")
+    );
 
     connect(view->page()->mainFrame(), SIGNAL(titleChanged(QString)), SLOT(adjustTitle(QString)));
     connect(view->page()->mainFrame(), SIGNAL(loadStarted()), SLOT(startLoading()));
