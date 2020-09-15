@@ -349,6 +349,12 @@ void MainWindow::init(AnyOption *opts)
 
 void MainWindow::delayedWindowResize()
 {
+    this->setFocusPolicy(Qt::StrongFocus);
+
+    if (qwkSettings->getBool("view/stay_on_top")) {
+        setWindowFlags(Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint);
+    }
+
     if (qwkSettings->getBool("view/fullscreen")) {
         showFullScreen();
     } else if (qwkSettings->getBool("view/maximized")) {
@@ -358,13 +364,6 @@ void MainWindow::delayedWindowResize()
     }
     QApplication::processEvents(); //process events to force update
 
-    this->setFocusPolicy(Qt::StrongFocus);
-    this->focusWidget();
-
-    if (qwkSettings->getBool("view/stay_on_top")) {
-        setWindowFlags(Qt::FramelessWindowHint|Qt::WindowStaysOnTopHint);
-    }
-    QApplication::processEvents(); //process events to force update
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event)
