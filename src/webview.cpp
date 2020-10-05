@@ -160,11 +160,12 @@ void WebView::handleSslErrors(QNetworkReply* reply, const QList<QSslError> &erro
 
 void WebView::handleNetworkReply(QNetworkReply* reply)
 {
-    if( reply ) {
+    if ( reply ) {
         qDebug() << QDateTime::currentDateTime().toString() << "handleNetworkReply URL:" << reply->request().url().toString();
         if( reply->error()) {
             QString errStr = reply->errorString();
             qWarning() << QDateTime::currentDateTime().toString() << "handleNetworkReply ERROR:" << reply->error() << "=" << errStr;
+            qWarning() << QDateTime::currentDateTime().toString() << "on URL:" << reply->request().url().toString();
             emit qwkNetworkError(reply->error(), reply->errorString());
         } else {
             qDebug() << QDateTime::currentDateTime().toString() << "handleNetworkReply OK";

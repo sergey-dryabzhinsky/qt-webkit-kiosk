@@ -7,6 +7,8 @@
 #include "config.h"
 
 #include <QtDebug>
+#include "qinfo.h"
+
 #include <QtGui>
 #include <QtWebKit>
 #include "webview.h"

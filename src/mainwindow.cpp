@@ -41,6 +41,7 @@
 
 #include <QDebug>
 #include "config.h"
+#include "qinfo.h"
 #include "mainwindow.h"
 #include "qwk_webpage.h"
 
