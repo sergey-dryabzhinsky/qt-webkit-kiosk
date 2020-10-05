@@ -1,3 +1,11 @@
+qt-webkit-kiosk (1.99.10-1sergey1) unstable; urgency=medium
+
+  * Fix event to view passthrough by @therealjumbo
+  * Fix use of qInfo macros with Qt4
+  * Security option - local content access to remote urls by @knowack1
+
+ -- Sergey Dryabzhinsky <sergey.dryabzhinsky@gmail.com>  Thu, 06 Oct 2020 02:12:00 +0300
+
 qt-webkit-kiosk (1.99.9-1sergey1) unstable; urgency=medium
 
   * LocalStorage support by @BrandonLWhite

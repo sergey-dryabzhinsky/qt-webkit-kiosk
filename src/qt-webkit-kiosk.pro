@@ -14,7 +14,7 @@ contains(QT_VERSION, ^5\\.[0-9]+\\..*) {
 CONFIG += console link_pkgconfig
 TARGET = qt-webkit-kiosk
 TEMPLATE = app
-VERSION = 1.99.10-dev
+VERSION = 1.99.10
 
 CONFIG(debug, debug|release) {
 # here comes debug specific statements
