@@ -525,6 +525,11 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     }
 }
 
+void MainWindow::keyReleaseEvent(QKeyEvent *event)
+{
+    view->event(event);
+}
+
 void MainWindow::handleQwkNetworkError(QNetworkReply::NetworkError error, QString message)
 {
     qDebug() << QDateTime::currentDateTime().toString()
