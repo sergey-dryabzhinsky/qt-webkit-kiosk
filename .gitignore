@@ -4,5 +4,7 @@
 *.o
 moc_*.cpp
 Makefile*
+.qmake.stash
+src/moc_predefs.h
 # Main binary
 src/qt-webkit-kiosk
