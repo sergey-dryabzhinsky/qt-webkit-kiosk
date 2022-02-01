@@ -114,6 +114,7 @@ protected:
     bool hideScrollbars();
     bool disableSelection();
     void keyPressEvent(QKeyEvent *event);
+    void keyReleaseEvent(QKeyEvent *event);
     void resizeEvent(QResizeEvent* event);
 
 private:

@@ -325,7 +325,6 @@ void MainWindow::init(AnyOption *opts)
     // Window show, start events loop
     show();
 
-    view->page()->view()->setFocusPolicy(Qt::StrongFocus);
     view->setFocusPolicy(Qt::StrongFocus);
 
     if (qwkSettings->getBool("view/hide_mouse_cursor")) {
@@ -449,19 +448,27 @@ void MainWindow::centerFixedSizeWindow()
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
+    qDebug(">> MainWindow received keyPressEvent...");
+
     if (qwkSettings->getUInt("browser/disable_hotkeys")) {
-        QMainWindow::keyPressEvent(event);
+        if (! view->hasFocus()) {
+            view->event(event);
+        }
         return;
     }
 
     switch (event->key()) {
     case Qt::Key_Up:
         view->scrollUp();
-        view->event(event);
+        if (! view->hasFocus()) {
+            view->event(event);
+        }
         break;
     case Qt::Key_Down:
         view->scrollDown();
-        view->event(event);
+        if (! view->hasFocus()) {
+            view->event(event);
+        }
         break;
     case Qt::Key_PageUp:
         view->scrollPageUp();
@@ -490,11 +497,17 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             clearCacheOnExit();
             QApplication::exit(0);
         }
+        else if (! view->hasFocus()) {
+            view->event(event);
+        }
         break;
     case Qt::Key_R:
         if (int(event->modifiers()) == Qt::CTRL) {
             clearCache();
             view->reload();
+        }
+        else if (! view->hasFocus()) {
+            view->event(event);
         }
         break;
     case Qt::Key_F5:
@@ -520,8 +533,19 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         }
         break;
     default:
-        view->event(event);
+        if (! view->hasFocus()) {
+            view->event(event);
+        }
         break;
+    }
+}
+
+void MainWindow::keyReleaseEvent(QKeyEvent *event)
+{
+    qDebug(">> MainWindow received keyReleaseEvent...");
+
+    if (! view->hasFocus()) {
+        view->event(event);
     }
 }
 
