@@ -30,8 +30,8 @@ bool SocketPair::create()
         return false;
     }
 
-	clientConnection.setSocketOption( QAbstractSocket::LowDelayOption, 1 );
-	clientConnection.setSocketOption( QAbstractSocket::KeepAliveOption, 1 );
+    clientConnection.setSocketOption( QAbstractSocket::LowDelayOption, 1 );
+    clientConnection.setSocketOption( QAbstractSocket::KeepAliveOption, 1 );
 
     clientConnection.connectToHost(QHostAddress::LocalHost, server.serverPort(), QIODevice::WriteOnly);
     return true;
@@ -41,9 +41,9 @@ void SocketPair::newConnection()
 {
     serverConnection = server.nextPendingConnection();
 
-	serverConnection->setSocketOption( QAbstractSocket::LowDelayOption, 1 );
-	serverConnection->setSocketOption( QAbstractSocket::KeepAliveOption, 1 );
-	serverConnection->setReadBufferSize( 1 );
+    serverConnection->setSocketOption( QAbstractSocket::LowDelayOption, 1 );
+    serverConnection->setSocketOption( QAbstractSocket::KeepAliveOption, 1 );
+    serverConnection->setReadBufferSize( 1 );
 
     dataCheck->start();
 
