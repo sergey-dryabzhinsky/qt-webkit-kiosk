@@ -12,7 +12,7 @@ SocketPair::SocketPair(QObject *parent)
 bool SocketPair::create()
 {
     connect(dataCheck, SIGNAL(timeout()), this, SLOT(readServerData()));
-    connect(&server, SIGNAL(newConnection()), this, SLOT(newConnection()));
+    connect(&server, SIGNAL(newConnection()), this, SLOT(newConnection()), Qt::QueuedConnection);
 
     int tries = 5;
     while (tries) {
