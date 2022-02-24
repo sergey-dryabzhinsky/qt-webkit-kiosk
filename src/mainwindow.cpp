@@ -103,7 +103,6 @@ void MainWindow::init(AnyOption *opts)
         connect(handler, SIGNAL(sigUSR1()), SLOT(unixSignalUsr1()));
         connect(handler, SIGNAL(sigUSR2()), SLOT(unixSignalUsr2()));
     }
-    handler->start();
 
     setMinimumWidth(320);
     setMinimumHeight(200);

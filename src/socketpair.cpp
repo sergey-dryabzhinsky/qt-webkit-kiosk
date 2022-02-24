@@ -49,6 +49,7 @@ void SocketPair::newConnection()
 
 //    connect(serverConnection, SIGNAL(readyRead()), this, SLOT(readServerData()));
     server.close();
+    emit clientConnected();
 }
 
 void SocketPair::readServerData()

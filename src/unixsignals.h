@@ -18,7 +18,6 @@ class UnixSignals : public QObject
 public:
     UnixSignals( QObject *parent = 0 );
 
-    void start();
     void stop();
 
     static void signalHandler(int number);
@@ -34,6 +33,7 @@ Q_SIGNALS:
     void sigUSR2();
 
 private slots:
+    void start();
     void handleSig(QByteArray);
 
 private:

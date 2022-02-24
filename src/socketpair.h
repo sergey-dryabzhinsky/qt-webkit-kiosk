@@ -22,6 +22,7 @@ public:
     QTcpSocket* output();
 
 Q_SIGNALS:
+    void clientConnected();
     void sigData(QByteArray);
 
 public slots:

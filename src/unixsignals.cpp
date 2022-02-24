@@ -17,6 +17,7 @@ UnixSignals::UnixSignals( QObject *parent )
     if (!UnixSignals::sockPair.create())
         qFatal("Unable to create signal socket pair");
 
+    connect(&UnixSignals::sockPair, SIGNAL(clientConnected()), this, SLOT(start()));
     connect(&UnixSignals::sockPair, SIGNAL(sigData(QByteArray)), this, SLOT(handleSig(QByteArray)));
 }
 
