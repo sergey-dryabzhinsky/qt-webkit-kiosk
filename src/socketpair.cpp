@@ -1,6 +1,7 @@
 #include "socketpair.h"
-#include <QIODevice>
 #include <QDebug>
+#include <QIODevice>
+#include <QtGlobal>
 
 SocketPair::SocketPair(QObject *parent)
         : QObject(parent)
@@ -13,6 +14,9 @@ bool SocketPair::create()
 {
     connect(dataCheck, SIGNAL(timeout()), this, SLOT(readServerData()));
     connect(&server, SIGNAL(newConnection()), this, SLOT(newConnection()), Qt::QueuedConnection);
+
+    connect(&server, SIGNAL(acceptError(QAbstractSocket::SocketError)), this, SLOT(logServerError(QAbstractSocket::SocketError)));
+    connect(&clientConnection, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(logClientConnectionError(QAbstractSocket::SocketError)));
 
     int tries = 5;
     while (tries) {
@@ -40,6 +44,12 @@ bool SocketPair::create()
 void SocketPair::newConnection()
 {
     serverConnection = server.nextPendingConnection();
+    if(serverConnection != nullptr) {
+        connect(serverConnection, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(logServerConnectionError(QAbstractSocket::SocketError)));
+    } else {
+        qFatal("%s:%d:%s, server.nextPendingConnection() was NULL.", __FILE__,
+                __LINE__, __func__);
+    }
 
     serverConnection->setSocketOption( QAbstractSocket::LowDelayOption, 1 );
     serverConnection->setSocketOption( QAbstractSocket::KeepAliveOption, 1 );
@@ -80,4 +90,25 @@ QTcpSocket* SocketPair::input()
 QTcpSocket* SocketPair::output()
 {
     return serverConnection;
+}
+
+void SocketPair::logServerError(QAbstractSocket::SocketError socketError) {
+    qCritical("%s:%d:%s, server.serverError() is: '%d', and server.errorString() "
+            "is: '%s', and socketError is: '%d'", __FILE__, __LINE__, __func__,
+            server.serverError(), qUtf8Printable(server.errorString()),
+            socketError);
+}
+
+void SocketPair::logServerConnectionError(QAbstractSocket::SocketError socketError) {
+    qCritical("%s:%d:%s, serverConnection->error() is: '%d', and "
+           "serverConnection->errorString() is: '%s', and socketError is: '%d'",
+           __FILE__, __LINE__, __func__, serverConnection->error(),
+            qUtf8Printable(serverConnection->errorString()), socketError);
+}
+
+void SocketPair::logClientConnectionError(QAbstractSocket::SocketError socketError) {
+    qCritical("%s:%d:%s, clientConnection.error() is: '%d', and "
+           "clientConnection.errorString() is: '%s', and socketError is: '%d'",
+           __FILE__, __LINE__, __func__, clientConnection.error(),
+            qUtf8Printable(clientConnection.errorString()), socketError);
 }
