@@ -1,6 +1,6 @@
-#include <signal.h>
 #include <QApplication>
 #include <QDebug>
+#include <csignal>
 #include "unixsignals.h"
 
 SocketPair UnixSignals::sockPair;
@@ -107,9 +107,8 @@ void UnixSignals::stop()
 
 void UnixSignals::signalHandler(int number)
 {
-    char tmp = number;
-    qDebug() << "UnixSignals::signalHandler -- pass signal" << number;
-    UnixSignals::sockPair.input()->write(&tmp, sizeof(tmp));
+    volatile std::sig_atomic_t tmp = number;
+    UnixSignals::sockPair.input()->write((char* )&tmp, sizeof(tmp));
 }
 
 void UnixSignals::handleSig(QByteArray data)
