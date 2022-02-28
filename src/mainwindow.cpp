@@ -116,7 +116,7 @@ void MainWindow::init(AnyOption *opts)
         setMinimumHeight(minimalHeight);
     }
 
-    hiddenCurdor = new QCursor(Qt::BlankCursor);
+    hiddenCursor = new QCursor(Qt::BlankCursor);
 
     qDebug() << "Application icon: " << qwkSettings->getQString("application/icon");
     setWindowIcon(QIcon(
@@ -302,6 +302,29 @@ void MainWindow::init(AnyOption *opts)
         qwkSettings->getBool("security/local_content_can_access_remote_urls")
     );
 
+    QNetworkConfigurationManager manager;
+    QNetworkConfiguration cfg = manager.defaultConfiguration();
+
+    n_session = new QNetworkSession(cfg);
+    connect(n_session, SIGNAL(stateChanged(QNetworkSession::State)), this, SLOT(networkStateChanged(QNetworkSession::State)));
+    n_session->open();
+
+    connect(this->handler, SIGNAL(signalHandlerInstalled()), this, SLOT(setupWindow()));
+}
+
+/* The OS signal handler can't be installed until after the Qt event loop
+ * starts since it eventually calls `QApplication::exit(0);`, and that will
+ * cleanup anything we draw on the screen. Thus we don't want to connect any
+ * slots that touch the what's in focus or draw on the screen until the OS
+ * signal handler is ready. `this->init()` is called in `src/main.cpp` before
+ * `app.exec()`, thus we don't do any of this in `this->init()`. Instead,
+ * `this->init()` will connect this slot, `this->setupWindow()`, to the the
+ * `signalHandlerInstalled` Qt signal emitted by `this->handler`. At that point
+ * the OS signal handler has been installed and it is safe to draw on the
+ * screen.
+ */
+void MainWindow::setupWindow()
+{
     connect(view->page()->mainFrame(), SIGNAL(titleChanged(QString)), SLOT(adjustTitle(QString)));
     connect(view->page()->mainFrame(), SIGNAL(loadStarted()), SLOT(startLoading()));
     connect(view->page()->mainFrame(), SIGNAL(urlChanged(const QUrl &)), SLOT(urlChanged(const QUrl &)));
@@ -311,34 +334,21 @@ void MainWindow::init(AnyOption *opts)
     connect(view, SIGNAL(qwkNetworkError(QNetworkReply::NetworkError,QString)), SLOT(handleQwkNetworkError(QNetworkReply::NetworkError,QString)));
     connect(view, SIGNAL(qwkNetworkReplyUrl(QUrl)), SLOT(handleQwkNetworkReplyUrl(QUrl)));
 
-    QNetworkConfigurationManager manager;
-    QNetworkConfiguration cfg = manager.defaultConfiguration();
-
-    n_session = new QNetworkSession(cfg);
-    connect(n_session, SIGNAL(stateChanged(QNetworkSession::State)), this, SLOT(networkStateChanged(QNetworkSession::State)));
-    n_session->open();
-
     QDesktopWidget *desktop = QApplication::desktop();
     connect(desktop, SIGNAL(resized(int)), SLOT(desktopResized(int)));
 
-    // Window show, start events loop
-    show();
-
-    view->setFocusPolicy(Qt::StrongFocus);
-
     if (qwkSettings->getBool("view/hide_mouse_cursor")) {
         QApplication::setOverrideCursor(Qt::BlankCursor);
-        view->setCursor(*hiddenCurdor);
-        QApplication::processEvents(); //process events to force cursor update before press
+        view->setCursor(*hiddenCursor);
     }
 
-    int delay_resize = 1;
+    int delay_resize = 0;
     if (qwkSettings->getBool("view/startup_resize_delayed")) {
         delay_resize = qwkSettings->getUInt("view/startup_resize_delay");
     }
     delayedResize->singleShot(delay_resize, this, SLOT(delayedWindowResize()));
 
-    int delay_load = 1;
+    int delay_load = 0;
     if (qwkSettings->getBool("browser/startup_load_delayed")) {
         delay_load = qwkSettings->getUInt("browser/startup_load_delay");
     }
@@ -361,9 +371,11 @@ void MainWindow::delayedWindowResize()
         showMaximized();
     } else if (qwkSettings->getBool("view/fixed-size")) {
         centerFixedSizeWindow();
+    } else {
+        show();
     }
-    QApplication::processEvents(); //process events to force update
 
+    QApplication::processEvents(); //process events to force update
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event)
@@ -629,6 +641,8 @@ void MainWindow::desktopResized(int p)
         showMaximized();
     } else if (qwkSettings->getBool("view/fixed-size")) {
         centerFixedSizeWindow();
+    } else {
+        show();
     }
 }
 

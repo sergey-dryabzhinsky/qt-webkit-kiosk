@@ -98,6 +98,8 @@ void UnixSignals::start()
 #else
     qWarning("No signal USR2 defined");
 #endif
+
+    emit signalHandlerInstalled();
 }
 
 void UnixSignals::stop()

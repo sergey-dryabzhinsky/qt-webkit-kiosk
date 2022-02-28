@@ -25,6 +25,7 @@ public:
     static SocketPair sockPair;
 
 Q_SIGNALS:
+    void signalHandlerInstalled();
     void sigBREAK();
     void sigTERM();
     void sigHUP();
