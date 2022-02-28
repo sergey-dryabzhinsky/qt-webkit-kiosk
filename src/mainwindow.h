@@ -146,7 +146,6 @@ private:
     QNetworkSession *n_session;
     QNetworkInterface *network_interface;
 
-    QTimer *delayedResize;
     QTimer *delayedLoad;
 };
 

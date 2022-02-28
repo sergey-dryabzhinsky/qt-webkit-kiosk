@@ -75,7 +75,6 @@ MainWindow::MainWindow() : QMainWindow()
 
     network_interface = new QNetworkInterface();
 
-    delayedResize = new QTimer();
     delayedLoad = new QTimer();
 
 #ifdef USE_TESTLIB
@@ -346,7 +345,7 @@ void MainWindow::setupWindow()
     if (qwkSettings->getBool("view/startup_resize_delayed")) {
         delay_resize = qwkSettings->getUInt("view/startup_resize_delay");
     }
-    delayedResize->singleShot(delay_resize, this, SLOT(delayedWindowResize()));
+    QTimer::singleShot(delay_resize, this, SLOT(delayedWindowResize()));
 
     int delay_load = 0;
     if (qwkSettings->getBool("browser/startup_load_delayed")) {
