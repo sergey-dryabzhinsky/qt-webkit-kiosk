@@ -6,13 +6,10 @@
 SocketPair::SocketPair(QObject *parent)
         : QObject(parent)
 {
-    dataCheck = new QTimer();
-    dataCheck->setInterval(100);
 }
 
 bool SocketPair::create()
 {
-    connect(dataCheck, SIGNAL(timeout()), this, SLOT(readServerData()));
     connect(&server, SIGNAL(newConnection()), this, SLOT(newConnection()), Qt::QueuedConnection);
 
     connect(&server, SIGNAL(acceptError(QAbstractSocket::SocketError)), this, SLOT(logServerError(QAbstractSocket::SocketError)));
@@ -55,9 +52,7 @@ void SocketPair::newConnection()
     serverConnection->setSocketOption( QAbstractSocket::KeepAliveOption, 1 );
     serverConnection->setReadBufferSize( 1 );
 
-    dataCheck->start();
-
-//    connect(serverConnection, SIGNAL(readyRead()), this, SLOT(readServerData()));
+    connect(serverConnection, SIGNAL(readyRead()), this, SLOT(readServerData()));
     server.close();
     emit clientConnected();
 }
@@ -72,7 +67,6 @@ void SocketPair::readServerData()
 
 void SocketPair::close()
 {
-    dataCheck->stop();
     clientConnection.close();
     if (serverConnection) {
         serverConnection->close();

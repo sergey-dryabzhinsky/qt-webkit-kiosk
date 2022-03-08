@@ -30,7 +30,6 @@ public slots:
     void readServerData();
 
 private:
-    QTimer *dataCheck;
     QTcpSocket *serverConnection;
     QTcpSocket clientConnection;
     QTcpServer server;
