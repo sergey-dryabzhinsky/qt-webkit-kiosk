@@ -87,6 +87,8 @@ protected slots:
 
     void desktopResized(int p);
 
+    void setupWindow();
+
     void delayedWindowResize();
     void delayedPageLoad();
     void delayedPageReload();
@@ -106,7 +108,6 @@ protected slots:
     void unixSignalUsr2();
 
 protected:
-
     void centerFixedSizeWindow();
     void attachJavascripts();
     void attachStyles();
@@ -127,7 +128,7 @@ private:
     QNetworkDiskCache *diskCache;
     QWebInspector *inspector;
 
-    QCursor     *hiddenCurdor;
+    QCursor     *hiddenCursor;
     QKeyEvent   *eventExit;
 
     AnyOption   *cmdopts;
@@ -145,7 +146,6 @@ private:
     QNetworkSession *n_session;
     QNetworkInterface *network_interface;
 
-    QTimer *delayedResize;
     QTimer *delayedLoad;
 };
 

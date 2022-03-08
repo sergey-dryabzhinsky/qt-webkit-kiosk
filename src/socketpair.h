@@ -22,6 +22,7 @@ public:
     QTcpSocket* output();
 
 Q_SIGNALS:
+    void clientConnected();
     void sigData(QByteArray);
 
 public slots:
@@ -29,10 +30,15 @@ public slots:
     void readServerData();
 
 private:
-    QTimer *dataCheck;
     QTcpSocket *serverConnection;
     QTcpSocket clientConnection;
     QTcpServer server;
+
+private slots:
+    void logServerError(QAbstractSocket::SocketError);
+    void logServerConnectionError(QAbstractSocket::SocketError);
+    void logClientConnectionError(QAbstractSocket::SocketError);
+
 };
 
 #endif // SOCKETPAIR_H

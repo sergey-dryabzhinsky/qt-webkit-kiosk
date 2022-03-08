@@ -1,6 +1,6 @@
-#include <signal.h>
 #include <QApplication>
 #include <QDebug>
+#include <csignal>
 #include "unixsignals.h"
 
 SocketPair UnixSignals::sockPair;
@@ -17,6 +17,7 @@ UnixSignals::UnixSignals( QObject *parent )
     if (!UnixSignals::sockPair.create())
         qFatal("Unable to create signal socket pair");
 
+    connect(&UnixSignals::sockPair, SIGNAL(clientConnected()), this, SLOT(start()));
     connect(&UnixSignals::sockPair, SIGNAL(sigData(QByteArray)), this, SLOT(handleSig(QByteArray)));
 }
 
@@ -97,6 +98,8 @@ void UnixSignals::start()
 #else
     qWarning("No signal USR2 defined");
 #endif
+
+    emit signalHandlerInstalled();
 }
 
 void UnixSignals::stop()
@@ -106,9 +109,8 @@ void UnixSignals::stop()
 
 void UnixSignals::signalHandler(int number)
 {
-    char tmp = number;
-    qDebug() << "UnixSignals::signalHandler -- pass signal" << number;
-    UnixSignals::sockPair.input()->write(&tmp, sizeof(tmp));
+    volatile std::sig_atomic_t tmp = number;
+    UnixSignals::sockPair.input()->write((char* )&tmp, sizeof(tmp));
 }
 
 void UnixSignals::handleSig(QByteArray data)
