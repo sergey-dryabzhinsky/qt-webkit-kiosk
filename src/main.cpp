@@ -47,6 +47,7 @@ bool setupOptions(AnyOption *cmdopts)
     cmdopts->addUsage(" -c --config options.ini             Configuration INI-file");
     cmdopts->addUsage(" -u --uri http://www.example.com/    Open this URI, home page");
     cmdopts->addUsage(" -C --clear-cache                    Clear cached request data");
+    cmdopts->addUsage(" -R --rotate                         Rotate display 90 degrees");
     cmdopts->addUsage("");
     cmdopts->addUsage("Build with:");
     cmdopts->addUsage("        Qt: " QT_VERSION_STR);
@@ -71,6 +72,7 @@ bool setupOptions(AnyOption *cmdopts)
     cmdopts->setFlag("help", 'h');
     cmdopts->setFlag("version", 'v');
     cmdopts->setFlag("clear-cache", 'C');
+    cmdopts->setFlag("rotate", 'R');
 
     cmdopts->setOption("config", 'c');
     cmdopts->setOption("uri", 'u');

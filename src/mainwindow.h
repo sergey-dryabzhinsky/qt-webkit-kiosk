@@ -48,6 +48,9 @@
 #include <QMainWindow>
 #include <QtNetwork>
 #include <QtWebKit>
+#include <QtWebKitWidgets/QWebFrame>
+#include <QGraphicsView>
+#include <QGraphicsProxyWidget>
 
 #ifdef USE_TESTLIB
 #include <QtTest/QTestEventList>
@@ -118,6 +121,8 @@ protected:
     void resizeEvent(QResizeEvent* event);
 
 private:
+    bool rotated; // Are we rotating 90 degrees?
+
     WebView         *view;              // Webkit Page View
     QHBoxLayout     *topBox;            // Box for progress and messages
     QProgressBar    *loadProgress;      // progress bar to display page loading
@@ -132,6 +137,10 @@ private:
 
     AnyOption   *cmdopts;
     UnixSignals *handler;
+
+    QGraphicsView *graphicsView;
+    QGraphicsScene *graphicsScene;
+    QGraphicsProxyWidget *proxyWidget;
 
 #ifdef USE_TESTLIB
     QTestEventList *simulateClick;

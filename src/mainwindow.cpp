@@ -168,7 +168,7 @@ void MainWindow::init(AnyOption *opts)
     }
 
     // --- Web View --- //
-    view = new WebView(this);
+    view = new WebView();
 
     QPalette paletteG = this->palette();
     paletteG.setColor(QPalette::Window, QColor(220,240,220,127));
@@ -215,8 +215,6 @@ void MainWindow::init(AnyOption *opts)
         topBox->addWidget(messagesBox, 1, Qt::AlignTop | Qt::AlignLeft);
     }
 
-    setCentralWidget(view);
-
     view->setSettings(qwkSettings);
     view->setPage(new QwkWebPage(view));
 
@@ -245,6 +243,7 @@ void MainWindow::init(AnyOption *opts)
         nm->setCache(diskCache);
         view->page()->setNetworkAccessManager(nm);
     }
+    rotated = cmdopts->getFlag("rotate");
 
     if (qwkSettings->getBool("browser/cookiejar")) {
         view->page()->networkAccessManager()->setCookieJar(new PersistentCookieJar());
@@ -345,7 +344,20 @@ void MainWindow::init(AnyOption *opts)
     }
     delayedLoad->singleShot(delay_load, this, SLOT(delayedPageLoad()));
 
+    graphicsView = new QGraphicsView(this);
+    graphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    graphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    graphicsScene = new QGraphicsScene(graphicsView);
+    proxyWidget = graphicsScene->addWidget(view);
+    graphicsView->fitInView(proxyWidget);
+    if (rotated)
+        proxyWidget->setRotation(90);
+    graphicsView->setScene(graphicsScene);
+    graphicsView->setVisible(true);
+    proxyWidget->setVisible(true);
+    setCentralWidget(graphicsView);
 }
+
 
 void MainWindow::delayedWindowResize()
 {
@@ -370,7 +382,13 @@ void MainWindow::delayedWindowResize()
 void MainWindow::resizeEvent(QResizeEvent* event)
 {
    QMainWindow::resizeEvent(event);
-   // Your code here.
+    if (graphicsView && view) {
+        auto size = event->size();
+        if (rotated)
+            view->resize(size.height(), size.width());
+        else
+            view->resize(size);
+    }
 }
 
 void MainWindow::delayedPageLoad()
