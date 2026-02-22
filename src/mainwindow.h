@@ -48,7 +48,6 @@
 #include <QMainWindow>
 #include <QtNetwork>
 #include <QtWebKit>
-#include <QtWebKitWidgets/QWebFrame>
 #include <QGraphicsView>
 #include <QGraphicsProxyWidget>
 
@@ -57,6 +56,7 @@
 #endif
 
 #ifdef QT5
+#include <QtWebKitWidgets/QWebFrame>
 #include <QtWebKitWidgets/QWebInspector>
 #endif
 
