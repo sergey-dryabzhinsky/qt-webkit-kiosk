@@ -43,8 +43,13 @@ bool setupOptions(AnyOption *cmdopts)
     cmdopts->addUsage("Usage: ");
     cmdopts->addUsage("");
     cmdopts->addUsage(" -h --help                           Print usage and exit");
-    cmdopts->addUsage(" -v --version                        Print version and exit");
+    cmdopts->addUsage(" -V --version                        Print version and exit");
     cmdopts->addUsage(" -c --config options.ini             Configuration INI-file");
+    cmdopts->addUsage(" -S --screenshot                     Make page screenshot into default PNG file screenshot.png after page loads.");
+    cmdopts->addUsage(" -f --screenshot-file full_path_filename.(png|jpg)\n"
+					  "                                     Make page screenshot into (PNG|JPEG) filename with full path to it screenshot.png. By default it places file screenshot.(png|jpg) into current working dir.");
+    cmdopts->addUsage(" -d --delay X                        Delay making screenshot of a page by X seconds. Default is 5.");
+    cmdopts->addUsage(" -j --screenshot-jpeg-quality Q      Make screenshot into JPEG screenshot.jpg with quality Q. Default is 85.");
     cmdopts->addUsage(" -u --uri http://www.example.com/    Open this URI, home page");
     cmdopts->addUsage(" -C --clear-cache                    Clear cached request data");
     cmdopts->addUsage(" -R --rotate                         Rotate display 90 degrees");
@@ -70,12 +75,17 @@ bool setupOptions(AnyOption *cmdopts)
     qDebug() << "Runing with: Qt =" << qVersion() << "; WebKit =" << qWebKitVersion();
 
     cmdopts->setFlag("help", 'h');
-    cmdopts->setFlag("version", 'v');
+    cmdopts->setFlag("version", 'V');
     cmdopts->setFlag("clear-cache", 'C');
     cmdopts->setFlag("rotate", 'R');
+    cmdopts->setFlag("screenshot", 'S');
 
     cmdopts->setOption("config", 'c');
     cmdopts->setOption("uri", 'u');
+
+    cmdopts->setOption("screenshot-file", 'f');
+    cmdopts->setOption("screenshot-jpeg-quality", 'j');
+    cmdopts->setOption("delay", 'd');
 
     cmdopts->setVersion(VERSION);
 
@@ -90,6 +100,7 @@ bool setupOptions(AnyOption *cmdopts)
         cmdopts->printUsage();
         return false;
     }
+
 
     if (cmdopts->getFlag('v') || cmdopts->getFlag("version")) {
         qDebug(">> Version option in command prompt...");
@@ -110,8 +121,8 @@ int main(int argc, char * argv[])
     }
 
     MainWindow *browser = new MainWindow();
-    browser->init(cmdopts);
 
+    browser->init(cmdopts);
     // executes browser.cleanupSlot() when the Qt framework emits aboutToQuit() signal.
     QObject::connect(qApp, SIGNAL(aboutToQuit()),
                      browser, SLOT(cleanupSlot()));

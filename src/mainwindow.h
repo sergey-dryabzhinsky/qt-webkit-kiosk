@@ -151,11 +151,18 @@ private:
     bool isSelectionDisabled;
     bool isUrlRealyChanged;
 
+    bool doScreenshot; // Are we doing screenshot?
+    bool doScreenshotJpeg; // Are we doing jpeg screenshot?
+    int jpegScreenshotQuality;
+    int screenshotDelay;
+    QString screenshotFileName;
+
     QNetworkSession *n_session;
     QNetworkInterface *network_interface;
 
     QTimer *delayedResize;
     QTimer *delayedLoad;
+    QTimer *delayedScreenshot;
 };
 
 #endif // QWK_MAINWINDOW_H

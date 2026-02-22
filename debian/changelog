@@ -1,4 +1,4 @@
-qt-webkit-kiosk (1.99.10-1sergey1) unstable; urgency=medium
+qt-webkit-kiosk (1.99.10-1rusoft1~ubuntu16) unstable; urgency=medium
 
   * Fix event to view passthrough by @therealjumbo
   * Fix use of qInfo macros with Qt4

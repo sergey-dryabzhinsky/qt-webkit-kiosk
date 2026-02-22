@@ -99,11 +99,53 @@ void MainWindow::init(AnyOption *opts)
         qwkSettings->loadSettings(QString(""));
     }
 
+    if (cmdopts->getValue("screenshot-file") || cmdopts->getValue('f')) {
+        qDebug(">> Screenshot filename option in command prompt...");
+        QString screenshotFileName = cmdopts->getValue('f');
+        if (screenshotFileName.isEmpty()) {
+            screenshotFileName = cmdopts->getValue("screenshot-file");
+        }
+        qwkSettings->setValue("screenshot/file", screenshotFileName);
+    }
+
     if (qwkSettings->getBool("signals/enable")) {
         connect(handler, SIGNAL(sigUSR1()), SLOT(unixSignalUsr1()));
         connect(handler, SIGNAL(sigUSR2()), SLOT(unixSignalUsr2()));
     }
     handler->start();
+
+     if (cmdopts->getFlag('S') || cmdopts->getFlag("screenshot")) {
+        doScreenshot = true;
+        screenshotFileName = "screenshot.png";
+    }
+    quint16 screenshotJpegQuality = qwkSettings->getUInt("screenshot/jpeg_quality");
+    if (screenshotJpegQuality) {
+        qDebug(">> Screenshot JPEG quality from config file:", screenshotJpegQuality);
+        qDebug(">> We will make Screenshot into JPEG file and exit.");
+        doScreenshot = true;
+        doScreenshotJpeg = true;
+        jpegScreenshotQuality = 85;
+        screenshotFileName = "screenshot.jpg";
+    }
+    if (cmdopts->getValue("screenshot-jpeg-quality") || cmdopts->getValue('q')) {
+        QString quality = cmdopts->getValue('q');
+        qDebug(">> Screenshot JPEG quality from cmd-line:", quality);
+        if (quality.isEmpty()) {
+            quality = cmdopts->getValue("screenshot-jpeg-quality");
+        }
+        qwkSettings->setValue("screenshot/jpeg_quality", quality.toInt());
+        jpegScreenshotQuality = quality.toInt();
+    }
+
+    if (cmdopts->getValue("delay") || cmdopts->getValue('d')) {
+        QString delay = cmdopts->getValue('d');
+        qDebug(">> Screenshot delay sec from cmd-line:", delay);
+        if (delay.isEmpty()) {
+            delay = cmdopts->getValue("delay");
+        }
+        qwkSettings->setValue("screenshot/delay", delay.toInt());
+        screenshotDelay = delay.toInt();
+    }
 
     setMinimumWidth(320);
     setMinimumHeight(200);
