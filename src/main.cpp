@@ -47,13 +47,15 @@ bool setupOptions(AnyOption *cmdopts)
     cmdopts->addUsage(" -c --config options.ini             Configuration INI-file");
     cmdopts->addUsage(" -S --screenshot                     Make page screenshot into default PNG file screenshot.png after page loads.");
     cmdopts->addUsage(" -J --screenshot-jpeg                Make page screenshot into default JPEG file screenshot.jpg after page loads.");
+    cmdopts->addUsage(" -W --screenshot-webp                Make page screenshot into default WEBP file screenshot.webp after page loads.");
     cmdopts->addUsage(" -F --screenshot-file full_path_filename.(png|jpg)\n"
-					  "                                     Make page screenshot into (PNG|JPEG) filename with full path to it screenshot.png. By default it places file screenshot.(png|jpg) into current working dir.");
+					  "                                     Make page screenshot into (PNG|JPEG|webp) filename with full path to it screenshot.png. By default it places file screenshot.(png|jpg) into current working dir.");
     cmdopts->addUsage(" -D --delay X                        Delay making screenshot of a page by X seconds. Default is 0.");
-    cmdopts->addUsage(" -Q --screenshot-jpeg-quality Q      Make screenshot into JPEG screenshot.jpg with quality Q. Default is 85.");
+    cmdopts->addUsage(" -Q --screenshot-jpeg-quality Q      Make screenshot into JPEG screenshot.jpg with quality Q. And for WEBP if supported Default is 85.");
     cmdopts->addUsage(" -U --uri http://www.example.com/    Open this URI, home page");
     cmdopts->addUsage(" -C --clear-cache                    Clear cached request data");
     cmdopts->addUsage(" -R --rotate                         Rotate display 90 degrees");
+    cmdopts->addUsage(" -L --list-supported-formats         List supported formats for QImage to write a screenshot, and exit");
     cmdopts->addUsage("");
     cmdopts->addUsage("Build with:");
     cmdopts->addUsage("        Qt: " QT_VERSION_STR);
@@ -81,6 +83,8 @@ bool setupOptions(AnyOption *cmdopts)
     cmdopts->setFlag("rotate", 'R');
     cmdopts->setFlag("screenshot", 'S');
     cmdopts->setFlag("screenshot-jpeg", 'J');
+    cmdopts->setFlag("screenshot-webp", 'W');
+    cmdopts->setFlag("list-supported-formats", 'L');
 
     cmdopts->setOption("config", 'c');
     cmdopts->setOption("uri", 'U');

@@ -106,7 +106,7 @@ void MainWindow::init(AnyOption *opts)
 QList<QByteArray> formats = QImageReader::supportedImageFormats();
 
 // Check if "webp" (case-insensitive) is in the list
-bool webpSupported = false;
+webpSupported = false;
 foreach (const QByteArray& format, formats) {
     if (format.toLower() == "webp") {
         webpSupported = true;
@@ -114,20 +114,57 @@ foreach (const QByteArray& format, formats) {
     }
 }
 
+    bool listSupportedFormats = false;
+    if (cmdopts->getFlag('L') || cmdopts->getFlag("list-supported-formats")) {
+        listSupportedFormats = true;
+    }
+
 // Print the result or perform an action
 if (webpSupported) {
     qDebug() << "WebP plugin is loaded and supported.";
 } else {
     qDebug() << "WebP plugin is not loaded.";
-    qDebug() << "Available formats:" ;
+    qDebug() << "Available formats:";
 	foreach (const QByteArray& format, formats) {
-		qDebug() << format << ",\n";
+		if (format.toLower() == "png") {
+			qDebug() << "*" << format << ",";
+		} else
+		if (format.toLower() == "jpeg") {
+			qDebug() << "*" << format << ",";
+		} else
+		if (format.toLower() == "jpg") {
+			qDebug() << "*" << format << ",";
+		} else
+		if (format.toLower() == "webp") {
+			qDebug() << "*" << format << ",";
+		} else
+			qDebug() << format << ",";
     }
 }
+if (listSupportedFormats) {
+	printf("Available formats:\n");
+	foreach (const QByteArray& format, formats) {
+		if (format.toLower() == "png") {
+			printf("*%s,\n", format.constData());
+		} else
+		if (format.toLower() == "jpeg") {
+			printf("*%s,\n", format.constData());
+		} else
+		if (format.toLower() == "jpg") {
+			printf("*%s,\n", format.constData());
+		} else
+		if (format.toLower() == "webp") {
+			printf("*%s,\n", format.constData());
+		} else
+			printf("%s,\n", format.constData());
+    }
+	QApplication::exit(0);
+	exit(0);
+}
 
-    if (cmdopts->getValue("screenshot-file") || cmdopts->getValue('f')) {
+    if (cmdopts->getValue("screenshot-file") || cmdopts->getValue('F')) {
         qDebug(">> Screenshot filename option in command prompt...");
-        QString screenshotFileName = cmdopts->getValue('f');
+        QString screenshotFileName = cmdopts->getValue('F');
         if (screenshotFileName.isEmpty()) {
             screenshotFileName = cmdopts->getValue("screenshot-file");
         }
@@ -147,6 +184,15 @@ if (webpSupported) {
    if (cmdopts->getFlag('J') || cmdopts->getFlag("screenshot-jpeg")) {
        doScreenshotJpeg = true;
        screenshotFileName = "screenshot.jpg";
+    }
+    if (cmdopts->getFlag('W') || cmdopts->getFlag("screenshot-webp")) {
+        doScreenshotWebp = true;
+        screenshotFileName = "screenshot.webp";
+		if (!webpSupported) {
+			qDebug("Webp screenshot requested but qt not support WEBP fomat! default PNG will be used");
+			doScreenshot = true;
+			screenshotFileName = "screenshot.png";
+		}
     }
 
     doExitOnScreenshot = qwkSettings->getBool("screenshot/exit");
@@ -206,9 +252,9 @@ if (webpSupported) {
        qwkSettings->getQString("application/icon")
     ));
 
-    if (cmdopts->getValue("uri") || cmdopts->getValue('u')) {
+    if (cmdopts->getValue("uri") || cmdopts->getValue('U')) {
         qDebug(">> Uri option in command prompt...");
-        QString uri = cmdopts->getValue('u');
+        QString uri = cmdopts->getValue('U');
         if (uri.isEmpty()) {
             uri = cmdopts->getValue("uri");
         }
@@ -477,8 +523,9 @@ void MainWindow::resizeEvent(QResizeEvent* event)
 void MainWindow::delayedPageScreenshot()
 {
 	qDebug(">>> run delayedPageScreenshot");
-	qDebug("do screensot png: %d, do jpeg:%d",(int)doScreenshot, (int)doScreenshotJpeg);
-	if (!doScreenshot && !doScreenshotJpeg) return;
+	qDebug("do screensot png: %d, do jpeg:%d, do webp: %d",
+		(int)doScreenshot, (int)doScreenshotJpeg, (int)doScreenshotWebp);
+	if (!doScreenshot && !doScreenshotJpeg && doScreenshotWebp) return;
 
 	qDebug("prepare painting image...");
 // Assuming you have a QWebView instance called webView
@@ -498,6 +545,10 @@ void MainWindow::delayedPageScreenshot()
 	if (doScreenshotJpeg){
 		qDebug("with quality: %d", jpegScreenshotQuality);
 		image.save(screenshotFileName, "jpeg", jpegScreenshotQuality);
+	}
+	if (doScreenshotWebp){
+		qDebug("with quality: %d", jpegScreenshotQuality);
+		image.save(screenshotFileName, "webp", jpegScreenshotQuality);
 	}
 	if (doScreenshot)
 		image.save(screenshotFileName, "png");

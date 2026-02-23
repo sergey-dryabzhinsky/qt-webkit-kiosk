@@ -154,8 +154,10 @@ private:
 
     bool doScreenshot; // Are we doing screenshot?
     bool doExitOnScreenshot; // Are we doing exit from app after screenshot?
+    bool webpSupported;
     bool doScreenshotJpeg; // Are we doing jpeg screenshot?
-    int jpegScreenshotQuality;
+    bool doScreenshotWebp; // Are we try to doing webp screenshot?
+    int jpegScreenshotQuality; // and webp
     int screenshotDelay;
     QString screenshotFileName;
 
