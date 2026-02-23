@@ -93,6 +93,7 @@ protected slots:
     void delayedWindowResize();
     void delayedPageLoad();
     void delayedPageReload();
+    void delayedPageScreenshot();
 
     void handleQwkNetworkError(QNetworkReply::NetworkError, QString);
     void handleQwkNetworkReplyUrl(QUrl);
@@ -152,6 +153,7 @@ private:
     bool isUrlRealyChanged;
 
     bool doScreenshot; // Are we doing screenshot?
+    bool doExitOnScreenshot; // Are we doing exit from app after screenshot?
     bool doScreenshotJpeg; // Are we doing jpeg screenshot?
     int jpegScreenshotQuality;
     int screenshotDelay;

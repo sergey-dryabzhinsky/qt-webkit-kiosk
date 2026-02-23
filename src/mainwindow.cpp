@@ -40,6 +40,9 @@
 ****************************************************************************/
 
 #include <QDebug>
+#include <QImageReader>
+#include <QByteArray>
+#include <QStringList>
 #include "config.h"
 #include "qinfo.h"
 #include "mainwindow.h"
@@ -99,6 +102,29 @@ void MainWindow::init(AnyOption *opts)
         qwkSettings->loadSettings(QString(""));
     }
 
+// Get the list of all supported image formats
+QList<QByteArray> formats = QImageReader::supportedImageFormats();
+
+// Check if "webp" (case-insensitive) is in the list
+bool webpSupported = false;
+foreach (const QByteArray& format, formats) {
+    if (format.toLower() == "webp") {
+        webpSupported = true;
+        break;
+    }
+}
+
+// Print the result or perform an action
+if (webpSupported) {
+    qDebug() << "WebP plugin is loaded and supported.";
+} else {
+    qDebug() << "WebP plugin is not loaded.";
+    qDebug() << "Available formats:" ;
+	foreach (const QByteArray& format, formats) {
+		qDebug() << format << ",\n";
+    }
+}
+
     if (cmdopts->getValue("screenshot-file") || cmdopts->getValue('f')) {
         qDebug(">> Screenshot filename option in command prompt...");
         QString screenshotFileName = cmdopts->getValue('f');
@@ -114,22 +140,31 @@ void MainWindow::init(AnyOption *opts)
     }
     handler->start();
 
-     if (cmdopts->getFlag('S') || cmdopts->getFlag("screenshot")) {
-        doScreenshot = true;
-        screenshotFileName = "screenshot.png";
+   if (cmdopts->getFlag('S') || cmdopts->getFlag("screenshot")) {
+       doScreenshot = true;
+       screenshotFileName = "screenshot.png";
+   }
+   if (cmdopts->getFlag('J') || cmdopts->getFlag("screenshot-jpeg")) {
+       doScreenshotJpeg = true;
+       screenshotFileName = "screenshot.jpg";
     }
-    quint16 screenshotJpegQuality = qwkSettings->getUInt("screenshot/jpeg_quality");
-    if (screenshotJpegQuality) {
-        qDebug(">> Screenshot JPEG quality from config file:", screenshotJpegQuality);
-        qDebug(">> We will make Screenshot into JPEG file and exit.");
-        doScreenshot = true;
-        doScreenshotJpeg = true;
+
+    doExitOnScreenshot = qwkSettings->getBool("screenshot/exit");
+    if (doExitOnScreenshot) {
+        qDebug(">> When we will make Screenshot we will exit the app.");
+    } else // default value
+		doExitOnScreenshot = true;
+
+    jpegScreenshotQuality = qwkSettings->getUInt("screenshot/jpeg_quality");
+    if (jpegScreenshotQuality) {
+        qDebug(">> Screenshot JPEG quality from config file: %d", jpegScreenshotQuality);
+    } else //default value
         jpegScreenshotQuality = 85;
-        screenshotFileName = "screenshot.jpg";
-    }
-    if (cmdopts->getValue("screenshot-jpeg-quality") || cmdopts->getValue('q')) {
-        QString quality = cmdopts->getValue('q');
-        qDebug(">> Screenshot JPEG quality from cmd-line:", quality);
+
+    if (cmdopts->getValue("screenshot-jpeg-quality") || cmdopts->getValue('Q')) {
+        qDebug(">> We will make Screenshot into JPEG file and exit.");
+        QString quality = cmdopts->getValue('Q');
+        qDebug(">> Screenshot JPEG quality from cmd-line: %s", quality.toUtf8().constData());
         if (quality.isEmpty()) {
             quality = cmdopts->getValue("screenshot-jpeg-quality");
         }
@@ -137,15 +172,20 @@ void MainWindow::init(AnyOption *opts)
         jpegScreenshotQuality = quality.toInt();
     }
 
-    if (cmdopts->getValue("delay") || cmdopts->getValue('d')) {
-        QString delay = cmdopts->getValue('d');
-        qDebug(">> Screenshot delay sec from cmd-line:", delay);
+    if (cmdopts->getValue("delay") || cmdopts->getValue('D')) {
+        QString delay = cmdopts->getValue('D');
+        qDebug(">> Screenshot delay sec from cmd-line: %s", delay.toUtf8().constData());
         if (delay.isEmpty()) {
             delay = cmdopts->getValue("delay");
         }
         qwkSettings->setValue("screenshot/delay", delay.toInt());
         screenshotDelay = delay.toInt();
-    }
+    } else { //default value
+        screenshotDelay = 0; //really will be 1 milsec
+	}
+
+	qDebug("In the end:\nscreenshot file name:%s\njpeg quality:%d\ndelay:%d",
+		screenshotFileName.toUtf8().constData(), jpegScreenshotQuality, screenshotDelay);
 
     setMinimumWidth(320);
     setMinimumHeight(200);
@@ -172,6 +212,7 @@ void MainWindow::init(AnyOption *opts)
         if (uri.isEmpty()) {
             uri = cmdopts->getValue("uri");
         }
+        qDebug(">> Will load uri: %s", uri.toUtf8().constData());
         qwkSettings->setValue("browser/homepage", uri);
     }
 
@@ -433,6 +474,42 @@ void MainWindow::resizeEvent(QResizeEvent* event)
     }
 }
 
+void MainWindow::delayedPageScreenshot()
+{
+	qDebug(">>> run delayedPageScreenshot");
+	qDebug("do screensot png: %d, do jpeg:%d",(int)doScreenshot, (int)doScreenshotJpeg);
+	if (!doScreenshot && !doScreenshotJpeg) return;
+
+	qDebug("prepare painting image...");
+// Assuming you have a QWebView instance called webView
+	QSize size = view->page()->mainFrame()->contentsSize();
+	qDebug("got size: %dx%d", size.width(), size.height());
+	view->page()->setViewportSize(size); // Ensure the viewport covers the full size
+
+	QImage image(size, QImage::Format_ARGB32);
+	QPainter painter(&image);
+
+	qDebug("start render...");
+	view->page()->mainFrame()->render(&painter);
+
+	painter.end();
+	qDebug("done painting....");
+	qDebug("save to file: %s...", screenshotFileName.toUtf8().constData());
+	if (doScreenshotJpeg){
+		qDebug("with quality: %d", jpegScreenshotQuality);
+		image.save(screenshotFileName, "jpeg", jpegScreenshotQuality);
+	}
+	if (doScreenshot)
+		image.save(screenshotFileName, "png");
+
+	qDebug("Done.");
+	if (doExitOnScreenshot){
+		qDebug("Do app exit");
+		clearCacheOnExit();
+		QApplication::exit(0);
+	}
+}
+
 void MainWindow::delayedPageLoad()
 {
     // Wait 1 second. May be not here?
@@ -576,6 +653,14 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     case Qt::Key_F8:
         view->stop();
         break;
+    case Qt::Key_Print:
+{
+		bool saveDEOS = doExitOnScreenshot;
+		doExitOnScreenshot = false; //only in headless mode
+        delayedPageScreenshot();
+		doExitOnScreenshot = saveDEOS;
+}
+        break;
     case Qt::Key_F12:
         if (qwkSettings->getUInt("inspector/enable")) {
             if (!inspector->isVisible()) {
@@ -616,7 +701,7 @@ void MainWindow::handleQwkNetworkError(QNetworkReply::NetworkError error, QStrin
                 ;
     if (message.contains("Host ") && message.contains(" not found")) {
         // Don't give a damn
-        qDebug() << "Don't give a damn";
+        qDebug() << "404? Don't give a damn";
         return;
     }
 /*    if (message.contains("Error downloading ") && message.contains("server replied: Not Found")) {
@@ -832,6 +917,13 @@ void MainWindow::finishLoading(bool ok)
     if (loadProgress) {
         loadProgress->hide();
     }
+
+	qDebug("start doing screenshot in ~%d sec", screenshotDelay);
+	//really it's milliseconds needed
+	if (!screenshotDelay)
+		delayedScreenshot->singleShot(1, this, SLOT(delayedPageScreenshot()));
+	else
+		delayedScreenshot->singleShot(screenshotDelay*1000, this, SLOT(delayedPageScreenshot()));
 
     // On AJAX it's triggered too?
     if (isUrlRealyChanged) {

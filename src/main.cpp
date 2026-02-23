@@ -46,11 +46,12 @@ bool setupOptions(AnyOption *cmdopts)
     cmdopts->addUsage(" -V --version                        Print version and exit");
     cmdopts->addUsage(" -c --config options.ini             Configuration INI-file");
     cmdopts->addUsage(" -S --screenshot                     Make page screenshot into default PNG file screenshot.png after page loads.");
-    cmdopts->addUsage(" -f --screenshot-file full_path_filename.(png|jpg)\n"
+    cmdopts->addUsage(" -J --screenshot-jpeg                Make page screenshot into default JPEG file screenshot.jpg after page loads.");
+    cmdopts->addUsage(" -F --screenshot-file full_path_filename.(png|jpg)\n"
 					  "                                     Make page screenshot into (PNG|JPEG) filename with full path to it screenshot.png. By default it places file screenshot.(png|jpg) into current working dir.");
-    cmdopts->addUsage(" -d --delay X                        Delay making screenshot of a page by X seconds. Default is 5.");
-    cmdopts->addUsage(" -j --screenshot-jpeg-quality Q      Make screenshot into JPEG screenshot.jpg with quality Q. Default is 85.");
-    cmdopts->addUsage(" -u --uri http://www.example.com/    Open this URI, home page");
+    cmdopts->addUsage(" -D --delay X                        Delay making screenshot of a page by X seconds. Default is 0.");
+    cmdopts->addUsage(" -Q --screenshot-jpeg-quality Q      Make screenshot into JPEG screenshot.jpg with quality Q. Default is 85.");
+    cmdopts->addUsage(" -U --uri http://www.example.com/    Open this URI, home page");
     cmdopts->addUsage(" -C --clear-cache                    Clear cached request data");
     cmdopts->addUsage(" -R --rotate                         Rotate display 90 degrees");
     cmdopts->addUsage("");
@@ -79,12 +80,13 @@ bool setupOptions(AnyOption *cmdopts)
     cmdopts->setFlag("clear-cache", 'C');
     cmdopts->setFlag("rotate", 'R');
     cmdopts->setFlag("screenshot", 'S');
+    cmdopts->setFlag("screenshot-jpeg", 'J');
 
     cmdopts->setOption("config", 'c');
-    cmdopts->setOption("uri", 'u');
+    cmdopts->setOption("uri", 'U');
 
     cmdopts->setOption("screenshot-file", 'f');
-    cmdopts->setOption("screenshot-jpeg-quality", 'j');
+    cmdopts->setOption("screenshot-jpeg-quality", 'Q');
     cmdopts->setOption("delay", 'd');
 
     cmdopts->setVersion(VERSION);
@@ -102,7 +104,7 @@ bool setupOptions(AnyOption *cmdopts)
     }
 
 
-    if (cmdopts->getFlag('v') || cmdopts->getFlag("version")) {
+    if (cmdopts->getFlag('V') || cmdopts->getFlag("version")) {
         qDebug(">> Version option in command prompt...");
         cmdopts->printVersion();
         return false;
