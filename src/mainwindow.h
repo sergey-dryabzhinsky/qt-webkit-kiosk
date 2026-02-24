@@ -93,6 +93,7 @@ protected slots:
     void delayedWindowResize();
     void delayedPageLoad();
     void delayedPageReload();
+    void delayedPageScreenshot();
 
     void handleQwkNetworkError(QNetworkReply::NetworkError, QString);
     void handleQwkNetworkReplyUrl(QUrl);
@@ -151,11 +152,21 @@ private:
     bool isSelectionDisabled;
     bool isUrlRealyChanged;
 
+    bool doScreenshot; // Are we doing screenshot?
+    bool doExitOnScreenshot; // Are we doing exit from app after screenshot?
+    bool webpSupported;
+    bool doScreenshotJpeg; // Are we doing jpeg screenshot?
+    bool doScreenshotWebp; // Are we try to doing webp screenshot?
+    int jpegScreenshotQuality; // and webp
+    int screenshotDelay;
+    QString screenshotFileName;
+
     QNetworkSession *n_session;
     QNetworkInterface *network_interface;
 
     QTimer *delayedResize;
     QTimer *delayedLoad;
+    QTimer *delayedScreenshot;
 };
 
 #endif // QWK_MAINWINDOW_H

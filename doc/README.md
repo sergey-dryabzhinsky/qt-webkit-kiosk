@@ -15,6 +15,8 @@ Support several parameters via configuration file: proxy, user-agent, click soun
 
 Also hides printer dialog, uses default or defined printer, adds custom js/css files to every loaded page, disables text selection.
 
+Can make screenshots of a page in png(default), jpeg or webp( is qt supported/have plugin)
+
 ## Release Build
 ```
 qmake
